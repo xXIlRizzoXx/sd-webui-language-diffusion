@@ -1,0 +1,83 @@
+/* sd-webui-forge-i18n — styles for the language selector + flag indicators.
+ *
+ * Scoped to Forge's stock localization dropdown (elem_id `setting_localization`)
+ * and the `.forge-language-dropdown` class added by forge_language_flags.js
+ * when it binds. Nothing in this file touches any other Gradio dropdown.
+ */
+
+/* If the user adds `localization` to Settings > User Interface >
+ * Quicksettings list, the dropdown shows up in the top-right row.
+ * Right-pin it so it ends up next to UI Preset / Checkpoint / VAE. */
+#quicksettings>div#setting_localization {
+    margin-left: auto;
+    min-width: 11em;
+    max-width: 14em;
+    flex: 0 0 auto;
+    position: relative;
+}
+
+#setting_localization input {
+    width: 9em;
+    cursor: pointer;
+    padding-left: 2.2em;
+}
+
+/* SVG flag injected by javascript/forge_language_flags.js. */
+img.forge-flag {
+    display: inline-block;
+    width: 18px;
+    height: 13px;
+    vertical-align: middle;
+    margin-right: 0.45em;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+    border-radius: 1px;
+    user-select: none;
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+#setting_localization ul.options li.item,
+.forge-language-dropdown ul.options li.item {
+    display: flex;
+    align-items: center;
+}
+
+/* When the dropdown is open, the floating <ul.options> panel is detached
+ * by Gradio and appended elsewhere in the DOM. forge_language_flags.js
+ * tags that ul with `.forge-language-options` so we can give the panel
+ * and its items some breathing room without affecting any other dropdown
+ * on the page. */
+ul.options.forge-language-options {
+    padding: 0.4em 0.3em !important;
+}
+
+ul.options.forge-language-options li.item {
+    padding: 0.4em 0.7em !important;
+    margin: 0 !important;
+    border-radius: 4px;
+}
+
+/* Flag indicator pinned over the input (closed state). Injected by
+ * forge_language_flags.js inside the input's .wrap row, not the outer
+ * container, so vertical centring tracks the input itself. */
+#setting_localization .wrap,
+.forge-language-dropdown .wrap {
+    position: relative;
+}
+
+#setting_localization .wrap > .forge-flag-indicator,
+.forge-language-dropdown .wrap > .forge-flag-indicator {
+    position: absolute;
+    left: 0.6em;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    line-height: 0;
+    z-index: 1;
+}
+
+#setting_localization .forge-flag-indicator img.forge-flag,
+.forge-language-dropdown .forge-flag-indicator img.forge-flag {
+    margin-right: 0;
+    display: block;
+}

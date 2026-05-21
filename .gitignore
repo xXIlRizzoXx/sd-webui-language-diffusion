@@ -1,0 +1,21 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local notes / staging
+*.local.md
+*.tmp
+
+# Runtime state — created by scripts/language_diffusion_setup.py on
+# first install to remember that the quicksettings pin has been added.
+.first-run-pinned
