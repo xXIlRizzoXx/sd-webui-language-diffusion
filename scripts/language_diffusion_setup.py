@@ -44,31 +44,80 @@ _FIRST_RUN_MARKER = os.path.join(_EXT_ROOT, ".first-run-pinned")
 
 def relocate_localization_setting() -> None:
     """Move the localization setting under the 'Extensions' sidebar
-    group, with sub-label 'Language Diffusion'.
+    group, with sub-label 'Language Diffusion', and rename the 'None'
+    option to 'English' (auto-translated by the bundled locales).
 
-    Forge's `modules/options.py` resolves the top-level sidebar group
-    from `OptionInfo.category_id`:
-        category = categories.mapping.get(item.category_id)
-        category = "Extensions" if category is None else category.label
+    Three changes are applied to the existing `OptionInfo`:
 
-    By setting `category_id = None`, the section is automatically
-    placed under "Extensions" alongside other installed extensions.
-    The sub-entry label comes from `OptionInfo.section[1]`.
+    1. `section` → `("language_diffusion", "Language Diffusion")`
+       — gives the picker a sub-entry under the Extensions group.
 
-    No-op on forks where the setting isn't registered. Idempotent.
+    2. `category_id` → `None`
+       — Forge's `modules/options.py` falls back to "Extensions" as
+       the top-level header whenever the category isn't in the
+       registered categories map, so `None` lands the section there.
+
+    3. `component_args` wrapped so the choices list returns
+       `("English", "None")` as a (label, value) tuple in place of
+       the raw string `"None"`. The visible label is "English"
+       (auto-translated to Inglese / Inglés / Anglais / Englisch /
+       英语 / 英語 by the bundled locale JSONs), while the underlying
+       value remains "None" — preserving Forge's existing semantics
+       (no JSON loaded → English source strings).
+
+    No-op on forks where the setting isn't registered. Idempotent
+    on every attribute that we touch.
     """
     info = shared.opts.data_labels.get("localization")
     if info is None:
         return
 
+    # ── sidebar location ────────────────────────────────────────
     target_section = ("language_diffusion", "Language Diffusion")
-    target_category = None  # None → grouped under "Extensions"
+    if info.section != target_section:
+        info.section = target_section
+    if info.category_id is not None:
+        info.category_id = None
 
-    if info.section == target_section and info.category_id == target_category:
+    # ── 'None' → 'English' display label ───────────────────────
+    # `component_args` may be a dict literal OR a zero-arg callable
+    # that returns a dict; Forge uses the callable form for the
+    # localization setting so the choices update when JSONs are
+    # added or removed at runtime.
+    original_args = info.component_args
+
+    # Guard against re-wrapping if we have already patched this entry.
+    if getattr(original_args, "_language_diffusion_patched", False):
         return
 
-    info.section = target_section
-    info.category_id = target_category
+    def _rename_none_to_english(choices):
+        out = []
+        for c in choices:
+            if c == "None":
+                out.append(("English", "None"))
+            else:
+                out.append(c)
+        return out
+
+    if callable(original_args):
+
+        def patched_args():
+            d = dict(original_args())  # copy to avoid mutating cached state
+            d["choices"] = _rename_none_to_english(d.get("choices", []))
+            return d
+
+        patched_args._language_diffusion_patched = True
+        info.component_args = patched_args
+
+    elif isinstance(original_args, dict):
+        new_args = dict(original_args)
+        new_args["choices"] = _rename_none_to_english(new_args.get("choices", []))
+        # Build a callable so we can set our marker attribute on it.
+        def patched_args(_new=new_args):
+            return _new
+
+        patched_args._language_diffusion_patched = True
+        info.component_args = patched_args
 
 
 def pin_to_quicksettings_once() -> None:

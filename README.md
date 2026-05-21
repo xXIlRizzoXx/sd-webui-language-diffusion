@@ -142,13 +142,17 @@ but the UI is still in English. You need to pick a language once.
 3. Click **Language Diffusion** inside the Extensions group.
 4. Click the **Localization** dropdown. You will see the seven
    options, each with its flag:
-   - 🇬🇧 None  *(English source, no JSON loaded)*
+   - 🇬🇧 English  *(source, no JSON loaded — internal value: "None")*
    - 🇮🇹 it_IT
    - 🇪🇸 es_ES
    - 🇫🇷 fr_FR
    - 🇩🇪 de_DE
    - 🇨🇳 zh_CN
    - 🇯🇵 ja_JP
+
+   *The English label auto-translates to "Inglese" / "Inglés" /
+   "Anglais" / "Englisch" / "英语" / "英語" when you are in
+   another locale.*
 5. Pick the locale you want.
 6. Scroll back to the top of the Settings tab.
 7. Click **Apply settings** (yellow button, top left).
