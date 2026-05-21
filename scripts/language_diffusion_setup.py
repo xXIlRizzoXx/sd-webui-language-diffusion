@@ -219,10 +219,41 @@ def pin_to_quicksettings_once() -> None:
         pass  # Best-effort; missing marker just means we retry next launch.
 
 
+def force_localization_rescan() -> None:
+    """Force Forge to re-scan all localization JSON files (root +
+    extensions) after our extension has loaded.
+
+    Forge calls `list_localizations()` once in `modules/initialize.py`
+    BEFORE extension scripts are loaded. In some environments — fresh
+    installs, certain extension orderings, or after the user adds
+    locale files at runtime — that first scan does not see our
+    bundled JSONs and the dropdown ends up offering them but
+    `localization_js()` produces `window.localization = {}` because
+    the `localizations` dict has no path for the active code.
+
+    Calling `list_localizations()` again from inside our extension's
+    script (which runs after `extensions.list_extensions()` has fully
+    populated the extension registry) guarantees that the dict is in
+    sync with what is actually on disk before the UI is built.
+
+    Best-effort: silently swallow failures. If the rescan can't run
+    for any reason, we just fall back to whatever Forge already
+    cached.
+    """
+    try:
+        from modules import localization
+        from modules.shared_cmd_options import cmd_opts
+
+        localization.list_localizations(cmd_opts.localizations_dir)
+    except Exception:
+        pass
+
+
 # Run at module import. Forge loads extension scripts during startup,
 # after the default settings have been registered (so `localization`
 # exists in `data_labels`) but before the Settings UI is constructed
-# (so reassigning `.section` and prepending to `user_quicksettings_list`
+# (so reassigning `.section` and prepending to `quicksettings_list`
 # are both picked up at render time).
 relocate_localization_setting()
 pin_to_quicksettings_once()
+force_localization_rescan()
