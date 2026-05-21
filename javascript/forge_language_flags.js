@@ -151,22 +151,7 @@
         }
         if (!ul) return;
         ul.classList.add("forge-language-options");
-        ul.querySelectorAll("li.item, [role='option']").forEach((li) => {
-            decorateOption(li);
-            // Bind a reload trigger directly to each option's click.
-            // This is the most reliable hook — fires the instant the
-            // user picks a new value, regardless of how Gradio
-            // dispatches its internal change event.
-            if (!li.dataset.forgeReloadBound) {
-                li.dataset.forgeReloadBound = "1";
-                li.addEventListener("click", () => {
-                    // 700 ms gives Forge's run_settings_single() time to
-                    // persist the new value to config.json before we
-                    // tear the page down.
-                    setTimeout(triggerReload, 700);
-                });
-            }
-        });
+        ul.querySelectorAll("li.item, [role='option']").forEach(decorateOption);
     }
 
     function updateInputIndicator(dropdown) {
@@ -224,31 +209,31 @@
             input.addEventListener("focus", refreshOpen);
             input.addEventListener("input", refreshOpen);
 
-            // Quicksettings change-handlers in Forge call
-            // run_settings_single() which only saves the value to
-            // config.json — they do NOT trigger a UI reload. For
-            // `localization` that means the translations never get
-            // applied unless the user manually clicks Reload UI.
+            // Forge's quicksettings change-handlers save the new
+            // value to config.json via run_settings_single() but do
+            // NOT trigger a UI reload — for `localization` that
+            // means the new translation file is never applied
+            // unless the user manually clicks "Reload UI".
             //
-            // Gradio dispatches its 'change' event in a custom way
-            // that doesn't always surface as a real DOM `change`
-            // event on the underlying input. We hedge with three
-            // event hooks and let the lastValue compare deduplicate:
-            //   1. The most reliable: click on a <li.item> option
-            //      (bound in decorateOpenList).
-            //   2. DOM 'change' on the input (works on some builds).
-            //   3. DOM 'blur' on the input (fires when user picks an
-            //      option and focus moves away).
+            // Gradio's Dropdown component dispatches its change
+            // events in a non-standard way (Svelte internals, not
+            // real DOM 'change' on the underlying input), which
+            // made every event-based hook we tried miss the
+            // non-English selections. Polling the input value every
+            // 200 ms is bulletproof: regardless of HOW Gradio
+            // updates the displayed value, we detect the change.
             let lastValue = input.value;
-            const onMaybeChanged = () => {
-                updateInputIndicator(dropdown);
-                if (input.value !== lastValue) {
-                    lastValue = input.value;
+            setInterval(() => {
+                const v = input.value;
+                if (v !== lastValue) {
+                    lastValue = v;
+                    updateInputIndicator(dropdown);
+                    // 700 ms gives Forge's run_settings_single()
+                    // time to persist the new value to config.json
+                    // before we reload.
                     setTimeout(triggerReload, 700);
                 }
-            };
-            input.addEventListener("change", onMaybeChanged);
-            input.addEventListener("blur", onMaybeChanged);
+            }, 200);
         }
     }
 

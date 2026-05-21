@@ -138,20 +138,22 @@ the **top-right corner of the WebUI** (next to UI Preset / Checkpoint
 / VAE / Diffusion in Low Bits). To pick a language:
 
 1. Look at the top bar of the WebUI. You will see a dropdown labelled
-   **Localization** on the far right, with a flag chip inside.
+   **Language** on the far right, with a flag chip inside.
 2. Click it. You will see the seven options, each with its national
-   flag:
+   flag and the language's name in its own language (autoglottonyms):
    - 🇬🇧 English  *(source, no JSON loaded — internal value: "None")*
-   - 🇮🇹 it_IT
-   - 🇪🇸 es_ES
-   - 🇫🇷 fr_FR
-   - 🇩🇪 de_DE
-   - 🇨🇳 zh_CN
-   - 🇯🇵 ja_JP
+   - 🇮🇹 Italiano
+   - 🇪🇸 Español
+   - 🇫🇷 Français
+   - 🇩🇪 Deutsch
+   - 🇨🇳 简体中文
+   - 🇯🇵 日本語
 
-   *The English label auto-translates to "Inglese" / "Inglés" /
-   "Anglais" / "Englisch" / "英语" / "英語" when you are in
-   another locale.*
+   *The dropdown's "Language" field label and the "English" option
+   auto-translate to your active locale (Lingua / Idioma / Langue /
+   Sprache / 语言 / 言語, and Inglese / Inglés / Anglais / Englisch /
+   英语 / 英語). The other autoglottonyms keep their native form by
+   convention.*
 3. Pick the locale you want.
 
 The UI **auto-reloads** within a second — no need to click anything

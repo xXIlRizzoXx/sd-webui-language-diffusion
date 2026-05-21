@@ -43,6 +43,23 @@ from modules import shared
 _EXT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _FIRST_RUN_MARKER = os.path.join(_EXT_ROOT, ".first-run-pinned")
 
+# Display labels for the language dropdown — autoglottonyms (the name
+# of each language in its own language) plus "English" for the
+# source-language option. The bundled locale JSONs translate
+# "English" itself (Inglese / Inglés / Anglais / Englisch / 英语 /
+# 英語) so the dropdown's source-language entry follows the active
+# UI language. The other entries are kept in their native form — the
+# universal convention for language pickers.
+LOCALE_DISPLAY_NAMES = {
+    "None": "English",
+    "it_IT": "Italiano",
+    "es_ES": "Español",
+    "fr_FR": "Français",
+    "de_DE": "Deutsch",
+    "zh_CN": "简体中文",
+    "ja_JP": "日本語",
+}
+
 
 def relocate_localization_setting() -> None:
     """Hide the localization setting from the Settings page sidebar
@@ -94,31 +111,37 @@ def relocate_localization_setting() -> None:
     if info.label != "Language":
         info.label = "Language"
 
-    # ── 'None' → 'English' display label ───────────────────────
-    # `component_args` may be a dict literal OR a zero-arg callable
-    # that returns a dict; Forge uses the callable form for the
-    # localization setting so the choices update when JSONs are
-    # added or removed at runtime.
+    # ── autoglottonym choice labels ───────────────────────────
+    # Replace each raw choice ("None" / "it_IT" / "es_ES" / ...) with
+    # a (display_label, value) tuple from LOCALE_DISPLAY_NAMES. The
+    # persisted value column stays unchanged, so Forge's internal
+    # logic — which keys on the raw locale code — keeps working.
+    #
+    # We wrap the `component_args` callable so this transformation
+    # runs every time Forge re-reads the dropdown's choices (which it
+    # does whenever the user adds or removes a locale JSON at runtime).
     original_args = info.component_args
 
     # Guard against re-wrapping if we have already patched this entry.
     if getattr(original_args, "_language_diffusion_patched", False):
         return
 
-    def _rename_none_to_english(choices):
+    def _to_autoglottonym_choices(choices):
         out = []
         for c in choices:
-            if c == "None":
-                out.append(("English", "None"))
-            else:
+            if isinstance(c, tuple):
+                # Already (label, value) — leave alone.
                 out.append(c)
+                continue
+            label = LOCALE_DISPLAY_NAMES.get(c, c)
+            out.append((label, c))
         return out
 
     if callable(original_args):
 
         def patched_args():
             d = dict(original_args())  # copy to avoid mutating cached state
-            d["choices"] = _rename_none_to_english(d.get("choices", []))
+            d["choices"] = _to_autoglottonym_choices(d.get("choices", []))
             return d
 
         patched_args._language_diffusion_patched = True
@@ -126,8 +149,8 @@ def relocate_localization_setting() -> None:
 
     elif isinstance(original_args, dict):
         new_args = dict(original_args)
-        new_args["choices"] = _rename_none_to_english(new_args.get("choices", []))
-        # Build a callable so we can set our marker attribute on it.
+        new_args["choices"] = _to_autoglottonym_choices(new_args.get("choices", []))
+
         def patched_args(_new=new_args):
             return _new
 
