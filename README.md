@@ -136,12 +136,10 @@ After installing, the six languages are now **registered** with Forge,
 but the UI is still in English. You need to pick a language once.
 
 1. Click the **Settings** tab in the top navigation.
-2. In the left sidebar of Settings, look for the **Language** entry
-   (the extension promotes the language picker out of the
-   `User Interface` sub-section and gives it its own sidebar
-   slot — the section label auto-translates to "Lingua" / "Idioma"
-   / "Langue" / "Sprache" / "语言" / "言語" once a locale is active).
-3. Click **Language** in the sidebar.
+2. In the left sidebar of Settings, scroll down to the **Extensions**
+   group — the same place where ADetailer, Civitai Helper, Image
+   Browser and other installed extensions appear.
+3. Click **Language Diffusion** inside the Extensions group.
 4. Click the **Localization** dropdown. You will see the seven
    options, each with its flag:
    - 🇬🇧 None  *(English source, no JSON loaded)*
@@ -286,10 +284,14 @@ it does not invent a new system. The flow is:
 
 1. **At extension import**: Forge loads
    `scripts/language_diffusion_setup.py`, which immediately reassigns
-   the `section` attribute of the existing `localization` setting in
-   `shared.opts.data_labels` from the default `("ui", "User Interface")`
-   to `("language", "Language")`. The Settings page is built **after**
-   this, so the sidebar picks up the new section.
+   the `section` of the existing `localization` setting in
+   `shared.opts.data_labels` to
+   `("language_diffusion", "Language Diffusion")` and sets its
+   `category_id` to `None`. Forge's `modules/options.py` then groups
+   it under the **Extensions** sidebar header (the fallback for any
+   setting whose category is not in the registered categories map).
+   The Settings page is built after this runs, so the sidebar picks
+   up the new location.
 
 2. **At startup**: Forge calls `modules.localization.list_localizations()`,
    which scans these folders for `*.json` files:
@@ -393,13 +395,19 @@ third-party Python dependencies — the only runtime Python lives in
 Runs once at Forge startup and performs two UI rearrangements:
 
 1. **Sidebar section relocation.** Looks up the existing `localization`
-   setting in `shared.opts.data_labels`, then reassigns its `.section`
-   attribute from the default `("ui", "User Interface")` to
-   `("language", "Language")`. Forge's Settings page is built after
-   this runs, so the **Language** sidebar entry appears with the
-   localization dropdown inside it — instead of leaving the picker
-   buried in the `User Interface` sub-section where Forge would
-   render "User Interface" twice (group header + setting label).
+   setting in `shared.opts.data_labels`, then:
+
+   - Reassigns its `.section` attribute to
+     `("language_diffusion", "Language Diffusion")`.
+   - Sets its `.category_id` to `None`.
+
+   Forge's grouping logic in `modules/options.py` reads
+   `OptionInfo.category_id`; when it is `None` or not registered in
+   the global `categories.mapping`, the section is placed under the
+   **Extensions** top-level header. So the Localization picker ends
+   up grouped with ADetailer, Civitai Helper, Image Browser, and
+   every other installed extension — exactly where users expect to
+   find extension-shipped settings.
 
 2. **First-install quicksettings auto-pin.** Checks for a
    `.first-run-pinned` marker file in the extension folder; if absent,

@@ -3,24 +3,30 @@ sd-webui-language-diffusion — Settings sidebar relocation + quicksettings auto
 
 This script does two things at Forge startup:
 
-1. **Sidebar section relocation.** Moves the `localization` setting from
-   its default `User Interface` group into a dedicated `Language`
-   sidebar section, so the picker has its own entry parallel to
-   `User Interface`, `Presets`, `ADetailer`, etc. The section label
-   "Language" is auto-translated by the bundled locale dictionaries
-   (Lingua / Idioma / Langue / Sprache / 语言 / 言語).
+1. **Sidebar section relocation.** Moves the `localization` setting
+   from its default `User Interface` / `ui` category into the
+   **Extensions** sidebar group, alongside ADetailer, Civitai Helper,
+   Image Browser, and other installed extensions. The sub-entry is
+   labelled "Language Diffusion" — matching the extension's name in
+   the same way ADetailer's sub-entry is labelled "ADetailer".
+
+   Forge's grouping logic in `modules/options.py` reads
+   `OptionInfo.category_id`; when it is `None` or not registered in
+   the global `categories.mapping`, the section is placed under the
+   "Extensions" top-level header. We use this by setting
+   `category_id = None` on the existing `localization` OptionInfo.
 
 2. **Quicksettings auto-pin (first install only).** Appends
    `localization` to `shared.opts.user_quicksettings_list` so the
    language dropdown appears in the quicksettings row at the top of
-   the WebUI (next to UI Preset / Checkpoint / VAE) without any manual
-   configuration. Tracked by a `.first-run-pinned` marker file inside
-   the extension folder:
+   the WebUI (next to UI Preset / Checkpoint / VAE) without any
+   manual configuration. Tracked by a `.first-run-pinned` marker file
+   inside the extension folder:
      - First install: pin added.
      - User removes the pin later via Settings → User Interface →
        Quicksettings list: stays removed (marker prevents re-pinning).
-     - User uninstalls and later reinstalls: marker is gone with the
-       folder, so pin gets re-added on next launch.
+     - User uninstalls and reinstalls: marker is gone with the folder,
+       so pin gets re-added on next launch.
 
 Both actions are pure UI reorganisation. The setting key, dropdown
 options, persistence, Apply-Settings-then-Reload-UI flow, and PNG
@@ -37,7 +43,17 @@ _FIRST_RUN_MARKER = os.path.join(_EXT_ROOT, ".first-run-pinned")
 
 
 def relocate_localization_setting() -> None:
-    """Move the localization setting into a dedicated 'Language' section.
+    """Move the localization setting under the 'Extensions' sidebar
+    group, with sub-label 'Language Diffusion'.
+
+    Forge's `modules/options.py` resolves the top-level sidebar group
+    from `OptionInfo.category_id`:
+        category = categories.mapping.get(item.category_id)
+        category = "Extensions" if category is None else category.label
+
+    By setting `category_id = None`, the section is automatically
+    placed under "Extensions" alongside other installed extensions.
+    The sub-entry label comes from `OptionInfo.section[1]`.
 
     No-op on forks where the setting isn't registered. Idempotent.
     """
@@ -45,11 +61,14 @@ def relocate_localization_setting() -> None:
     if info is None:
         return
 
-    target = ("language", "Language")
-    if info.section == target:
+    target_section = ("language_diffusion", "Language Diffusion")
+    target_category = None  # None → grouped under "Extensions"
+
+    if info.section == target_section and info.category_id == target_category:
         return
 
-    info.section = target
+    info.section = target_section
+    info.category_id = target_category
 
 
 def pin_to_quicksettings_once() -> None:
