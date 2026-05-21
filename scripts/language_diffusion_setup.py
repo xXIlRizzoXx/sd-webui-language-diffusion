@@ -87,6 +87,13 @@ def relocate_localization_setting() -> None:
     if info.category_id is not None:
         info.category_id = None
 
+    # ── rename visible field label "Localization" → "Language" ──
+    # "Language" is a key in every bundled locale JSON
+    # ("Lingua" / "Idioma" / "Langue" / "Sprache" / "语言" / "言語"),
+    # so the dropdown label auto-translates with the rest of the UI.
+    if info.label != "Language":
+        info.label = "Language"
+
     # ── 'None' → 'English' display label ───────────────────────
     # `component_args` may be a dict literal OR a zero-arg callable
     # that returns a dict; Forge uses the callable form for the

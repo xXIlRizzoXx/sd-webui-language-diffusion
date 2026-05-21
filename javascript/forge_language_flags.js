@@ -151,7 +151,22 @@
         }
         if (!ul) return;
         ul.classList.add("forge-language-options");
-        ul.querySelectorAll("li.item, [role='option']").forEach(decorateOption);
+        ul.querySelectorAll("li.item, [role='option']").forEach((li) => {
+            decorateOption(li);
+            // Bind a reload trigger directly to each option's click.
+            // This is the most reliable hook — fires the instant the
+            // user picks a new value, regardless of how Gradio
+            // dispatches its internal change event.
+            if (!li.dataset.forgeReloadBound) {
+                li.dataset.forgeReloadBound = "1";
+                li.addEventListener("click", () => {
+                    // 700 ms gives Forge's run_settings_single() time to
+                    // persist the new value to config.json before we
+                    // tear the page down.
+                    setTimeout(triggerReload, 700);
+                });
+            }
+        });
     }
 
     function updateInputIndicator(dropdown) {
@@ -214,19 +229,26 @@
             // config.json — they do NOT trigger a UI reload. For
             // `localization` that means the translations never get
             // applied unless the user manually clicks Reload UI.
-            // We close the gap by listening for the dropdown's
-            // change event ourselves and reloading the page once
-            // Forge has had a beat to persist the new value.
+            //
+            // Gradio dispatches its 'change' event in a custom way
+            // that doesn't always surface as a real DOM `change`
+            // event on the underlying input. We hedge with three
+            // event hooks and let the lastValue compare deduplicate:
+            //   1. The most reliable: click on a <li.item> option
+            //      (bound in decorateOpenList).
+            //   2. DOM 'change' on the input (works on some builds).
+            //   3. DOM 'blur' on the input (fires when user picks an
+            //      option and focus moves away).
             let lastValue = input.value;
-            input.addEventListener("change", () => {
+            const onMaybeChanged = () => {
                 updateInputIndicator(dropdown);
                 if (input.value !== lastValue) {
                     lastValue = input.value;
-                    // 700 ms gives Forge time to write config.json
-                    // before we tear the page down.
                     setTimeout(triggerReload, 700);
                 }
-            });
+            };
+            input.addEventListener("change", onMaybeChanged);
+            input.addEventListener("blur", onMaybeChanged);
         }
     }
 
