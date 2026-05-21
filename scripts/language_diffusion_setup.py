@@ -72,27 +72,40 @@ def relocate_localization_setting() -> None:
 
 
 def pin_to_quicksettings_once() -> None:
-    """On first install only, append 'localization' to the user's
-    quicksettings list so the language picker shows up in the top bar.
+    """On first install only, append 'localization' to Forge's
+    `quicksettings_list` so the language picker shows up in the top
+    bar (rightmost, via the right-pin CSS rule in style.css).
 
-    The marker file inside the extension folder records that we've
-    done the auto-pin once, so subsequent launches do not re-add the
-    entry — meaning the user can remove it from the list at any time
-    without us fighting them.
+    Forge stores the quicksettings list as a Python list (the
+    OptionInfo default is `[]`, see modules/shared_options.py). The
+    DropdownMulti component handles it as such. We append the
+    'localization' identifier to that list, persist the config, and
+    drop a marker file inside the extension folder so subsequent
+    launches do not re-pin (letting the user remove the entry from
+    the list later if they prefer).
     """
     if os.path.exists(_FIRST_RUN_MARKER):
         return
 
     try:
-        current = shared.opts.user_quicksettings_list or ""
+        current = shared.opts.quicksettings_list
     except Exception:
         # Setting not registered on this WebUI fork.
         return
 
-    items = [s.strip() for s in current.split(",") if s.strip()]
+    # `quicksettings_list` is a list since Forge uses DropdownMulti for
+    # it. Some older A1111-derived forks stored it as a comma-separated
+    # string — be defensive and accept either form.
+    if isinstance(current, list):
+        items = list(current)  # copy to avoid mutating in place
+    elif isinstance(current, str):
+        items = [s.strip() for s in current.split(",") if s.strip()]
+    else:
+        return  # Unknown shape; bail out rather than corrupt the config.
+
     if "localization" not in items:
         items.append("localization")
-        shared.opts.user_quicksettings_list = ", ".join(items)
+        shared.opts.quicksettings_list = items
         # Persist immediately so the change survives the launch even
         # if the user never clicks "Apply settings" again.
         try:
@@ -111,7 +124,7 @@ def pin_to_quicksettings_once() -> None:
                 "This file prevents re-pinning 'localization' to the "
                 "quicksettings row on subsequent launches, so removing "
                 "the entry via Settings > User Interface > Quicksettings "
-                "list stays removed.\n\n"
+                "List stays removed.\n\n"
                 "Delete this file to have the extension re-pin "
                 "'localization' on next launch.\n"
             )
