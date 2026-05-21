@@ -153,9 +153,18 @@ the **top-right corner of the WebUI** (next to UI Preset / Checkpoint
    "Anglais" / "Englisch" / "英语" / "英語" when you are in
    another locale.*
 3. Pick the locale you want.
-4. The WebUI must reload for the change to take effect:
-   - Click **Reload UI** at the bottom of the page (Forge's standard
-     reload button — same one you click after Apply settings).
+
+The UI **auto-reloads** within a second — no need to click anything
+else. The new language is applied immediately.
+
+> [!Note]
+> Forge's stock quicksettings handlers only save the new value to
+> `config.json`; they do not trigger a page reload. For most settings
+> that's fine, but `localization` needs a reload to swap the
+> translation file. This extension wires a small JS hook to the
+> dropdown's change event that calls `restart_reload()` automatically
+> ~700 ms after you pick a new language — long enough for Forge to
+> persist the change.
 
 > [!Note]
 > Language Diffusion deliberately keeps the Localization picker out
@@ -460,7 +469,8 @@ extension's own marker class.
 
 ### `javascript/forge_language_flags.js`
 
-The flag decorator. Self-contained IIFE (no exports). Architecture:
+The flag decorator + auto-reload trigger. Self-contained IIFE
+(no exports). Architecture:
 
 1. `LABEL_TO_CODE` — maps every label the dropdown might display (raw
    locale codes like `it_IT` plus autoglottonyms like `Italiano`) to a
@@ -476,14 +486,21 @@ The flag decorator. Self-contained IIFE (no exports). Architecture:
 5. `updateInputIndicator(dropdown)` — pins a flag chip inside the
    `.wrap` row of the closed input, matching the currently-selected
    value.
-6. `bindDropdown(dropdown)` — attaches click/focus/input listeners to
+6. `triggerReload()` — calls Forge's global `restart_reload()` when
+   available, otherwise `location.reload()`.
+7. `bindDropdown(dropdown)` — attaches click/focus/input listeners to
    the dropdown, so the option list gets decorated every time the user
-   opens it. Idempotent (the `data-forge-flag-bound` attribute guards
-   re-binding).
-7. `findDropdowns()` — locates all instances of the localization
+   opens it. Also adds a `change` listener on the input element that
+   fires `triggerReload()` 700 ms after the value changes. This is the
+   missing link in Forge's quicksettings flow: `run_settings_single()`
+   persists the new value to `config.json` but does not reload the
+   page, so without this hook the user has to manually click "Reload
+   UI" to actually see the new translation. Idempotent (the
+   `data-forge-flag-bound` attribute guards re-binding).
+8. `findDropdowns()` — locates all instances of the localization
    dropdown on the page by element id `setting_localization` and by
    substring match on `id` (defensive against future Forge changes).
-8. `arm()` — bootstrap. On page load, polls for the dropdown to mount
+9. `arm()` — bootstrap. On page load, polls for the dropdown to mount
    (every 100 ms, up to 80 attempts = 8 seconds). Once found, binds
    and stops polling.
 

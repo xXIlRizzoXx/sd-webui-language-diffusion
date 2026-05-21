@@ -174,6 +174,22 @@
         row.appendChild(indicator);
     }
 
+    function triggerReload() {
+        // Forge defines restart_reload() globally; it shows a
+        // "Reloading..." overlay then calls location.reload() after 2s.
+        // Use it when available so the user sees a clear cue; otherwise
+        // fall back to a plain page reload.
+        try {
+            if (typeof restart_reload === "function") {
+                restart_reload();
+                return;
+            }
+        } catch (_) {
+            // ignore
+        }
+        location.reload();
+    }
+
     function bindDropdown(dropdown) {
         if (!dropdown || dropdown.dataset.forgeFlagBound) return;
         dropdown.dataset.forgeFlagBound = "1";
@@ -192,9 +208,25 @@
         if (input) {
             input.addEventListener("focus", refreshOpen);
             input.addEventListener("input", refreshOpen);
-            input.addEventListener("change", () =>
-                updateInputIndicator(dropdown),
-            );
+
+            // Quicksettings change-handlers in Forge call
+            // run_settings_single() which only saves the value to
+            // config.json — they do NOT trigger a UI reload. For
+            // `localization` that means the translations never get
+            // applied unless the user manually clicks Reload UI.
+            // We close the gap by listening for the dropdown's
+            // change event ourselves and reloading the page once
+            // Forge has had a beat to persist the new value.
+            let lastValue = input.value;
+            input.addEventListener("change", () => {
+                updateInputIndicator(dropdown);
+                if (input.value !== lastValue) {
+                    lastValue = input.value;
+                    // 700 ms gives Forge time to write config.json
+                    // before we tear the page down.
+                    setTimeout(triggerReload, 700);
+                }
+            });
         }
     }
 
