@@ -19,21 +19,18 @@
 (function () {
     "use strict";
 
-    // Map any displayed label (locale code OR autoglottonym, in any
-    // language) to a flag key. Includes:
-    //   - Locale codes ("it_IT", "es_ES", ...) for forks that don't
-    //     wrap choices in tuples.
-    //   - Autoglottonyms ("Italiano", "Español", ...).
-    //   - Translated forms of "English" ("Inglese", "Inglés", ...)
-    //     so the source-language option can be identified regardless
-    //     of which locale is currently active.
-    //
-    // Deliberately DOES NOT include "None" — that is the internal
-    // value of the source-language option, never displayed in the
-    // input thanks to the tuple choices `("English", "None")`. If we
-    // mapped "None" here, the polling guard would treat the brief
-    // transient value the dropdown shows on mount as a real language
-    // selection and trigger an infinite reload loop.
+    // Map any displayed label to a flag key. ONLY contains the
+    // user-visible labels — autoglottonyms ("Italiano", "Español",
+    // ...) plus translated forms of "English" ("Inglese", "Inglés",
+    // ...). Deliberately DOES NOT include:
+    //   - "None" — internal value, never displayed thanks to tuple
+    //     choices `("English", "None")`.
+    //   - Raw locale codes ("it_IT", "es_ES", ...) — Gradio briefly
+    //     shows the raw value when mounting the dropdown before the
+    //     (label, value) tuple resolution kicks in. If raw codes were
+    //     mapped here, the transition "it_IT" → "Italiano" during
+    //     mount would be misread as a user pick and trigger an
+    //     infinite reload loop.
     const LABEL_TO_CODE = {
         "English": "uk",
         "Inglese": "uk",       // English in it_IT
@@ -42,17 +39,11 @@
         "Englisch": "uk",      // English in de_DE
         "英语": "uk",           // English in zh_CN
         "英語": "uk",           // English in ja_JP
-        "it_IT": "it",
         "Italiano": "it",
-        "es_ES": "es",
         "Español": "es",
-        "fr_FR": "fr",
         "Français": "fr",
-        "de_DE": "de",
         "Deutsch": "de",
-        "zh_CN": "cn",
         "简体中文": "cn",
-        "ja_JP": "jp",
         "日本語": "jp",
     };
 
@@ -214,17 +205,33 @@
 
         updateInputIndicator(dropdown);
 
+        // The `userInteracted` flag is the most important guard
+        // against spurious reloads. It only flips to true once the
+        // user has actually touched the dropdown (clicked it open,
+        // focused the input, or used the keyboard). Until then, ALL
+        // value transitions are treated as part of Forge's normal
+        // mount lifecycle (empty → raw code → translated label →
+        // re-renders) and ignored.
+        let userInteracted = false;
+        const markInteracted = () => {
+            userInteracted = true;
+        };
+
         const refreshOpen = () => {
+            markInteracted();
             requestAnimationFrame(() => decorateOpenList(dropdown));
             setTimeout(() => decorateOpenList(dropdown), 120);
         };
         dropdown.addEventListener("click", refreshOpen);
+        dropdown.addEventListener("keydown", markInteracted);
+
         const input = dropdown.querySelector(
             "input[role='listbox'], input[role='combobox']",
         );
         if (input) {
             input.addEventListener("focus", refreshOpen);
             input.addEventListener("input", refreshOpen);
+            input.addEventListener("keydown", markInteracted);
 
             // Forge's quicksettings change-handlers save the new
             // value to config.json via run_settings_single() but do
@@ -234,24 +241,23 @@
             //
             // Gradio's Dropdown component dispatches its change
             // events in a non-standard way (Svelte internals, not
-            // real DOM 'change' on the underlying input), which
-            // made every event-based hook we tried miss the
-            // non-English selections. Polling the input value every
-            // 200 ms is bulletproof: regardless of HOW Gradio
-            // updates the displayed value, we detect the change.
+            // real DOM events on the underlying input). We poll the
+            // input value every 200 ms — bulletproof against whatever
+            // mechanism Gradio uses to update the visible value.
             //
-            // CRITICAL: only treat a value change as a real user
-            // selection when BOTH the previous and new values are
-            // recognised language labels. Otherwise we'd misread
-            // the initial mount transitions ("" → "Italiano" populated
-            // by Gradio on page load, or "" → "None" → "English"
-            // briefly during English-mode mount) as user picks and
-            // reload forever in a tight loop.
-            //
-            // The `reloadScheduled` flag ensures that once we have
-            // queued a reload, further value changes in this page's
-            // lifetime are ignored — the page is about to go away
-            // anyway, no point watching its dying gasps.
+            // Three guards combine to suppress spurious reloads:
+            //   1. `userInteracted` — must be true. This is the main
+            //      defence against the initial-mount transition loop
+            //      (empty → "it_IT" → "Italiano") that previously
+            //      caused infinite reloads. The user hasn't touched
+            //      the dropdown yet, so nothing should reload.
+            //   2. `wasKnown && isKnown` — both the previous and new
+            //      values must be recognised language labels.
+            //      Excludes any transient state Gradio writes during
+            //      re-render.
+            //   3. `reloadScheduled` — once a reload is queued, no
+            //      further reloads are scheduled even if Gradio keeps
+            //      mutating the input value before the reload fires.
             let lastValue = input.value;
             let reloadScheduled = false;
             const handle = setInterval(() => {
@@ -265,7 +271,7 @@
                     const isKnown = codeFromLabel(v) !== null;
                     lastValue = v;
                     updateInputIndicator(dropdown);
-                    if (wasKnown && isKnown) {
+                    if (userInteracted && wasKnown && isKnown) {
                         reloadScheduled = true;
                         // 700 ms gives Forge's run_settings_single()
                         // time to persist the new value to config.json
