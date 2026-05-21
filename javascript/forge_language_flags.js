@@ -19,12 +19,24 @@
 (function () {
     "use strict";
 
-    // Map any displayed label (locale code OR autoglottonym) to a flag key.
-    // Forge's stock dropdown shows raw codes; we still accept autoglottonyms
-    // in case another extension rewrites the labels.
+    // Map any displayed label (locale code OR autoglottonym, in any
+    // language) to a flag key. Includes:
+    //   - "None" (Forge's stock raw value)
+    //   - Locale codes ("it_IT", "es_ES", ...) for forks that don't
+    //     wrap choices in tuples.
+    //   - Autoglottonyms ("Italiano", "Español", ...).
+    //   - Translated forms of "English" ("Inglese", "Inglés", ...)
+    //     so the source-language option can be identified regardless
+    //     of which locale is currently active.
     const LABEL_TO_CODE = {
         "None": "uk",
         "English": "uk",
+        "Inglese": "uk",       // English in it_IT
+        "Inglés": "uk",        // English in es_ES
+        "Anglais": "uk",       // English in fr_FR
+        "Englisch": "uk",      // English in de_DE
+        "英语": "uk",           // English in zh_CN
+        "英語": "uk",           // English in ja_JP
         "it_IT": "it",
         "Italiano": "it",
         "es_ES": "es",
@@ -222,16 +234,27 @@
             // non-English selections. Polling the input value every
             // 200 ms is bulletproof: regardless of HOW Gradio
             // updates the displayed value, we detect the change.
+            //
+            // CRITICAL: only treat a value change as a real user
+            // selection when BOTH the previous and new values are
+            // recognised language labels. Otherwise we'd misread
+            // the initial mount ("" → "Italiano" populated by
+            // Gradio on page load) as a user pick and reload
+            // forever in a tight loop.
             let lastValue = input.value;
             setInterval(() => {
                 const v = input.value;
                 if (v !== lastValue) {
+                    const wasKnown = codeFromLabel(lastValue) !== null;
+                    const isKnown = codeFromLabel(v) !== null;
                     lastValue = v;
                     updateInputIndicator(dropdown);
-                    // 700 ms gives Forge's run_settings_single()
-                    // time to persist the new value to config.json
-                    // before we reload.
-                    setTimeout(triggerReload, 700);
+                    if (wasKnown && isKnown) {
+                        // 700 ms gives Forge's run_settings_single()
+                        // time to persist the new value to config.json
+                        // before we reload.
+                        setTimeout(triggerReload, 700);
+                    }
                 }
             }, 200);
         }
