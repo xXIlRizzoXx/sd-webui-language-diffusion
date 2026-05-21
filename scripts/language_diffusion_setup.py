@@ -249,6 +249,53 @@ def force_localization_rescan() -> None:
         pass
 
 
+def register_reload_on_localization_change() -> None:
+    """Re-build Forge's cached <head> HTML whenever `localization`
+    changes, so the new JSON contents are injected into
+    `window.localization` on the next browser request.
+
+    Why this is needed:
+
+    Forge generates the html `<head>` block once at startup via
+    `modules.ui_gradio_extensions.reload_javascript()`. That function
+    calls `localization_js(shared.opts.localization)`, captures the
+    result in a local variable `js`, and binds a closure as Gradio's
+    `TemplateResponse`. Every subsequent browser fetch of the WebUI
+    page reuses that captured `js` — so even after the user changes
+    the language via the quicksettings dropdown and config.json is
+    updated to e.g. `localization="de_DE"`, the cached head still
+    says `window.localization = {<italian contents>}`.
+
+    `modules/ui_settings.py:253` re-invokes `reload_javascript()`
+    after a Settings-page Apply button click, but NOT after a
+    quicksettings change (`run_settings_single`). We bridge that gap
+    by registering an `onchange` callback on the `localization`
+    option: `opts.set(key, value)` invokes `option.onchange()`
+    automatically, so when run_settings_single saves the new locale,
+    our callback fires and rebuilds the cached head.
+
+    The browser's subsequent `location.reload()` (triggered by our
+    forge_language_flags.js polling) then fetches the fresh head
+    with the correct JSON inlined.
+    """
+    try:
+        from modules import shared as _shared
+
+        def _on_localization_change():
+            try:
+                from modules.ui_gradio_extensions import reload_javascript
+                reload_javascript()
+            except Exception:
+                pass
+
+        # opts.onchange(key, func, call=True) — call=True would run the
+        # callback once immediately, which we want to avoid (the head
+        # has already been built once correctly at boot).
+        _shared.opts.onchange("localization", _on_localization_change, call=False)
+    except Exception:
+        pass
+
+
 # Run at module import. Forge loads extension scripts during startup,
 # after the default settings have been registered (so `localization`
 # exists in `data_labels`) but before the Settings UI is constructed
@@ -257,3 +304,4 @@ def force_localization_rescan() -> None:
 relocate_localization_setting()
 pin_to_quicksettings_once()
 force_localization_rescan()
+register_reload_on_localization_change()
