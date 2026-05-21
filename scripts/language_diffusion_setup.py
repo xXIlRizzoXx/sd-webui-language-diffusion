@@ -1,37 +1,39 @@
 """
-sd-webui-language-diffusion — Settings sidebar relocation + quicksettings auto-pin.
+sd-webui-language-diffusion — UI setup: top-bar picker only, no Settings entry.
 
-This script does two things at Forge startup:
+This script does three things at Forge startup:
 
-1. **Sidebar section relocation.** Moves the `localization` setting
-   from its default `User Interface` / `ui` category into the
-   **Extensions** sidebar group, alongside ADetailer, Civitai Helper,
-   Image Browser, and other installed extensions. The sub-entry is
-   labelled "Language Diffusion" — matching the extension's name in
-   the same way ADetailer's sub-entry is labelled "ADetailer".
+1. **Hide the Localization setting from the Settings page.** Sets the
+   first element of the OptionInfo's `section` tuple to `None`.
+   Forge's `modules/ui_settings.py` interprets a `None` section_id
+   as "skip this setting" — neither the sidebar entry nor the
+   right-pane field are rendered. The setting still works in
+   quicksettings because that loop ignores `section[0]`.
 
-   Forge's grouping logic in `modules/options.py` reads
-   `OptionInfo.category_id`; when it is `None` or not registered in
-   the global `categories.mapping`, the section is placed under the
-   "Extensions" top-level header. We use this by setting
-   `category_id = None` on the existing `localization` OptionInfo.
+2. **Rename 'None' to 'English' in the dropdown.** Wraps the
+   OptionInfo's `component_args` callable so the choices list now
+   contains `("English", "None")` as a (label, value) tuple in place
+   of the raw `"None"` string. The visible label "English" is
+   auto-translated by the bundled locale JSONs (Inglese / Inglés /
+   Anglais / Englisch / 英语 / 英語), while the underlying persisted
+   value remains "None" for compatibility with Forge's existing
+   "no JSON loaded → English source strings" semantics.
 
-2. **Quicksettings auto-pin (first install only).** Appends
-   `localization` to `shared.opts.user_quicksettings_list` so the
+3. **Auto-pin to quicksettings (first install only).** Appends
+   `localization` to `shared.opts.quicksettings_list` so the
    language dropdown appears in the quicksettings row at the top of
-   the WebUI (next to UI Preset / Checkpoint / VAE) without any
-   manual configuration. Tracked by a `.first-run-pinned` marker file
-   inside the extension folder:
+   the WebUI (next to UI Preset / Checkpoint / VAE). Tracked by a
+   `.first-run-pinned` marker file inside the extension folder:
      - First install: pin added.
      - User removes the pin later via Settings → User Interface →
-       Quicksettings list: stays removed (marker prevents re-pinning).
+       Quicksettings List: stays removed (marker prevents re-pinning).
      - User uninstalls and reinstalls: marker is gone with the folder,
        so pin gets re-added on next launch.
 
-Both actions are pure UI reorganisation. The setting key, dropdown
-options, persistence, Apply-Settings-then-Reload-UI flow, and PNG
-infotext format are all unchanged. Disabling the extension restores
-the upstream layout.
+All three actions are pure UI reorganisation. The setting key,
+dropdown options, persistence, Apply-Settings-then-Reload-UI flow,
+and PNG infotext format are unchanged. Disabling the extension
+restores the upstream layout entirely.
 """
 
 import os
@@ -43,21 +45,22 @@ _FIRST_RUN_MARKER = os.path.join(_EXT_ROOT, ".first-run-pinned")
 
 
 def relocate_localization_setting() -> None:
-    """Move the localization setting under the 'Extensions' sidebar
-    group, with sub-label 'Language Diffusion', and rename the 'None'
-    option to 'English' (auto-translated by the bundled locales).
+    """Hide the localization setting from the Settings page sidebar
+    (so it lives exclusively in the top-bar quicksettings dropdown)
+    and rename its 'None' option to 'English' for clarity.
 
-    Three changes are applied to the existing `OptionInfo`:
+    Two changes are applied to the existing `OptionInfo`:
 
-    1. `section` → `("language_diffusion", "Language Diffusion")`
-       — gives the picker a sub-entry under the Extensions group.
+    1. `section` → `(None, "Language Diffusion")`
+       — Forge's `modules/ui_settings.py` checks `item.section[0]`:
+         section_must_be_skipped = item.section[0] is None
+       and skips both the sidebar entry and the right-pane rendering
+       when that flag is True. The setting still works in the
+       quicksettings row because `add_quicksettings()` iterates
+       `opts.quicksettings_list` on a separate code path that doesn't
+       care about `section[0]`.
 
-    2. `category_id` → `None`
-       — Forge's `modules/options.py` falls back to "Extensions" as
-       the top-level header whenever the category isn't in the
-       registered categories map, so `None` lands the section there.
-
-    3. `component_args` wrapped so the choices list returns
+    2. `component_args` wrapped so the choices list returns
        `("English", "None")` as a (label, value) tuple in place of
        the raw string `"None"`. The visible label is "English"
        (auto-translated to Inglese / Inglés / Anglais / Englisch /
@@ -72,10 +75,15 @@ def relocate_localization_setting() -> None:
     if info is None:
         return
 
-    # ── sidebar location ────────────────────────────────────────
-    target_section = ("language_diffusion", "Language Diffusion")
+    # ── hide from Settings page (None section_id ⇒ skipped by Forge) ──
+    # Keep the label "Language Diffusion" in the tuple anyway so any
+    # debug tooling that reads `info.section[1]` still has a sensible
+    # name to display.
+    target_section = (None, "Language Diffusion")
     if info.section != target_section:
         info.section = target_section
+    # category_id is now irrelevant (no section tab will be built),
+    # but normalise it to None for cleanliness.
     if info.category_id is not None:
         info.category_id = None
 

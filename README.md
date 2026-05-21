@@ -132,16 +132,15 @@ For people without git:
 
 ## First-time setup
 
-After installing, the six languages are now **registered** with Forge,
-but the UI is still in English. You need to pick a language once.
+After installing, the six languages are now **registered** with Forge.
+On first launch, the extension also auto-pins the language picker to
+the **top-right corner of the WebUI** (next to UI Preset / Checkpoint
+/ VAE / Diffusion in Low Bits). To pick a language:
 
-1. Click the **Settings** tab in the top navigation.
-2. In the left sidebar of Settings, scroll down to the **Extensions**
-   group — the same place where ADetailer, Civitai Helper, Image
-   Browser and other installed extensions appear.
-3. Click **Language Diffusion** inside the Extensions group.
-4. Click the **Localization** dropdown. You will see the seven
-   options, each with its flag:
+1. Look at the top bar of the WebUI. You will see a dropdown labelled
+   **Localization** on the far right, with a flag chip inside.
+2. Click it. You will see the seven options, each with its national
+   flag:
    - 🇬🇧 English  *(source, no JSON loaded — internal value: "None")*
    - 🇮🇹 it_IT
    - 🇪🇸 es_ES
@@ -153,10 +152,16 @@ but the UI is still in English. You need to pick a language once.
    *The English label auto-translates to "Inglese" / "Inglés" /
    "Anglais" / "Englisch" / "英语" / "英語" when you are in
    another locale.*
-5. Pick the locale you want.
-6. Scroll back to the top of the Settings tab.
-7. Click **Apply settings** (yellow button, top left).
-8. Click **Reload UI** (orange button, right next to Apply settings).
+3. Pick the locale you want.
+4. The WebUI must reload for the change to take effect:
+   - Click **Reload UI** at the bottom of the page (Forge's standard
+     reload button — same one you click after Apply settings).
+
+> [!Note]
+> Language Diffusion deliberately keeps the Localization picker out
+> of the Settings page sidebar — the top-bar dropdown is the single
+> point of control for the entire extension. Less clutter, faster
+> access.
 
 The UI reloads. Once it comes back, every label, dropdown choice,
 setting description, and tooltip is translated.
@@ -287,15 +292,18 @@ Language Diffusion piggybacks on Forge's existing localization stack —
 it does not invent a new system. The flow is:
 
 1. **At extension import**: Forge loads
-   `scripts/language_diffusion_setup.py`, which immediately reassigns
-   the `section` of the existing `localization` setting in
-   `shared.opts.data_labels` to
-   `("language_diffusion", "Language Diffusion")` and sets its
-   `category_id` to `None`. Forge's `modules/options.py` then groups
-   it under the **Extensions** sidebar header (the fallback for any
-   setting whose category is not in the registered categories map).
-   The Settings page is built after this runs, so the sidebar picks
-   up the new location.
+   `scripts/language_diffusion_setup.py`, which immediately:
+   - Reassigns the `section` of the existing `localization` setting
+     in `shared.opts.data_labels` to `(None, "Language Diffusion")`.
+     Forge's `modules/ui_settings.py` skips any setting whose
+     `section[0]` is `None` — so the entry never appears in the
+     Settings page.
+   - Patches `component_args` so the dropdown choices render
+     `"None"` as the tuple `("English", "None")` — visible label
+     "English" (auto-translated), persisted value still "None".
+   - On first launch, appends `localization` to
+     `shared.opts.quicksettings_list` so the dropdown is rendered
+     in the top-right of the WebUI.
 
 2. **At startup**: Forge calls `modules.localization.list_localizations()`,
    which scans these folders for `*.json` files:
@@ -396,30 +404,30 @@ third-party Python dependencies — the only runtime Python lives in
 
 ### `scripts/language_diffusion_setup.py`
 
-Runs once at Forge startup and performs two UI rearrangements:
+Runs once at Forge startup and performs three UI rearrangements:
 
-1. **Sidebar section relocation.** Looks up the existing `localization`
-   setting in `shared.opts.data_labels`, then:
+1. **Hide from Settings page.** Reassigns the OptionInfo's `section`
+   to `(None, "Language Diffusion")`. Forge's
+   `modules/ui_settings.py` checks
+   `item.section[0] is None` and skips both the sidebar entry and
+   the right-pane component when that flag is True. So the
+   Localization dropdown disappears from Settings entirely — the
+   top-bar quicksettings is the only place to control the language.
 
-   - Reassigns its `.section` attribute to
-     `("language_diffusion", "Language Diffusion")`.
-   - Sets its `.category_id` to `None`.
+2. **Rename 'None' to 'English'.** Wraps the OptionInfo's
+   `component_args` callable so the choices list returns
+   `("English", "None")` as a (label, value) tuple in place of the
+   raw string `"None"`. The visible label "English" is
+   auto-translated by the bundled locale JSONs (Inglese / Inglés /
+   Anglais / Englisch / 英语 / 英語), while the persisted value
+   remains "None" for backwards compatibility.
 
-   Forge's grouping logic in `modules/options.py` reads
-   `OptionInfo.category_id`; when it is `None` or not registered in
-   the global `categories.mapping`, the section is placed under the
-   **Extensions** top-level header. So the Localization picker ends
-   up grouped with ADetailer, Civitai Helper, Image Browser, and
-   every other installed extension — exactly where users expect to
-   find extension-shipped settings.
-
-2. **First-install quicksettings auto-pin.** Checks for a
+3. **First-install quicksettings auto-pin.** Checks for a
    `.first-run-pinned` marker file in the extension folder; if absent,
-   appends `localization` to `shared.opts.user_quicksettings_list` and
-   immediately saves the config. Then creates the marker file so
-   subsequent launches do not re-add the pin — letting the user remove
-   it via the standard *Settings → User Interface → Quicksettings
-   list* field if they prefer.
+   appends `localization` to `shared.opts.quicksettings_list` and
+   immediately saves the config. Creates the marker file so subsequent
+   launches do not re-add the pin — letting the user remove it via
+   *Settings → User Interface → Quicksettings List* if they prefer.
 
 Pure UI reorganisation: the setting key, options, persistence,
 Apply-Settings-then-Reload-UI flow, and PNG infotext format are all
