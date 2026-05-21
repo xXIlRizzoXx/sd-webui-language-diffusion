@@ -21,15 +21,20 @@
 
     // Map any displayed label (locale code OR autoglottonym, in any
     // language) to a flag key. Includes:
-    //   - "None" (Forge's stock raw value)
     //   - Locale codes ("it_IT", "es_ES", ...) for forks that don't
     //     wrap choices in tuples.
     //   - Autoglottonyms ("Italiano", "Español", ...).
     //   - Translated forms of "English" ("Inglese", "Inglés", ...)
     //     so the source-language option can be identified regardless
     //     of which locale is currently active.
+    //
+    // Deliberately DOES NOT include "None" — that is the internal
+    // value of the source-language option, never displayed in the
+    // input thanks to the tuple choices `("English", "None")`. If we
+    // mapped "None" here, the polling guard would treat the brief
+    // transient value the dropdown shows on mount as a real language
+    // selection and trigger an infinite reload loop.
     const LABEL_TO_CODE = {
-        "None": "uk",
         "English": "uk",
         "Inglese": "uk",       // English in it_IT
         "Inglés": "uk",        // English in es_ES
@@ -238,11 +243,22 @@
             // CRITICAL: only treat a value change as a real user
             // selection when BOTH the previous and new values are
             // recognised language labels. Otherwise we'd misread
-            // the initial mount ("" → "Italiano" populated by
-            // Gradio on page load) as a user pick and reload
-            // forever in a tight loop.
+            // the initial mount transitions ("" → "Italiano" populated
+            // by Gradio on page load, or "" → "None" → "English"
+            // briefly during English-mode mount) as user picks and
+            // reload forever in a tight loop.
+            //
+            // The `reloadScheduled` flag ensures that once we have
+            // queued a reload, further value changes in this page's
+            // lifetime are ignored — the page is about to go away
+            // anyway, no point watching its dying gasps.
             let lastValue = input.value;
-            setInterval(() => {
+            let reloadScheduled = false;
+            const handle = setInterval(() => {
+                if (reloadScheduled) {
+                    clearInterval(handle);
+                    return;
+                }
                 const v = input.value;
                 if (v !== lastValue) {
                     const wasKnown = codeFromLabel(lastValue) !== null;
@@ -250,6 +266,7 @@
                     lastValue = v;
                     updateInputIndicator(dropdown);
                     if (wasKnown && isKnown) {
+                        reloadScheduled = true;
                         // 700 ms gives Forge's run_settings_single()
                         // time to persist the new value to config.json
                         // before we reload.
