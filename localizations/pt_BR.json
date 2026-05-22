@@ -204,7 +204,7 @@
     "Enabled for VAE (always tiled)": "Habilitado para VAE (sempre tiled)",
     "End generation immediately or after completing current batch": "Encerra a geração imediatamente ou após concluir o batch atual",
     "Ending job %s (%.2f seconds)": "Encerrando o trabalho %s (%.2f segundos)",
-    "Epsilon Scaling": "Epsilon Scaling",
+    "Epsilon Scaling": "Escalonamento Epsilon",
     "Eta": "Eta",
     "Eta DDIM": "Eta DDIM",
     "Eta for DDIM": "Eta para DDIM",
@@ -364,7 +364,7 @@
     "MaHiRo": "MaHiRo",
     "Make the video player loop the playback": "Faz o player de vídeo repetir a reprodução",
     "Mask": "Máscara",
-    "Mask blur": "Mask blur",
+    "Mask blur": "Desfoque da máscara",
     "Mask mode": "Modo de máscara",
     "Mask transparency": "Transparência da máscara",
     "Masked content": "Conteúdo mascarado",
@@ -954,8 +954,8 @@
     "webui": "webui",
     "when using the \"Only masked\" option": "ao usar a opção \"Only masked\"",
     "when using the Interrupt button, if generating more than one image, stop after the current generation of an image has finished instead of immediately": "ao usar o botão Interrupt, se estiver gerando mais de uma imagem, pare depois que a geração da imagem atual terminar em vez de imediatamente",
-    "workflow: %s, max: %d epochs": "workflow: %s, max: %d epochs",
-    "workflow: %s, max: %d iters": "workflow: %s, max: %d iters",
+    "workflow: %s, max: %d epochs": "workflow: %s, máx: %d epochs",
+    "workflow: %s, max: %d iters": "workflow: %s, máx: %d iters",
     "z-a": "z-a",
     "English": "Inglês"
 }

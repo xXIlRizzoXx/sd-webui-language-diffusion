@@ -954,8 +954,8 @@
     "webui": "webui",
     "when using the \"Only masked\" option": "al usar la opción \"Only masked\"",
     "when using the Interrupt button, if generating more than one image, stop after the current generation of an image has finished instead of immediately": "al usar el botón Interrupt, si se están generando más de una imagen, detener tras finalizar la generación actual en lugar de inmediatamente",
-    "workflow: %s, max: %d epochs": "workflow: %s, max: %d epochs",
-    "workflow: %s, max: %d iters": "workflow: %s, max: %d iters",
+    "workflow: %s, max: %d epochs": "workflow: %s, máx: %d epochs",
+    "workflow: %s, max: %d iters": "workflow: %s, máx: %d iters",
     "z-a": "z-a",
     "English": "Inglés"
 }
