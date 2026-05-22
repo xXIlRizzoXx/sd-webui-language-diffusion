@@ -58,6 +58,10 @@ LOCALE_DISPLAY_NAMES = {
     "de_DE": "Deutsch",
     "zh_CN": "简体中文",
     "ja_JP": "日本語",
+    "pt_BR": "Português",
+    "ru_RU": "Русский",
+    "ko_KR": "한국어",
+    "pl_PL": "Polski",
 }
 
 

@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-🇮🇹  🇪🇸  🇫🇷  🇩🇪  🇨🇳  🇯🇵
+🇮🇹  🇪🇸  🇫🇷  🇩🇪  🇨🇳  🇯🇵  🇧🇷  🇷🇺  🇰🇷  🇵🇱
 </p>
 
 <p align="center">
@@ -40,10 +40,11 @@
 **Language Diffusion** is an extension that adds full multilingual support
 to **Stable Diffusion WebUI Forge — Neo**. It ships:
 
-- **Six complete locale dictionaries** (Italian, Spanish, French, German,
-  Simplified Chinese, Japanese), each translating roughly 958 UI strings
-  end to end — labels, dropdown choices, settings descriptions, tooltips,
-  error messages, sub-tab names, modal text.
+- **Ten complete locale dictionaries** (Italian, Spanish, French, German,
+  Simplified Chinese, Japanese, Brazilian Portuguese, Russian, Korean,
+  Polish), each translating roughly 958 UI strings end to end — labels,
+  dropdown choices, settings descriptions, tooltips, error messages,
+  sub-tab names, modal text.
 - **Inline SVG national flags** decorating the localization dropdown so
   you can pick a language at a glance. The flags are vector graphics
   embedded in the JavaScript, so they render identically on Windows,
@@ -79,8 +80,12 @@ don't use it. Removing the extension folder fully uninstalls it.
 | Deutsch | `localizations/de_DE.json` | 🇩🇪 | full seed translation |
 | 简体中文 | `localizations/zh_CN.json` | 🇨🇳 | full seed translation |
 | 日本語 | `localizations/ja_JP.json` | 🇯🇵 | full seed translation |
+| Português (BR) | `localizations/pt_BR.json` | 🇧🇷 | full seed translation |
+| Русский | `localizations/ru_RU.json` | 🇷🇺 | full seed translation |
+| 한국어 | `localizations/ko_KR.json` | 🇰🇷 | full seed translation |
+| Polski | `localizations/pl_PL.json` | 🇵🇱 | full seed translation |
 
-Each non-English JSON is approximately 65–75 KB and contains every
+Each non-English JSON is approximately 65–80 KB and contains every
 English UI string that Forge's localization system can match against,
 mapped to its translation in that locale.
 
@@ -139,7 +144,7 @@ the **top-right corner of the WebUI** (next to UI Preset / Checkpoint
 
 1. Look at the top bar of the WebUI. You will see a dropdown labelled
    **Language** on the far right, with a flag chip inside.
-2. Click it. You will see the seven options, each with its national
+2. Click it. You will see the eleven options, each with its national
    flag and the language's name in its own language (autoglottonyms):
    - 🇬🇧 English  *(source, no JSON loaded — internal value: "None")*
    - 🇮🇹 Italiano
@@ -148,12 +153,17 @@ the **top-right corner of the WebUI** (next to UI Preset / Checkpoint
    - 🇩🇪 Deutsch
    - 🇨🇳 简体中文
    - 🇯🇵 日本語
+   - 🇧🇷 Português
+   - 🇷🇺 Русский
+   - 🇰🇷 한국어
+   - 🇵🇱 Polski
 
    *The dropdown's "Language" field label and the "English" option
    auto-translate to your active locale (Lingua / Idioma / Langue /
-   Sprache / 语言 / 言語, and Inglese / Inglés / Anglais / Englisch /
-   英语 / 英語). The other autoglottonyms keep their native form by
-   convention.*
+   Sprache / 语言 / 言語 / Idioma / Язык / 언어 / Język, and Inglese /
+   Inglés / Anglais / Englisch / 英语 / 英語 / Inglês / Английский /
+   영어 / Angielski). The other autoglottonyms keep their native form
+   by convention.*
 3. Pick the locale you want.
 
 The UI **auto-reloads** within a second — no need to click anything
@@ -397,12 +407,16 @@ sd-webui-language-diffusion/
 │   ├── forge_language_flags.js            ← flag decorator for the dropdown
 │   └── hints_i18n_patch.js                ← tooltip alias bridge
 └── localizations/
-    ├── it_IT.json    ← Italiano        ~72 KB
-    ├── es_ES.json    ← Español         ~74 KB
-    ├── fr_FR.json    ← Français        ~74 KB
-    ├── de_DE.json    ← Deutsch         ~72 KB
-    ├── zh_CN.json    ← Simplified CN   ~66 KB
-    └── ja_JP.json    ← 日本語           ~75 KB
+    ├── it_IT.json    ← Italiano                  ~72 KB
+    ├── es_ES.json    ← Español                   ~74 KB
+    ├── fr_FR.json    ← Français                  ~74 KB
+    ├── de_DE.json    ← Deutsch                   ~72 KB
+    ├── zh_CN.json    ← Simplified Chinese        ~66 KB
+    ├── ja_JP.json    ← 日本語                     ~75 KB
+    ├── pt_BR.json    ← Português (Brasil)        ~73 KB
+    ├── ru_RU.json    ← Русский                   ~85 KB
+    ├── ko_KR.json    ← 한국어                     ~70 KB
+    └── pl_PL.json    ← Polski                    ~74 KB
 ```
 
 ### `install.py`

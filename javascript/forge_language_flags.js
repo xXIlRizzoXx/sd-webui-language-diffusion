@@ -39,12 +39,20 @@
         "Englisch": "uk",      // English in de_DE
         "英语": "uk",           // English in zh_CN
         "英語": "uk",           // English in ja_JP
+        "Inglês": "uk",        // English in pt_BR
+        "Английский": "uk",    // English in ru_RU
+        "영어": "uk",           // English in ko_KR
+        "Angielski": "uk",     // English in pl_PL
         "Italiano": "it",
         "Español": "es",
         "Français": "fr",
         "Deutsch": "de",
         "简体中文": "cn",
         "日本語": "jp",
+        "Português": "br",
+        "Русский": "ru",
+        "한국어": "kr",
+        "Polski": "pl",
     };
 
     // Each entry is a compact SVG with a roughly 3:2 aspect ratio,
@@ -111,6 +119,41 @@
                 '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 20">' +
                     '<rect width="30" height="20" fill="#fff"/>' +
                     '<circle cx="15" cy="10" r="6" fill="#bc002d"/>' +
+                    "</svg>",
+            ),
+        br:
+            "data:image/svg+xml;utf8," +
+            encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 10">' +
+                    '<rect width="14" height="10" fill="#009C3B"/>' +
+                    '<polygon points="7,1 13,5 7,9 1,5" fill="#FFDF00"/>' +
+                    '<circle cx="7" cy="5" r="2" fill="#002776"/>' +
+                    "</svg>",
+            ),
+        ru:
+            "data:image/svg+xml;utf8," +
+            encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 6">' +
+                    '<rect width="9" height="2" fill="#fff"/>' +
+                    '<rect y="2" width="9" height="2" fill="#0039A6"/>' +
+                    '<rect y="4" width="9" height="2" fill="#D52B1E"/>' +
+                    "</svg>",
+            ),
+        kr:
+            "data:image/svg+xml;utf8," +
+            encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 20">' +
+                    '<rect width="30" height="20" fill="#fff"/>' +
+                    '<circle cx="15" cy="10" r="4" fill="#cd2e3a"/>' +
+                    '<path d="M11,10 a4,4 0 0 1 8,0 a2,2 0 0 1 -4,0 a2,2 0 0 0 -4,0 z" fill="#0047a0"/>' +
+                    "</svg>",
+            ),
+        pl:
+            "data:image/svg+xml;utf8," +
+            encodeURIComponent(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 5">' +
+                    '<rect width="8" height="2.5" fill="#fff"/>' +
+                    '<rect y="2.5" width="8" height="2.5" fill="#dc143c"/>' +
                     "</svg>",
             ),
     };
