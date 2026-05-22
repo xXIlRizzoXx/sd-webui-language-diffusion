@@ -613,6 +613,9 @@ translations still produce a working UI.
 
 ## Contributing translations
 
+> 📘 The full contributor guide is in [**CONTRIBUTING.md**](CONTRIBUTING.md).
+> The summary below is the short version.
+
 The translations are a **first pass**. Every locale is welcome — and
 genuinely needs — native-speaker refinement. If you're reading this
 in your native language and something sounds off, **your help would

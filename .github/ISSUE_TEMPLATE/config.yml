@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📖 Read the README first
+    url: https://github.com/xXIlRizzoXx/sd-webui-language-diffusion#readme
+    about: Installation, how the extension works, and how to contribute
+  - name: 💬 General question or discussion
+    url: https://github.com/xXIlRizzoXx/sd-webui-language-diffusion/issues/new
+    about: Open a blank issue for anything that doesn't fit the templates above
