@@ -14,6 +14,48 @@
 
 ---
 
+> [!Important]
+> ### 🙏 Native speakers — please help review!
+>
+> The ten locale dictionaries shipped here were **produced with
+> machine-assisted translation** and lightly sanity-checked. They are
+> functional but **not yet polished by native speakers**. If you read
+> any of these languages natively (especially if you use Stable
+> Diffusion in that language), it would be amazing if you could:
+>
+> - Skim through your locale's JSON file for awkward phrasings,
+>   mistranslations, or wrong tone.
+> - Suggest corrections — either via a Pull Request
+>   ([guide below](#contributing-translations)) or by opening an
+>   [Issue](https://github.com/xXIlRizzoXx/sd-webui-language-diffusion/issues)
+>   listing the keys you'd change and your suggestions.
+> - Flag entries that are **missing or wrong** — even single-line
+>   reports are welcome.
+> - Sign up to maintain your locale long-term if you'd like to —
+>   open an issue saying "I want to maintain `xx_XX`".
+>
+> Files to focus on, sorted by how much they would benefit from a
+> fresh native pass:
+>
+> | Locale | File | Coverage | What's needed |
+> |---|---|---|---|
+> | 🇮🇹 Italiano | [`it_IT.json`](localizations/it_IT.json) | ~88% | review polish |
+> | 🇪🇸 Español | [`es_ES.json`](localizations/es_ES.json) | ~88% | review polish |
+> | 🇫🇷 Français | [`fr_FR.json`](localizations/fr_FR.json) | ~88% | review polish |
+> | 🇩🇪 Deutsch | [`de_DE.json`](localizations/de_DE.json) | ~88% | review polish |
+> | 🇨🇳 简体中文 | [`zh_CN.json`](localizations/zh_CN.json) | ~88% | review polish |
+> | 🇯🇵 日本語 | [`ja_JP.json`](localizations/ja_JP.json) | ~88% | review polish |
+> | 🇧🇷 Português | [`pt_BR.json`](localizations/pt_BR.json) | ~88% | review polish, fresh translation |
+> | 🇷🇺 Русский | [`ru_RU.json`](localizations/ru_RU.json) | ~89% | review polish, fresh translation |
+> | 🇰🇷 한국어 | [`ko_KR.json`](localizations/ko_KR.json) | ~89% | review polish, fresh translation |
+> | 🇵🇱 Polski | [`pl_PL.json`](localizations/pl_PL.json) | ~88% | review polish, fresh translation |
+>
+> **Don't know a listed language but want to add a new one?** See
+> [Adding a brand-new language](#adding-a-brand-new-language).
+> Suggestions for which locale to add next are also welcome via Issue.
+
+---
+
 ## Table of contents
 
 1. [What this is](#what-this-is)
@@ -571,10 +613,23 @@ translations still produce a working UI.
 
 ## Contributing translations
 
-The translations are a **first pass**. Each locale is welcome — and
-expected — to receive native-speaker refinement over time.
+The translations are a **first pass**. Every locale is welcome — and
+genuinely needs — native-speaker refinement. If you're reading this
+in your native language and something sounds off, **your help would
+mean a lot.**
 
-### Fixing a single string
+### Three ways to contribute, smallest to largest
+
+#### A. Spot a typo, awkward phrasing, or wrong term
+
+Open an [Issue](https://github.com/xXIlRizzoXx/sd-webui-language-diffusion/issues/new)
+with the locale tag in the title (e.g. `[it_IT] fix Sampling
+description`) and tell me what to change. Even a one-liner like
+> "In `it_IT.json` the key `\"Generate\"` should be `\"Genera\"`, not
+> `\"Generare\"`."
+is hugely useful.
+
+#### B. Fix a single string yourself
 
 1. Open the locale file you want to edit (e.g. `localizations/it_IT.json`).
 2. Find the key whose translation you want to change.
@@ -587,6 +642,14 @@ expected — to receive native-speaker refinement over time.
 5. In Forge, click **Reload UI** (no need to restart the process).
 6. Verify your change.
 7. Open a Pull Request against this repository.
+
+#### C. Adopt a locale
+
+If you'd like to be the long-term native maintainer of one of the
+ten locales, open an [Issue](https://github.com/xXIlRizzoXx/sd-webui-language-diffusion/issues/new)
+titled `[locale_code] adoption` (e.g. `[de_DE] adoption`) and I'll
+add you as a co-maintainer for that file. You then get review credit
+on any future PR touching that locale.
 
 ### Translation guidelines
 
@@ -803,15 +866,20 @@ and prompts are untouched — the extension is purely a UI layer.
 
 ### Roadmap
 
-- More locales (Portuguese, Korean, Russian, Polish, ...) when
-  contributors step forward.
-- Native-speaker review pass on each existing locale.
+- **Native-speaker review pass** on each existing locale — see the
+  [Help Wanted banner](#-native-speakers--please-help-review) at
+  the top of this README. **This is the single biggest thing the
+  project needs.**
+- More locales when contributors step forward (Dutch, Turkish,
+  Vietnamese, Arabic, Hindi, ...). Open an Issue suggesting which
+  language to add next.
 - Optional: a tiny "Re-extract" script that updates the master
   English template from the latest upstream Forge, so locales can
   stay in sync as the UI evolves.
 
 If you have ideas, suggestions, or want to take on a locale, open
-an issue or send a PR.
+an issue or send a PR — see
+[Contributing translations](#contributing-translations).
 
 ---
 
@@ -833,6 +901,13 @@ This extension stands on the shoulders of:
 The extension code is released as open source — feel free to study,
 fork, learn from, and improve it. Translations are released for
 community use; please attribute and contribute back when you can.
+
+### Translation contributors
+
+> _Native-speaker reviewers will be acknowledged here as they help
+> improve the locale dictionaries. Open an
+> [Issue](https://github.com/xXIlRizzoXx/sd-webui-language-diffusion/issues)
+> or a PR — every fix counts!_
 
 > Issues, PRs, and bug reports very welcome at
 > [github.com/xXIlRizzoXx/sd-webui-language-diffusion](https://github.com/xXIlRizzoXx/sd-webui-language-diffusion).
