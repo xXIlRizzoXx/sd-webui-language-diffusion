@@ -84,9 +84,12 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
 
 - **Ten complete locale dictionaries** (Italian, Spanish, French, German,
   Simplified Chinese, Japanese, Brazilian Portuguese, Russian, Korean,
-  Polish), each translating roughly 958 UI strings end to end — labels,
+  Polish), each translating roughly 1100 UI strings end to end — labels,
   dropdown choices, settings descriptions, tooltips, error messages,
-  sub-tab names, modal text.
+  sub-tab names, modal text. Includes 138 keys covering every UI string
+  in the [ADetailer Ultimate](https://github.com/xXIlRizzoXx/adetailer-ultimate)
+  extension (when installed) so the ADetailer panel translates in place
+  with the rest of the UI.
 - **Inline SVG national flags** decorating the localization dropdown so
   you can pick a language at a glance. The flags are vector graphics
   embedded in the JavaScript, so they render identically on Windows,
@@ -127,9 +130,11 @@ don't use it. Removing the extension folder fully uninstalls it.
 | 한국어 | `localizations/ko_KR.json` | 🇰🇷 | full seed translation |
 | Polski | `localizations/pl_PL.json` | 🇵🇱 | full seed translation |
 
-Each non-English JSON is approximately 65–80 KB and contains every
+Each non-English JSON is approximately 75–95 KB and contains every
 English UI string that Forge's localization system can match against,
-mapped to its translation in that locale.
+mapped to its translation in that locale — both Forge core (~959 keys)
+and ADetailer Ultimate (~138 keys, used only if that extension is
+installed; harmless otherwise).
 
 ---
 
