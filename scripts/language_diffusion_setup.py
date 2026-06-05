@@ -300,9 +300,17 @@ def register_reload_on_localization_change() -> None:
         pass
 
 
+# ANSI colour applied to the active-language value in the startup banner.
+# Forge's own console logging already uses ANSI, so this renders fine in the
+# Stability Matrix console and modern terminals. Swap to "\033[94m" for blue.
+_BANNER_LANG_COLOR = "\033[92m"  # bright green
+_BANNER_COLOR_RESET = "\033[0m"
+
+
 def log_startup_state() -> None:
     """Print a friendly one-line banner to the Forge startup console so it
     is obvious that the extension loaded and which UI language is active.
+    The language value is highlighted in colour (green by default).
 
     Purely cosmetic — wrapped so it can never affect startup. Robust to the
     terminal encoding: native language names (日本語 / Русский / 简体中文 …)
@@ -325,14 +333,17 @@ def log_startup_state() -> None:
             n_locales = 0
         tail = f"  ·  {n_locales} locales available" if n_locales else ""
 
+        lang_hl = f"{_BANNER_LANG_COLOR}{lang}{_BANNER_COLOR_RESET}"
         try:
-            print(f"[Language Diffusion] loaded — UI language: {lang}{tail}")
+            print(f"[Language Diffusion] loaded — UI language: {lang_hl}{tail}")
         except UnicodeEncodeError:
             # Console can't encode the native name / fancy punctuation:
             # retry with an ASCII-only variant (bare code, plain dashes).
+            # The colour codes are ASCII, so they stay on the fallback too.
             safe_lang = "English (source strings)" if code == "None" else code
+            safe_hl = f"{_BANNER_LANG_COLOR}{safe_lang}{_BANNER_COLOR_RESET}"
             safe_tail = f" ({n_locales} locales available)" if n_locales else ""
-            print(f"[Language Diffusion] loaded -- UI language: {safe_lang}{safe_tail}")
+            print(f"[Language Diffusion] loaded -- UI language: {safe_hl}{safe_tail}")
     except Exception:
         pass
 
