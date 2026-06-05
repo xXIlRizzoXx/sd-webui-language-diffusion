@@ -300,6 +300,43 @@ def register_reload_on_localization_change() -> None:
         pass
 
 
+def log_startup_state() -> None:
+    """Print a friendly one-line banner to the Forge startup console so it
+    is obvious that the extension loaded and which UI language is active.
+
+    Purely cosmetic — wrapped so it can never affect startup. Robust to the
+    terminal encoding: native language names (日本語 / Русский / 简体中文 …)
+    fall back to the bare locale code if the console can't encode them
+    (e.g. a legacy cp1252 Windows terminal), so the line always prints.
+    """
+    try:
+        code = getattr(shared.opts, "localization", None) or "None"
+        if code == "None":
+            lang = "English (source strings)"
+        else:
+            lang = f"{LOCALE_DISPLAY_NAMES.get(code, code)} ({code})"
+
+        # How many locale JSONs Forge can actually see (root + extensions).
+        try:
+            from modules import localization
+
+            n_locales = len(localization.localizations)
+        except Exception:
+            n_locales = 0
+        tail = f"  ·  {n_locales} locales available" if n_locales else ""
+
+        try:
+            print(f"[Language Diffusion] loaded — UI language: {lang}{tail}")
+        except UnicodeEncodeError:
+            # Console can't encode the native name / fancy punctuation:
+            # retry with an ASCII-only variant (bare code, plain dashes).
+            safe_lang = "English (source strings)" if code == "None" else code
+            safe_tail = f" ({n_locales} locales available)" if n_locales else ""
+            print(f"[Language Diffusion] loaded -- UI language: {safe_lang}{safe_tail}")
+    except Exception:
+        pass
+
+
 # Run at module import. Forge loads extension scripts during startup,
 # after the default settings have been registered (so `localization`
 # exists in `data_labels`) but before the Settings UI is constructed
@@ -309,3 +346,4 @@ relocate_localization_setting()
 pin_to_quicksettings_once()
 force_localization_rescan()
 register_reload_on_localization_change()
+log_startup_state()
