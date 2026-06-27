@@ -319,6 +319,35 @@ available in **Settings → Language**.
 - **Error and status messages** rendered in the UI (where the source is
   a static string, not a Python format-string).
 
+### Translated extensions
+
+Beyond Forge's core UI, Language Diffusion ships **complete dictionaries
+for specific extensions**. Install the extension *and* Language Diffusion
+and its panel translates in place, in all 10 languages — no setup. The
+extensions themselves are never modified: every translation lives here,
+so installing or removing an extension can't affect it, and the
+extension stays English if Language Diffusion isn't installed.
+
+⭐ = first-party (same author as Language Diffusion).
+
+| Extension | Strings | Languages | Status |
+|-----------|:-------:|:---------:|--------|
+| 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) **(core UI)** | ~959 | 10 | base coverage |
+| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) | ~147 | **10 / 10** | ✅ verified |
+| ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) | 39 | **10 / 10** | ✅ native-reviewed |
+| 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) | 113 | **10 / 10** | ✅ native-reviewed |
+
+**Languages** (all 10 covered for every extension above):
+🇮🇹 Italiano · 🇪🇸 Español · 🇫🇷 Français · 🇩🇪 Deutsch · 🇨🇳 简体中文 ·
+🇯🇵 日本語 · 🇧🇷 Português · 🇷🇺 Русский · 🇰🇷 한국어 · 🇵🇱 Polski
+
+- **10 / 10** = every string of that extension is translated in all 10 languages.
+- **native-reviewed** = each locale was checked end-to-end by a native-language
+  pass for accuracy, naturalness and cross-reference consistency.
+- A handful of transient, count-interpolated status messages (e.g.
+  `✅ 3 cleaned, 0 errors`) and a few internal/technical tokens stay in
+  English by design.
+
 ### Not translated (kept in English on purpose)
 
 Stable Diffusion has a **shared international vocabulary** that the
@@ -347,10 +376,11 @@ locale:
 - **PNG infotext / metadata** — generation metadata stays in the same
   format regardless of selected language, so images stay compatible
   with civitai, A1111, ComfyUI, and other tools.
-- **Third-party extensions**: each extension ships its own UI strings;
-  Language Diffusion only covers the strings defined by Forge core
-  and Forge's built-in extensions. Third-party extension developers
-  can ship their own translation JSONs and they will compose cleanly.
+- **Third-party extensions _not_ in the *Translated extensions* table
+  above**: each ships its own UI strings; Language Diffusion covers
+  Forge core, Forge's built-in extensions, and the extensions listed in
+  that table. Any other extension stays in its own language; its
+  developers can ship translation JSONs that compose cleanly with these.
 
 ---
 
