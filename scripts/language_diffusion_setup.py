@@ -286,9 +286,30 @@ def register_reload_on_localization_change() -> None:
         from modules import shared as _shared
 
         def _on_localization_change():
+            global _last_localization
             try:
                 from modules.ui_gradio_extensions import reload_javascript
                 reload_javascript()
+            except Exception:
+                pass
+            # Announce the switch in the console: "old -> new" with the new
+            # language highlighted (same colour as the startup banner).
+            # Purely cosmetic and fully guarded — never breaks a language change.
+            try:
+                new_code = getattr(_shared.opts, "localization", None) or "None"
+                if new_code != _last_localization:
+                    old_label = _lang_label(_last_localization or "None")
+                    new_label = _lang_label(new_code)
+                    new_hl = f"{_BANNER_LANG_COLOR}{new_label}{_BANNER_COLOR_RESET}"
+                    try:
+                        print(f"[Language Diffusion] UI language changed: {old_label} → {new_hl}")
+                    except UnicodeEncodeError:
+                        # cp1252 console: drop native names / arrow to ASCII.
+                        so = "English" if _last_localization in (None, "None") else _last_localization
+                        sn = "English" if new_code == "None" else new_code
+                        print(f"[Language Diffusion] UI language changed: {so} -> "
+                              f"{_BANNER_LANG_COLOR}{sn}{_BANNER_COLOR_RESET}")
+                    _last_localization = new_code
             except Exception:
                 pass
 
@@ -306,6 +327,18 @@ def register_reload_on_localization_change() -> None:
 _BANNER_LANG_COLOR = "\033[92m"  # bright green
 _BANNER_COLOR_RESET = "\033[0m"
 
+# Last-seen UI locale, so a language switch can be logged as "old -> new".
+# Seeded by log_startup_state() at boot and updated by _on_localization_change().
+_last_localization = None
+
+
+def _lang_label(code: str) -> str:
+    """Human label for a locale code: 'Italiano (it_IT)', or
+    'English (source strings)' for the no-localization default."""
+    if not code or code == "None":
+        return "English (source strings)"
+    return f"{LOCALE_DISPLAY_NAMES.get(code, code)} ({code})"
+
 
 def log_startup_state() -> None:
     """Print a friendly one-line banner to the Forge startup console so it
@@ -317,12 +350,12 @@ def log_startup_state() -> None:
     fall back to the bare locale code if the console can't encode them
     (e.g. a legacy cp1252 Windows terminal), so the line always prints.
     """
+    global _last_localization
     try:
         code = getattr(shared.opts, "localization", None) or "None"
-        if code == "None":
-            lang = "English (source strings)"
-        else:
-            lang = f"{LOCALE_DISPLAY_NAMES.get(code, code)} ({code})"
+        lang = _lang_label(code)
+        # Seed the change-tracker so the first switch logs the correct "old".
+        _last_localization = code
 
         # How many locale JSONs Forge can actually see (root + extensions).
         try:
