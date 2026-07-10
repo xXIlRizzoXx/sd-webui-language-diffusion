@@ -1012,6 +1012,8 @@
     "🔍 Run detection preview": "🔍 Запустить предпросмотр детекции",
     "Detection preview": "Предпросмотр детекции",
     "Run ADetailer on an image": "Запустить ADetailer на изображении",
+    "Drop or paste an image and press the button to run the detector with the current settings (classes, NOT, confidence) and outline the detected regions with bounding boxes — detection only, no inpainting. To actually run ADetailer on an image, use \"Run ADetailer on an image\" below.": "Перетащите или вставьте изображение и нажмите кнопку, чтобы запустить detector с текущими настройками (classes, NOT, confidence) и обвести обнаруженные области с помощью bounding boxes — только detect, без inpainting. Чтобы действительно запустить ADetailer на изображении, используйте «Запустить ADetailer на изображении» ниже.",
+    "Drop or paste an image and press the button to run the full ADetailer detect + inpaint pass on it — using this tab's detector, detailer checkpoint, prompt, LoRAs, text encoder and VAE — without regenerating the base image. Handy for trying different detailer setups on a finished picture (requested in #4).": "Перетащите или вставьте изображение и нажмите кнопку, чтобы выполнить для него полный проход ADetailer detect + inpaint — используя detector, detailer checkpoint, prompt, LoRAs, text encoder и VAE с этой вкладки — без повторной генерации базового изображения. Удобно, чтобы опробовать разные конфигурации detailer на готовом изображении (запрошено в #4).",
     "✨ Run ADetailer on this image": "✨ Запустить ADetailer на этом изображении",
     "💾 Save result to outputs": "💾 Сохранить результат в outputs",
     "Result": "Результат",

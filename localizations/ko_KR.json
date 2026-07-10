@@ -1012,6 +1012,8 @@
     "🔍 Run detection preview": "🔍 감지 미리보기 실행",
     "Detection preview": "감지 미리보기",
     "Run ADetailer on an image": "이미지에 ADetailer 실행",
+    "Drop or paste an image and press the button to run the detector with the current settings (classes, NOT, confidence) and outline the detected regions with bounding boxes — detection only, no inpainting. To actually run ADetailer on an image, use \"Run ADetailer on an image\" below.": "이미지를 끌어다 놓거나 붙여넣은 뒤 버튼을 누르면 현재 설정(classes, NOT, confidence)으로 detector를 실행하여 감지된 영역을 bounding boxes로 표시합니다 — detect만 수행하고 inpainting은 하지 않습니다. 이미지에 실제로 ADetailer를 실행하려면 아래의 \"이미지에 ADetailer 실행\"을 사용하세요.",
+    "Drop or paste an image and press the button to run the full ADetailer detect + inpaint pass on it — using this tab's detector, detailer checkpoint, prompt, LoRAs, text encoder and VAE — without regenerating the base image. Handy for trying different detailer setups on a finished picture (requested in #4).": "이미지를 끌어다 놓거나 붙여넣은 뒤 버튼을 누르면 이 탭의 detector, detailer checkpoint, prompt, LoRAs, text encoder, VAE를 사용하여 전체 ADetailer detect + inpaint 과정을 실행합니다 — 기본 이미지는 다시 생성하지 않습니다. 완성된 그림에 다양한 detailer 설정을 시험해 보기에 편리합니다 (#4에서 요청됨).",
     "✨ Run ADetailer on this image": "✨ 이 이미지에 ADetailer 실행",
     "💾 Save result to outputs": "💾 결과를 outputs에 저장",
     "Result": "결과",

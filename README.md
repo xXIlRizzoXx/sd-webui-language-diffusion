@@ -133,7 +133,7 @@ don't use it. Removing the extension folder fully uninstalls it.
 Each non-English JSON is approximately 75–95 KB and contains every
 English UI string that Forge's localization system can match against,
 mapped to its translation in that locale — both Forge core (~959 keys)
-and ADetailer Ultimate (~149 keys, used only if that extension is
+and ADetailer Ultimate (~151 keys, used only if that extension is
 installed; harmless otherwise).
 
 ---
@@ -333,7 +333,7 @@ extension stays English if Language Diffusion isn't installed.
 | Extension | Strings | Languages | Status |
 |-----------|:-------:|:---------:|--------|
 | 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) **(core UI)** | ~959 | 10 | base coverage |
-| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) | ~156 | **10 / 10** | ✅ verified |
+| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) | ~158 | **10 / 10** | ✅ verified |
 | ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) | 39 | **10 / 10** | ✅ native-reviewed |
 | 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) | 113 | **10 / 10** | ✅ native-reviewed |
 

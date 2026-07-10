@@ -1012,6 +1012,8 @@
     "🔍 Run detection preview": "🔍 运行检测预览",
     "Detection preview": "检测预览",
     "Run ADetailer on an image": "对图像运行 ADetailer",
+    "Drop or paste an image and press the button to run the detector with the current settings (classes, NOT, confidence) and outline the detected regions with bounding boxes — detection only, no inpainting. To actually run ADetailer on an image, use \"Run ADetailer on an image\" below.": "拖入或粘贴一张图像，然后点击按钮，即可使用当前设置（类别、NOT、置信度）运行 detector，并用 bounding boxes 框出 detect 到的区域——仅进行 detect，不做 inpainting。若要真正对图像运行 ADetailer，请使用下方的\"对图像运行 ADetailer\"。",
+    "Drop or paste an image and press the button to run the full ADetailer detect + inpaint pass on it — using this tab's detector, detailer checkpoint, prompt, LoRAs, text encoder and VAE — without regenerating the base image. Handy for trying different detailer setups on a finished picture (requested in #4).": "拖入或粘贴一张图像，然后点击按钮，即可对其运行完整的 ADetailer detect + inpaint 流程——使用本选项卡的 detector、detailer checkpoint、prompt、LoRAs、text encoder 和 VAE——而无需重新生成基础图像。非常适合在一张已完成的图像上尝试不同的 detailer 配置（应 #4 请求）。",
     "✨ Run ADetailer on this image": "✨ 对此图像运行 ADetailer",
     "💾 Save result to outputs": "💾 保存结果到 outputs",
     "Result": "结果",

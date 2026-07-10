@@ -1012,6 +1012,8 @@
     "🔍 Run detection preview": "🔍 検出プレビューを実行",
     "Detection preview": "検出プレビュー",
     "Run ADetailer on an image": "画像に対してADetailerを実行",
+    "Drop or paste an image and press the button to run the detector with the current settings (classes, NOT, confidence) and outline the detected regions with bounding boxes — detection only, no inpainting. To actually run ADetailer on an image, use \"Run ADetailer on an image\" below.": "画像をドロップまたは貼り付けてボタンを押すと、現在の設定（classes、NOT、confidence）でdetectorを実行し、検出された領域をbounding boxesで囲みます。detectのみで、inpaintingは行いません。実際に画像へADetailerを実行するには、下の「画像に対してADetailerを実行」を使用してください。",
+    "Drop or paste an image and press the button to run the full ADetailer detect + inpaint pass on it — using this tab's detector, detailer checkpoint, prompt, LoRAs, text encoder and VAE — without regenerating the base image. Handy for trying different detailer setups on a finished picture (requested in #4).": "画像をドロップまたは貼り付けてボタンを押すと、ベース画像を再生成することなく、このタブのdetector、detailer checkpoint、prompt、LoRAs、text encoder、VAEを使って、その画像に対してADetailerのdetect + inpaintフル処理を実行します。完成した画像でさまざまなdetailerの構成を試したいときに便利です（#4でリクエストされた機能）。",
     "✨ Run ADetailer on this image": "✨ この画像にADetailerを実行",
     "💾 Save result to outputs": "💾 結果をoutputsに保存",
     "Result": "結果",

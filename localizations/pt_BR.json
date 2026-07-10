@@ -1012,6 +1012,8 @@
     "🔍 Run detection preview": "🔍 Executar pré-visualização da detecção",
     "Detection preview": "Pré-visualização da detecção",
     "Run ADetailer on an image": "Executar o ADetailer em uma imagem",
+    "Drop or paste an image and press the button to run the detector with the current settings (classes, NOT, confidence) and outline the detected regions with bounding boxes — detection only, no inpainting. To actually run ADetailer on an image, use \"Run ADetailer on an image\" below.": "Solte ou cole uma imagem e pressione o botão para executar o detector com as configurações atuais (classes, NOT, confidence) e contornar as regiões detectadas com bounding boxes — apenas detecção, sem inpainting. Para realmente executar o ADetailer em uma imagem, use \"Executar o ADetailer em uma imagem\" abaixo.",
+    "Drop or paste an image and press the button to run the full ADetailer detect + inpaint pass on it — using this tab's detector, detailer checkpoint, prompt, LoRAs, text encoder and VAE — without regenerating the base image. Handy for trying different detailer setups on a finished picture (requested in #4).": "Solte ou cole uma imagem e pressione o botão para executar nela a passagem completa de detect + inpaint do ADetailer — usando o detector, o detailer checkpoint, o prompt, as LoRAs, o text encoder e o VAE desta aba — sem regenerar a imagem base. Útil para testar diferentes configurações de detailer em uma imagem finalizada (solicitado em #4).",
     "✨ Run ADetailer on this image": "✨ Executar o ADetailer nesta imagem",
     "💾 Save result to outputs": "💾 Salvar resultado na pasta outputs",
     "Result": "Resultado",
