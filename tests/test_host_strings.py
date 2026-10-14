@@ -116,6 +116,79 @@ FORGE_MERGER = [
     "Preview Metadata from Models",
 ]
 
+# Forge Neo strings added or renamed since May 2026: settings, refiner, LoRA
+# metadata editor, ControlNet canvas editor and DetectMap options, PiD,
+# Sparse, DeGrid. Settings hints are listed as drawn: "(hint)".
+FORGE_SINCE_MAY = [
+    "Show a browser confirmation before leaving the page",
+    "Remove leading and trailing whitespaces from the prompts",
+    "Output Directory for Hires. fix Images",
+    "Enable undo / redo history for prompt fields",
+    "Hide Schedulers",
+    "Resolution Step",
+    "Keep generating even when the WebUI browser tab is not in focus",
+    "[Klein] Enable Reference",
+    "[Qwen 2.1] Enable Reference",
+    "[Anima] Enable Reference",
+    "[Krea2] Enable Reference",
+    "Batch Cond/Uncond",
+    "Delay before a prompt edit is sent to Gradio",
+    "Show filenames without folder in the VAE / Text Encoder dropdown",
+    "(if empty, save in the txt2img folder above)",
+    "(requires specfic Edit LoRA)",
+    "(less effective on macOS)",
+    '("64" is recommended to prevent compatibility issues)',
+    '(for "Generate forever")',
+    "(enable Edit ; disable img2img)",
+    "(do both positive and negative denoising in the same batch ; increase speed & VRAM usage)",
+    "(in ms ; reduce lag when typing prompts, may also affect Extensions that react to the prompt inputs)",
+    "(if disabled, modules under subdirectories will be listed like sdxl/clip-l-anime.safetensors)",
+    "Show All Pages",
+    "Show Single Page",
+    "(use model of same architecture)",
+    "percentage of total steps",
+    "Refiner CFG Scale",
+    "use original if < 1.0",
+    "LoRA Replacements",
+    "Generate Canvas",
+    "Advanced Parameters",
+    "Number of Subjects",
+    "0 for Blank Canvas",
+    "Vertical Position",
+    "Randomize Bias",
+    "Rectangle",
+    "Oval",
+    "Mask Shape",
+    "Do not append DetectMap to output Gallery",
+    "Save DetectMap to disk",
+    "Directory to save DetectMap",
+    "Training Dataset Tags",
+    "Activation Text",
+    "append to positive prompt along with Lora",
+    "Preferred Weight",
+    'set to 0 to use "Default Weight for Extra Networks" in Settings',
+    "append to negative prompt",
+    "Random Prompt",
+    "(leave empty to use main prompt)",
+    "Degrade Sigma",
+    "(denoising strength)",
+    "(fix discoloration issue)",
+    "Dense Blocks",
+    "blocks to keep dense (i.e. slower / better quality)",
+    "Verbose (Debug)",
+    "higher = faster & worse quality",
+    "Tokens Threshold",
+    "model & resolution dependent ; higher = slower & better quality",
+    "Extra Tokens",
+    "higher = slower & better quality",
+    "0.0 for Auto",
+    "Upload JSON",
+    "Upload an OpenPose .json",
+    "Download the Pose as .json",
+    "Download",
+    "Download Preview",
+]
+
 # Older spellings that AUTOMATIC1111 1.10.1 still shows: they must stay.
 A1111_STILL_USED = [
     "Just resize", "Crop and resize", "Resize and fill", "Just resize (latent upscale)",
@@ -127,7 +200,7 @@ A1111_STILL_USED = [
 # Keys whose translation may equal the English text: technical vocabulary,
 # or words spelled the same in some languages.
 SAME_AS_ENGLISH = {"Latent Upscale", "📖 Guide", "Horizontal", "Vertical", "Linear", "Modules", "Name", "Notes", "Training",
-                   "(in MB)", "(in ms)", "(EXPERIMENTAL)"}
+                   "(in MB)", "(in ms)", "(EXPERIMENTAL)", "Rectangle", "Oval"}
 
 
 def _is_forge(root):
@@ -202,6 +275,10 @@ class HostStringKeyTests(unittest.TestCase):
     def test_forge_checkpoint_merger_strings_are_keys(self):
         self.assertTranslated(FORGE_MERGER)
 
+    def test_forge_strings_added_since_may_are_keys(self):
+        self.assertEqual(len(FORGE_SINCE_MAY), len(set(FORGE_SINCE_MAY)))
+        self.assertTranslated(FORGE_SINCE_MAY)
+
     def test_older_spellings_used_by_a1111_are_kept(self):
         self.assertTranslated(A1111_STILL_USED)
 
@@ -221,7 +298,7 @@ class HostStringKeyTests(unittest.TestCase):
         # Guards the lists above against typos: each string of this host must
         # appear verbatim (a hint without its parentheses) in its sources.
         if _is_forge(HOST_ROOT):
-            expected = FORGE_RESIZE_MODE + FORGE_MERGER
+            expected = FORGE_RESIZE_MODE + FORGE_MERGER + FORGE_SINCE_MAY
         else:
             expected = A1111_STRINGS
         blob = "\n".join(_read(p) for p in _host_sources(HOST_ROOT, ("modules", "scripts", "extensions-builtin", "javascript")))
