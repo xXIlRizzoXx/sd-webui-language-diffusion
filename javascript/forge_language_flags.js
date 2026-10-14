@@ -15,8 +15,9 @@
 // No document-wide MutationObserver: tab switches in Forge produce a lot
 // of DOM churn, and watching everything would tank scroll/repaint perf.
 // The DOM is touched at page load, when the user interacts with the
-// dropdown, and when the 200 ms value poller sees a new value (to update
-// the indicator and, after a pick, reload the page).
+// dropdown, and by the 200 ms value poller: it re-decorates the open
+// option list however it was opened (keyboard included) and, when it sees
+// a new value, updates the indicator and, after a pick, reloads the page.
 
 (function () {
     "use strict";
@@ -294,19 +295,25 @@
         el.dataset.forgeFlagCode = code;
     }
 
-    function decorateOpenList(dropdown) {
-        if (!dropdown) return;
+    // The open option list of this dropdown, or null. Gradio 4.40 gives
+    // every dropdown aria-controls="dropdown-options" (and no id on the
+    // list), so an element found by that id counts only inside this
+    // dropdown: the lists of other dropdowns never get flags.
+    function findOpenList(dropdown) {
+        if (!dropdown) return null;
         const input = findInput(dropdown);
-        const rawCodes = isRawCodeInput(input);
         const controlledId = input && input.getAttribute("aria-controls");
-        let ul = null;
         if (controlledId) {
-            ul = document.getElementById(controlledId);
+            const byId = document.getElementById(controlledId);
+            if (byId && dropdown.contains(byId)) return byId;
         }
-        if (!ul) {
-            ul = dropdown.querySelector("ul.options");
-        }
+        return dropdown.querySelector("ul.options");
+    }
+
+    function decorateOpenList(dropdown) {
+        const ul = findOpenList(dropdown);
         if (!ul) return;
+        const rawCodes = isRawCodeInput(findInput(dropdown));
         ul.classList.add("forge-language-options");
         ul.querySelectorAll("li.item, [role='option']").forEach((el) =>
             decorateOption(el, rawCodes),
@@ -388,14 +395,14 @@
             setTimeout(() => decorateOpenList(dropdown), 120);
         };
         dropdown.addEventListener("click", refreshOpen);
-        dropdown.addEventListener("keydown", markInteracted);
+        dropdown.addEventListener("keydown", refreshOpen);
 
         const input = findInput(dropdown);
         if (input) {
             const rawCodes = isRawCodeInput(input);
             input.addEventListener("focus", refreshOpen);
             input.addEventListener("input", refreshOpen);
-            input.addEventListener("keydown", markInteracted);
+            input.addEventListener("keydown", refreshOpen);
 
             // Forge's quicksettings change-handlers save the new
             // value to config.json via run_settings_single() but do
@@ -452,6 +459,11 @@
                     clearInterval(handle);
                     return;
                 }
+                // Svelte builds a new list whenever it opens, also on paths
+                // that fire none of the events above (Escape then an arrow
+                // key, a choices refresh): decorate whatever list is open.
+                // Idempotent, so an already decorated list is left alone.
+                if (findOpenList(dropdown)) decorateOpenList(dropdown);
                 const v = input.value;
                 if (v !== lastValue) {
                     lastValue = v;

@@ -28,13 +28,24 @@ Object.defineProperty(El.prototype, "childNodes", {
     },
 });
 // Bare text node, as Svelte creates for the Gradio 3 option label.
+// Writes to nodeValue are counted (textWrites) to prove idempotence.
+let textWrites = 0;
 function Text(value) {
     this.nodeType = 3;
-    this.nodeValue = value;
+    this._value = value;
     this.attrs = {};
     this.children = [];
     this.parentElement = null;
 }
+Object.defineProperty(Text.prototype, "nodeValue", {
+    get() {
+        return this._value;
+    },
+    set(v) {
+        textWrites++;
+        this._value = v;
+    },
+});
 El.prototype.getAttribute = function (n) {
     return n in this.attrs ? this.attrs[n] : null;
 };
@@ -64,6 +75,10 @@ El.prototype.insertBefore = function (c, ref) {
 El.prototype.remove = function () {
     const p = this.parentElement;
     if (p) p.children.splice(p.children.indexOf(this), 1);
+};
+El.prototype.contains = function (other) {
+    for (let e = other; e; e = e.parentElement) if (e === this) return true;
+    return false;
 };
 El.prototype.all = function () {
     const out = [];
@@ -117,28 +132,41 @@ let input;
 const initial = { "thirdparty-from": "zh_TW", "mount-click": "", tooltip: gradio === "gradio3" ? "None" : "Inglese" }[scenario];
 const firstValue = initial === undefined ? "it_IT" : initial;
 const choiceNodes = [];
-const ul = new El("ul", { class: "options" });
-if (gradio === "gradio3") {
-    // Gradio 3.41: no role on the input, raw codes as values, option
-    // text = check mark span + bare text nodes " ", choice, " " (core
-    // localization.js translates "None"; "zh_TW" stands for a locale of
-    // another extension that LD does not know).
-    input = wrap.appendChild(new El("input", { class: "border-none", autocomplete: "off", value: firstValue }));
-    [["None", "Nessuno"], ["it_IT", "it_IT"], ["de_DE", "de_DE"], ["zh_TW", "zh_TW"]].forEach(([v, t]) => {
-        const li = ul.appendChild(new El("li", { class: "item", role: "button", "data-value": v, "aria-label": v }));
-        li.appendChild(new El("span", { class: "inner-item" }, "✓"));
-        [" ", t, " "].forEach((x, i) => {
-            const node = li.appendChild(new Text(x));
-            if (i === 1) choiceNodes.push(node);
+// A fresh option list as Svelte builds it whenever the list opens.
+// Gradio 3.41: option text = check mark span + bare text nodes " ",
+// choice, " " (core localization.js may translate "None"; "zh_TW" stands
+// for a locale of another extension that LD does not know).
+// Gradio 4.40: (label, value) tuples show labels.
+function makeList(noneText, nodes, attrs) {
+    const list = new El("ul", Object.assign({ class: "options" }, attrs || {}));
+    if (gradio === "gradio3") {
+        [["None", noneText], ["it_IT", "it_IT"], ["de_DE", "de_DE"], ["zh_TW", "zh_TW"]].forEach(([v, t]) => {
+            const li = list.appendChild(new El("li", { class: "item", role: "button", "data-value": v, "aria-label": v }));
+            li.appendChild(new El("span", { class: "inner-item" }, "✓"));
+            [" ", t, " "].forEach((x, i) => {
+                const node = li.appendChild(new Text(x));
+                if (i === 1 && nodes) nodes.push(node);
+            });
         });
-    });
-} else {
-    // Gradio 4.40: role=listbox, (label, value) tuples show labels; the
-    // raw code shows up briefly while mounting.
-    input = wrap.appendChild(new El("input", { role: "listbox", "aria-controls": "dropdown-options", value: firstValue }));
-    ["Inglese", "Italiano", "Deutsch"].forEach((t) => ul.appendChild(new El("li", { class: "item", role: "option" }, t)));
+    } else {
+        ["Inglese", "Italiano", "Deutsch"].forEach((t) => list.appendChild(new El("li", { class: "item", role: "option" }, t)));
+    }
+    return list;
 }
-block.appendChild(ul);
+if (gradio === "gradio3") {
+    // Gradio 3.41: no role on the input, raw codes as values.
+    input = wrap.appendChild(new El("input", { class: "border-none", autocomplete: "off", value: firstValue }));
+} else {
+    // Gradio 4.40: role=listbox, labels shown; the raw code shows up
+    // briefly while mounting. aria-controls is the same for every dropdown.
+    input = wrap.appendChild(new El("input", { role: "listbox", "aria-controls": "dropdown-options", value: firstValue }));
+}
+let ul = block.appendChild(makeList("Nessuno", choiceNodes));
+// Another dropdown's open list, and an element that carries the shared
+// "dropdown-options" id, both outside the language picker.
+const foreignBlock = new El("div", { id: "setting_sd_model_checkpoint" });
+const foreignList = foreignBlock.appendChild(makeList("None"));
+const foreignById = makeList("None", null, { id: "dropdown-options" });
 // The Settings page (tab "settings", gr.Tabs elem_id "settings") holds the
 // setting when it is not pinned to the quicksettings row.
 if (scenario === "settings-page") new El("div", { id: "tab_settings" }).appendChild(block);
@@ -151,7 +179,8 @@ let reloads = 0;
 const sandbox = {
     document: {
         readyState: "complete",
-        getElementById: (id) => (id === "setting_localization" ? block : null),
+        getElementById: (id) =>
+            id === "setting_localization" ? block : id === "dropdown-options" && scenario === "foreign-list" ? foreignById : null,
         querySelectorAll: () => [block, refreshButton],
         createElement: (t) => new El(t),
         activeElement: null,
@@ -173,6 +202,9 @@ vm.runInContext(src, sandbox);
 function tick() {
     intervals.forEach((f) => f());
     timeouts.splice(0).forEach((f) => f());
+}
+function imgCount(list) {
+    return list.all().filter((e) => e.tagName === "IMG").length;
 }
 function report(step) {
     const flags = ul.children.map((li) => (li.children[0] && li.children[0].src ? "flag" : "-"));
@@ -198,6 +230,8 @@ function report(step) {
             indicator: ind ? ind.dataset.forgeFlagCode : null,
             indicatorName: name ? name.textContent : null,
             named: wrap.classList.has("forge-flag-named"),
+            images: imgCount(ul),
+            textWrites,
         }),
     );
 }
@@ -236,7 +270,53 @@ function mount() {
     tick();
 }
 
-if (scenario === "typed") {
+// Svelte destroys the list when it closes and builds a new one when it
+// opens again ({#if showOptions}), with the raw choices on Gradio 3.
+function rebuildList() {
+    ul.remove();
+    ul = block.appendChild(makeList("None"));
+}
+
+if (scenario === "keyboard-reopen") {
+    // Escape closes the open list, ArrowDown opens a new one: only
+    // keydown events, no click, focus or input.
+    mount();
+    focus();
+    tick();
+    report("opened");
+    input.fire("keydown");
+    ul.remove();
+    tick();
+    input.fire("keydown");
+    ul = block.appendChild(makeList("None"));
+    tick();
+    report("reopened");
+} else if (scenario === "silent-rebuild") {
+    // The list is rebuilt with no event at all (e.g. a choices refresh).
+    mount();
+    focus();
+    tick();
+    report("opened");
+    rebuildList();
+    tick();
+    report("rebuilt");
+    const before = textWrites;
+    for (let i = 0; i < 5; i++) tick();
+    report("idle");
+    console.log(JSON.stringify({ step: "idle-writes", writes: textWrites - before }));
+} else if (scenario === "foreign-list") {
+    // Lists of other dropdowns never get the picker's class or flags.
+    const foreign = () => [foreignList, foreignById].map((l) => ({ cls: l.classList.has("forge-language-options"), images: imgCount(l) }));
+    mount();
+    focus();
+    tick();
+    report("opened");
+    console.log(JSON.stringify({ step: "foreign-open", lists: foreign() }));
+    input.fire("keydown");
+    ul.remove();
+    for (let i = 0; i < 3; i++) tick();
+    console.log(JSON.stringify({ step: "foreign-closed", lists: foreign() }));
+} else if (scenario === "typed") {
     // Type to filter the list, then pick the remaining entry.
     mount();
     focus();

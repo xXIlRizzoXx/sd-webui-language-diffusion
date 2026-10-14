@@ -502,9 +502,11 @@ it does not invent a new system. The flow is:
      showing the flag of the currently-selected locale (on Gradio 3
      also its native name, drawn over the raw code).
 
-   The option decoration is driven by click, focus, and input events
-   on the dropdown only, and a lightweight value poller (every 200 ms)
-   updates the indicator and triggers the reload after a pick — there
+   The option decoration is driven by click, focus, input, and keydown
+   events on the dropdown, and a lightweight value poller (every 200 ms)
+   also decorates any open list the events missed (for example a list
+   reopened with Escape and then an arrow key), updates the indicator
+   and triggers the reload after a pick — there
    is **no** document-wide observer, so tab switches in the UI stay
    smooth.
 
@@ -690,9 +692,10 @@ The flag decorator + auto-reload trigger. Self-contained IIFE
    value.
 6. `triggerReload()` — calls Forge's global `restart_reload()` when
    available, otherwise `location.reload()`.
-7. `bindDropdown(dropdown)` — attaches click/focus/input listeners to
-   the dropdown, so the option list gets decorated every time the user
-   opens it. Also polls the input value every 200 ms and fires
+7. `bindDropdown(dropdown)` — attaches click/focus/input/keydown
+   listeners to the dropdown, so the option list gets decorated every
+   time the user opens it; the 200 ms poller also decorates an open
+   list of this dropdown that no event announced. Also polls the input value every 200 ms and fires
    `triggerReload()` 700 ms after the user picks another language: a
    new value that is still there once the input has lost the focus
    (text typed to filter the list does not count; Gradio blurs the

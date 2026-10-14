@@ -178,6 +178,44 @@ class LanguagePickerScriptTests(unittest.TestCase):
                 self.assertEqual(steps["unknown"]["optionFlagSrcs"][1], it)
                 self.assertEqual(steps["unknown"]["reloads"], 0)
 
+    def assert_decorated(self, gradio, step):
+        self.assertEqual(step["optionFlags"], ["flag", "flag", "flag", "-"] if gradio == "gradio3" else ["flag"] * 3)
+        if gradio == "gradio3":
+            self.assertEqual(step["optionLabels"], ["✓|Inglese", "✓|Italiano", "✓|Deutsch", "✓|zh_TW"])
+        self.assertEqual(step["reloads"], 0)
+
+    def test_list_reopened_from_the_keyboard_gets_names_and_flags(self):
+        # Escape then ArrowDown: Svelte builds a new list with the raw
+        # choices and fires no click, focus or input event.
+        for gradio in ("gradio3", "gradio4"):
+            with self.subTest(gradio=gradio):
+                steps = self.simulate(gradio, "keyboard-reopen")
+                self.assert_decorated(gradio, steps["opened"])
+                self.assert_decorated(gradio, steps["reopened"])
+
+    def test_list_rebuilt_without_any_event_is_decorated_once(self):
+        # The decoration must not depend on any event, and repeating it on
+        # an open list changes nothing.
+        for gradio in ("gradio3", "gradio4"):
+            with self.subTest(gradio=gradio):
+                steps = self.simulate(gradio, "silent-rebuild")
+                self.assert_decorated(gradio, steps["rebuilt"])
+                self.assert_decorated(gradio, steps["idle"])
+                self.assertEqual(steps["idle"]["images"], steps["rebuilt"]["images"])
+                self.assertEqual(steps["idle"]["images"], 3)
+                self.assertEqual(steps["idle-writes"]["writes"], 0)
+
+    def test_lists_of_other_dropdowns_get_no_flags(self):
+        # Gradio 4 gives every dropdown aria-controls="dropdown-options":
+        # an element with that id elsewhere is not the picker's list.
+        for gradio in ("gradio3", "gradio4"):
+            with self.subTest(gradio=gradio):
+                steps = self.simulate(gradio, "foreign-list")
+                self.assert_decorated(gradio, steps["opened"])
+                clean = [{"cls": False, "images": 0}] * 2
+                self.assertEqual(steps["foreign-open"]["lists"], clean)
+                self.assertEqual(steps["foreign-closed"]["lists"], clean)
+
 
 if __name__ == "__main__":
     unittest.main()
