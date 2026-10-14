@@ -72,6 +72,28 @@ class LanguagePickerScriptTests(unittest.TestCase):
         self.assertEqual(steps["picked"]["reloads"], 1)
         self.assertEqual(steps["picked"]["indicator"], "it")
 
+    def test_settings_page_instance_does_not_reload_before_apply(self):
+        # Not pinned: the setting is on the Settings page, where a pick is
+        # saved only by "Apply settings". Flags still apply there.
+        for gradio in ("gradio3", "gradio4"):
+            with self.subTest(gradio=gradio):
+                picked = self.simulate(gradio, "settings-page")["picked"]
+                self.assertEqual(picked["reloads"], 0)
+                self.assertEqual(picked["indicator"], "de")
+                self.assertIn("flag", picked["optionFlags"])
+
+    def test_english_entry_has_no_do_nothing_tooltip(self):
+        # AUTOMATIC1111 hints.js titles "None" as "Do not do anything special";
+        # on Gradio 3 the English entry and the input hold that raw code.
+        steps = self.simulate("gradio3", "tooltip")
+        self.assertEqual(steps["hovered"]["options"], ["Inglese", "Italiano", "Deutsch", ""])
+        self.assertEqual(steps["hovered"]["input"], "Inglese")
+        self.assertEqual(steps["relisted"]["input"], "Inglese")
+        # Forge Neo (Gradio 4): no title set by the picker script.
+        steps = self.simulate("gradio4", "tooltip")
+        self.assertEqual(steps["hovered"]["options"], ["", "", ""])
+        self.assertEqual(steps["hovered"]["input"], "")
+
     def test_gradio_3_picker_shows_language_names_like_forge_neo(self):
         # The list and the closed input show the names Forge Neo shows
         # ("English" through the UI translation); the raw codes stay the

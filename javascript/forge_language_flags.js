@@ -1,9 +1,11 @@
 // Inject SVG flag icons into Forge's localization dropdown.
 //
-// The `localization` setting renders as a Gradio Dropdown only in the
+// The `localization` setting renders as a Gradio Dropdown in the
 // quicksettings row: the setup script pins it there and hides it from the
-// Settings page (section[0] = None), so nothing is rendered when the user
-// removes it from Settings > User Interface > Quicksettings list.
+// Settings page (section[0] = None). When it is not pinned (the user
+// removed it from Settings > User Interface > Quicksettings list, or the
+// pin failed) the setup script leaves it on the Settings page instead,
+// where a pick is saved by "Apply settings", so no reload happens there.
 //
 // It has elem_id="setting_localization". The dropdown values are the
 // raw locale codes ("None", "it_IT", "es_ES", ... "pl_PL"). This script
@@ -254,9 +256,12 @@
     // Gradio 3 option: <li data-value=code><span>✓</span> code </li>. Write
     // the name into the bare text node that holds the choice, in place (Svelte
     // keeps a reference to it and data-value is what a click selects).
+    // The title keeps AUTOMATIC1111's hints.js from looking data-value up:
+    // its "None" tooltip ("Do not do anything special") would land on English.
     function labelRawCodeOption(el) {
         const name = nameForRawCode(el.getAttribute("data-value"));
         if (!name) return;
+        if (el.title !== name) el.title = name;
         const nodes = el.childNodes;
         for (let i = 0; i < nodes.length; i++) {
             const node = nodes[i];
@@ -358,6 +363,9 @@
         if (!dropdown || dropdown.dataset.forgeFlagBound) return;
         dropdown.dataset.forgeFlagBound = "1";
         dropdown.classList.add("forge-language-dropdown");
+        // Settings page instance (setting not pinned): "Apply settings"
+        // saves the pick, a reload before that would discard it.
+        const onSettingsPage = !!dropdown.closest("#tab_settings, #settings");
 
         updateInputIndicator(dropdown);
 
@@ -448,8 +456,16 @@
                     lastValue = v;
                     updateInputIndicator(dropdown);
                 }
+                // Gradio 3: the input holds the raw code, so hints.js would
+                // title English "Do not do anything special" ("None"). It
+                // clears the title when the list changes and re-checks it
+                // ~1 s later; this tick puts the name back first.
+                if (rawCodes) {
+                    const name = nameForRawCode(v);
+                    if (name && input.title !== name) input.title = name;
+                }
                 if (v === committed || isTransient(v) || hasFocus()) return;
-                if (!userInteracted || isTransient(committed)) {
+                if (!userInteracted || isTransient(committed) || onSettingsPage) {
                     committed = v;
                     return;
                 }
@@ -464,8 +480,9 @@
     }
 
     // Locate the localization dropdown (elem_id="setting_localization").
-    // The setup script hides it from Settings and pins it to the
-    // quicksettings row, so it is rendered only there.
+    // The setup script pins it to the quicksettings row and then hides it
+    // from Settings, so it is rendered in one place: the top bar, or the
+    // Settings page when it is not pinned.
     function findDropdowns() {
         const found = [];
         const direct = document.getElementById("setting_localization");

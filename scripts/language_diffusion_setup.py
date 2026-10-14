@@ -8,9 +8,12 @@ This script does three things at Forge startup:
    Forge's `modules/ui_settings.py` interprets a `None` section_id
    as "skip this setting" — neither the sidebar entry nor the
    right-pane field are rendered. The setting still works in
-   quicksettings because that loop ignores `section[0]`. Skipped when
-   the host freezes the setting's section with
-   --freeze-settings-in-sections, so the freeze keeps applying.
+   quicksettings because that loop ignores `section[0]`. Done only
+   while `localization` is pinned to the quicksettings row (otherwise
+   the setting stays on the Settings page, so the language can always
+   be changed), and skipped when the host freezes the setting's
+   section with --freeze-settings-in-sections, so the freeze keeps
+   applying.
 
 2. **Rename 'None' to 'English' in the dropdown.** Wraps the
    OptionInfo's `component_args` callable so the choices list now
@@ -120,31 +123,19 @@ def relocate_localization_setting() -> None:
        (no JSON loaded → English source strings). Gradio 4+ only: on
        Gradio 3 (AUTOMATIC1111 1.10) the raw codes are kept.
 
-    Change 1 is skipped when --freeze-settings-in-sections names the
-    setting's original section (the host checks `section[0]` to enforce
-    it). No-op on forks where the setting isn't registered. Idempotent
-    on every attribute that we touch.
+    Change 1 is applied by hide_setting_when_pinned(), after the
+    first-run pin: here the original section is only remembered on the
+    OptionInfo, so a later import (Reload UI) can put it back. No-op on
+    forks where the setting isn't registered. Idempotent on every
+    attribute that we touch.
     """
     info = shared.opts.data_labels.get("localization")
     if info is None:
         return
 
-    # ── hide from Settings page (None section_id ⇒ skipped by Forge) ──
-    # Keep the label "Language Diffusion" in the tuple anyway so any
-    # debug tooling that reads `info.section[1]` still has a sensible
-    # name to display.
-    # Skipped when the host freezes the setting's own section: the host's
-    # Options.__setattr__ checks `info.section[0]` against
-    # --freeze-settings-in-sections, so moving the setting out of it would
-    # silently make the language writable again.
-    if not _section_is_frozen(info.section[0]):
-        target_section = (None, "Language Diffusion")
-        if info.section != target_section:
-            info.section = target_section
-        # category_id is now irrelevant (no section tab will be built),
-        # but normalise it to None for cleanliness.
-        if info.category_id is not None:
-            info.category_id = None
+    # Remember the host's own section once, before anything changes it.
+    if getattr(info, "_language_diffusion_original_section", None) is None:
+        info._language_diffusion_original_section = (info.section, info.category_id)
 
     # ── rename visible field label "Localization" → "Language" ──
     # "Language" is a key in every bundled locale JSON
@@ -160,8 +151,9 @@ def relocate_localization_setting() -> None:
     # logic — which keys on the raw locale code — keeps working.
     #
     # We wrap the `component_args` callable so this transformation
-    # runs every time Forge re-reads the dropdown's choices (which it
-    # does whenever the user adds or removes a locale JSON at runtime).
+    # runs every time the host re-reads the dropdown's choices (on each
+    # page load and when the refresh button next to the picker is used,
+    # which is also when a locale JSON added at runtime shows up).
     original_args = info.component_args
 
     # Guard against re-wrapping if we have already patched this entry.
@@ -267,6 +259,61 @@ def pin_to_quicksettings_once() -> None:
             )
     except Exception:
         pass  # Best-effort; missing marker just means we retry next launch.
+
+
+def _localization_is_pinned() -> bool:
+    """True when 'localization' is in quicksettings_list and the host
+    renders the quicksettings row (not --freeze-settings, which moves
+    every quicksetting back to the Settings page)."""
+    try:
+        current = shared.opts.quicksettings_list
+    except Exception:
+        return False
+    if isinstance(current, str):
+        current = [s.strip() for s in current.split(",")]
+    if not isinstance(current, (list, tuple)) or "localization" not in current:
+        return False
+    try:
+        from modules.shared_cmd_options import cmd_opts
+
+        return not getattr(cmd_opts, "freeze_settings", False)
+    except Exception:
+        return True
+
+
+def hide_setting_when_pinned() -> None:
+    """Hide the localization setting from the Settings page only while
+    the top-bar picker exists; otherwise restore its original section.
+
+    The pin is best-effort and runs once (marker file), so it can be
+    missing: frozen quicksettings_list, config.json reset after the
+    first run, or the user removed it. Hiding the setting then would
+    leave no language picker anywhere in the UI.
+    """
+    info = shared.opts.data_labels.get("localization")
+    if info is None:
+        return
+    original = getattr(info, "_language_diffusion_original_section", None)
+    if original is None:
+        return
+    section, category_id = original
+
+    # ── hide from Settings page (None section_id ⇒ skipped by Forge) ──
+    # Keep the label "Language Diffusion" in the tuple anyway so any
+    # debug tooling that reads `info.section[1]` still has a sensible
+    # name to display. category_id is irrelevant then (no section tab
+    # is built), so it is normalised to None.
+    # Skipped when the host freezes the setting's own section: the host's
+    # Options.__setattr__ checks `info.section[0]` against
+    # --freeze-settings-in-sections, so moving the setting out of it would
+    # silently make the language writable again.
+    if _localization_is_pinned() and not _section_is_frozen(section[0] if section else None):
+        section, category_id = (None, "Language Diffusion"), None
+
+    if info.section != section:
+        info.section = section
+    if info.category_id != category_id:
+        info.category_id = category_id
 
 
 def force_localization_rescan() -> None:
@@ -430,10 +477,12 @@ def log_startup_state() -> None:
 # Run at module import. Forge loads extension scripts during startup,
 # after the default settings have been registered (so `localization`
 # exists in `data_labels`) but before the Settings UI is constructed
-# (so reassigning `.section` and prepending to `quicksettings_list`
-# are both picked up at render time).
+# (so reassigning `.section` and appending to `quicksettings_list`
+# are both picked up at render time). The setting is hidden only after
+# the pin, once it is known whether the top-bar picker exists.
 relocate_localization_setting()
 pin_to_quicksettings_once()
+hide_setting_when_pinned()
 force_localization_rescan()
 register_reload_on_localization_change()
 log_startup_state()

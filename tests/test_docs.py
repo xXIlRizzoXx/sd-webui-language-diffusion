@@ -120,7 +120,8 @@ class ReadmeBehaviourTests(unittest.TestCase):
 
     def test_removing_the_pin_explains_how_to_get_the_picker_back(self):
         section = _flat(_section(self.readme, "### How to remove the pin manually"))
-        self.assertIn("only language picker", section)
+        # Without the pin the setup script leaves the setting on the Settings page.
+        self.assertIn("is back on the Settings", section)
         self.assertIn(".first-run-pinned", section)
 
     def test_no_manual_apply_settings_flow_for_the_language(self):
@@ -134,12 +135,16 @@ class ReadmeBehaviourTests(unittest.TestCase):
     def test_code_comments_describe_the_pinned_picker(self):
         # The setup script hides the setting from Settings and pins it; the
         # picker script reloads the page itself. Comments must say the same.
-        sources = [FLAGS_JS, os.path.join(REPO, "style.css")]
+        sources = [FLAGS_JS, os.path.join(REPO, "style.css"), os.path.join(REPO, "install.py")]
         sources += glob.glob(os.path.join(REPO, "scripts", "*.py"))
         for path in sources:
             text = _flat(_read(path))
             for claim in ("Apply-Settings-then-Reload-UI", "both in Settings > User Interface",
-                          "If the user adds `localization`"):
+                          "If the user adds `localization`",
+                          # The pin is appended; the choices are re-read on page
+                          # load / refresh; the setup script imports more than shared.
+                          "prepending to `quicksettings_list`", "adds or removes a locale JSON at runtime",
+                          "only touches `modules.shared`", "Extensions tab surfaces"):
                 with self.subTest(file=os.path.basename(path), claim=claim):
                     self.assertFalse(claim in text, claim)
 

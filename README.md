@@ -105,7 +105,7 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
 The extension is **almost entirely frontend** — ten JSON files, three
 JavaScript files, one CSS file — plus one small Python startup script
 that adjusts the host's Localization setting in memory (hides it from
-the Settings page, labels the choices, pins it to the top bar). It does
+the Settings page while pinned, labels the choices, pins it to the top bar). It does
 **not** modify Forge's source files. The only thing it leaves behind
 after removal is the `localization` entry it added once to the
 Quicksettings list in `config.json` — see [Uninstall](#uninstall).
@@ -253,9 +253,9 @@ comes back in the new language a few seconds later.
 
 > [!Note]
 > Language Diffusion deliberately keeps the Language picker out
-> of the Settings page sidebar — the top-bar dropdown is the single
-> point of control for the entire extension. Less clutter, faster
-> access.
+> of the Settings page sidebar while it is pinned to the top bar —
+> the top-bar dropdown is the single point of control for the entire
+> extension. Less clutter, faster access.
 
 The UI reloads. Once it comes back, every label, dropdown choice,
 setting description, and tooltip is translated. There is no
@@ -314,13 +314,17 @@ delete `.first-run-pinned` inside the extension folder and restart Forge.
 4. **Apply settings** → **Reload UI**.
 
 > [!Warning]
-> The top-bar dropdown is the **only language picker**: Language
-> Diffusion keeps the setting off the Settings page, so after this the
-> language can no longer be changed from the UI. To get the picker back,
-> add `localization` to the **Quicksettings list** again (same field,
-> then **Apply settings** → **Reload UI**), or delete `.first-run-pinned`
-> inside the extension folder and restart the WebUI so the extension
-> pins it again.
+> While pinned, the top-bar dropdown is the **only language picker**.
+> Once the pin is gone, the **Language** setting is back on the Settings
+> page (*Settings → User Interface*): there a pick is saved with
+> **Apply settings** and shown after **Reload UI**, with no automatic
+> reload. The same happens when the pin is lost without your doing,
+> for example after `config.json` was reset or with
+> `--freeze-specific-settings quicksettings_list`. To get the top-bar
+> picker back, add `localization` to the **Quicksettings list** again
+> (same field, then **Apply settings** → **Reload UI**), or delete
+> `.first-run-pinned` inside the extension folder and restart the WebUI
+> so the extension pins it again.
 
 > [!Tip]
 > The extension decorates the Language dropdown in the quicksettings
@@ -430,7 +434,10 @@ it does not invent a new system. The flow is:
      in `shared.opts.data_labels` to `(None, "Language Diffusion")`.
      Forge's `modules/ui_settings.py` skips any setting whose
      `section[0]` is `None` — so the entry never appears in the
-     Settings page. Skipped when the WebUI is started with
+     Settings page. Done only while `localization` is in the
+     quicksettings list (checked after the first-run pin below);
+     otherwise the setting keeps its normal Settings section, so the
+     language can always be changed. Also skipped when the WebUI is started with
      `--freeze-settings-in-sections` naming the setting's section
      (`ui`): the freeze keeps applying, and the setting stays in its
      normal Settings section.
@@ -525,7 +532,7 @@ files are modified and there are no asynchronous hooks.
 ```
 sd-webui-language-diffusion/
 ├── README.md                              ← this file
-├── install.py                             ← extension marker (no deps)
+├── install.py                             ← comment only (no deps)
 ├── .gitignore
 ├── style.css                              ← scoped flag/dropdown layout
 ├── scripts/
@@ -549,11 +556,11 @@ sd-webui-language-diffusion/
 
 ### `install.py`
 
-Comment-only file. Forge and A1111 use the presence of `install.py`
-and/or `scripts/` to recognise a folder as an installable extension
-and to surface it in the Extensions tab. This extension has no
-third-party Python dependencies — the only runtime Python lives in
-`scripts/language_diffusion_setup.py`.
+Comment-only, optional file. Forge and A1111 run an extension's
+`install.py` at launch to install its dependencies, and list every
+folder under `extensions/` in the Extensions tab with or without it.
+This extension has no third-party Python dependencies — the only
+runtime Python lives in `scripts/language_diffusion_setup.py`.
 
 ### `scripts/language_diffusion_setup.py`
 
@@ -566,7 +573,10 @@ Runs once at Forge startup and performs three UI rearrangements:
    the right-pane component when that flag is True. So the
    Localization dropdown disappears from Settings entirely — the
    top-bar quicksettings is the only place to control the language.
-   Skipped when the WebUI is started with
+   Applied after step 3 and only while `localization` is in the
+   quicksettings list: when the pin is missing (removed by the user,
+   frozen, or lost with a reset `config.json`) the setting keeps its
+   normal Settings section. Also skipped when the WebUI is started with
    `--freeze-settings-in-sections` naming the setting's section
    (`ui`): the freeze keeps applying, and the setting stays in its
    normal Settings section.
@@ -597,8 +607,8 @@ where the localization setting isn't registered.
 Targets two selectors only:
 
 - `#setting_localization` — Forge's stock localization dropdown
-  element id. The dropdown is rendered only in the quicksettings row,
-  since the extension keeps it off the Settings page.
+  element id. The dropdown is rendered in the quicksettings row, or on
+  the Settings page when it is not pinned.
 - `.forge-language-dropdown` — a marker class added by
   `forge_language_flags.js` to whatever dropdown it has bound to,
   for future-proofing if the elem_id ever changes upstream.
@@ -630,7 +640,10 @@ The flag decorator + auto-reload trigger. Self-contained IIFE
    `RAW_CODE_TO_FLAG` maps the raw codes (`None`, `it_IT`, ...) and
    is used only on Gradio 3 (AUTOMATIC1111 1.10), whose dropdown
    input has no `role` attribute and shows the raw codes;
-   `RAW_CODE_TO_NAME` gives the native names drawn over them there.
+   `RAW_CODE_TO_NAME` gives the native names drawn over them there,
+   also set as the entries' tooltip so AUTOMATIC1111's `hints.js`
+   does not show its `None` hint ("Do not do anything special") on
+   English.
 2. `FLAG_SVG` — for each flag key, an inline SVG data URI of that
    national flag at roughly 3:2 aspect ratio.
 3. `decorateOption(li)` — prepends a flag `<img>` to a single option
@@ -655,7 +668,9 @@ The flag decorator + auto-reload trigger. Self-contained IIFE
    missing link in Forge's quicksettings flow: `run_settings_single()`
    persists the new value to `config.json` but does not reload the
    page, so without this hook the user has to manually click "Reload
-   UI" to actually see the new translation. Idempotent (the
+   UI" to actually see the new translation. No reload for the
+   instance on the Settings page (setting not pinned), where the pick
+   is saved only by **Apply settings**. Idempotent (the
    `data-forge-flag-bound` attribute guards re-binding).
 8. `findDropdowns()` — locates all instances of the localization
    dropdown on the page by element id `setting_localization` and by

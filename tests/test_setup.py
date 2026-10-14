@@ -114,6 +114,47 @@ class SetupScriptTests(unittest.TestCase):
         self.run_setup(host)
         self.assertEqual(host.opts.quicksettings_list, [])
 
+    def assert_language_reachable(self, host):
+        # Mirror of the host's ui_settings.create_ui: a setting is rendered in
+        # the top bar when pinned (and settings are not frozen), otherwise on
+        # the Settings page unless its section[0] is None.
+        info = host.opts.data_labels["localization"]
+        pinned = "localization" in host.opts.quicksettings_list and not host.options.cmd_opts.freeze_settings
+        self.assertTrue(pinned or info.section[0] is not None, "no language picker anywhere")
+
+    def test_config_reset_after_first_run_keeps_a_language_picker(self):
+        # config.json deleted, or moved to tmp/ by the host when corrupted:
+        # quicksettings_list is back to its default while the marker stays.
+        host = self.make_host(quicksettings=["sd_model_checkpoint"])
+        self.run_setup(host)
+        self.assertIsNone(host.opts.data_labels["localization"].section[0])
+        host.opts.data["quicksettings_list"] = ["sd_model_checkpoint"]
+        self.run_setup(host)
+        info = host.opts.data_labels["localization"]
+        self.assertEqual(info.section, ("ui", "User interface"))
+        self.assertEqual(info.label, "Language")
+        self.assertEqual(host.opts.quicksettings_list, ["sd_model_checkpoint"])
+        self.assert_language_reachable(host)
+
+    def test_removed_pin_moves_the_setting_back_to_the_settings_page(self):
+        host = self.make_host(quicksettings=[])
+        self.run_setup(host)
+        host.opts.quicksettings_list = []
+        self.run_setup(host)  # Reload UI / restart after removing the pin
+        self.assertEqual(host.opts.data_labels["localization"].section, ("ui", "User interface"))
+        self.assert_language_reachable(host)
+        host.opts.quicksettings_list = ["localization"]
+        self.run_setup(host)  # pinned again by the user: hidden again
+        self.assertIsNone(host.opts.data_labels["localization"].section[0])
+        self.assert_language_reachable(host)
+
+    def test_comma_string_quicksettings_list_counts_as_pinned(self):
+        # Older A1111-derived forks store quicksettings_list as a string.
+        host = self.make_host()
+        host.opts.data["quicksettings_list"] = "sd_model_checkpoint, localization"
+        self.run_setup(host)
+        self.assertIsNone(host.opts.data_labels["localization"].section[0])
+
     def test_frozen_quicksettings_list_does_not_abort_startup(self):
         # --freeze-specific-settings / --freeze-settings / --freeze-settings-in-sections
         # make Options.__setattr__ assert: the first-run pin must give up quietly
@@ -133,9 +174,10 @@ class SetupScriptTests(unittest.TestCase):
                 self.assertEqual(host.opts.quicksettings_list, ["sd_model_checkpoint"])
                 self.assertFalse(os.path.exists(host.marker))
                 self.assertIn("[Language Diffusion] loaded", out)
-                # A frozen 'ui' section keeps localization in it (see the test below).
-                expected_section = "ui" if "freeze_settings_in_sections" in flags else None
-                self.assertEqual(host.opts.data_labels["localization"].section[0], expected_section)
+                # Not pinned (or a frozen 'ui' section, see the test below):
+                # the setting stays on the Settings page.
+                self.assertEqual(host.opts.data_labels["localization"].section[0], "ui")
+                self.assert_language_reachable(host)
                 self.assertEqual(host.rescan_calls, 1)
                 self.assertIsNotNone(host.opts.data_labels["localization"].onchange)
 

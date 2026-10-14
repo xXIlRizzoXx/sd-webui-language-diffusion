@@ -103,6 +103,7 @@ El.prototype.closest = function (sel) {
     let e = this;
     while (e) {
         if (sel === ".wrap" && e.classList.has("wrap")) return e;
+        if (sel === "#tab_settings, #settings" && ["tab_settings", "settings"].includes(e.attrs.id)) return e;
         e = e.parentElement;
     }
     return null;
@@ -113,7 +114,7 @@ const block = new El("div", { id: "setting_localization" });
 const wrap = block.appendChild(new El("div", { class: "wrap" }));
 let input;
 // Value the input shows when the script binds.
-const initial = { "thirdparty-from": "zh_TW", "mount-click": "" }[scenario];
+const initial = { "thirdparty-from": "zh_TW", "mount-click": "", tooltip: gradio === "gradio3" ? "None" : "Inglese" }[scenario];
 const firstValue = initial === undefined ? "it_IT" : initial;
 const choiceNodes = [];
 const ul = new El("ul", { class: "options" });
@@ -138,6 +139,9 @@ if (gradio === "gradio3") {
     ["Inglese", "Italiano", "Deutsch"].forEach((t) => ul.appendChild(new El("li", { class: "item", role: "option" }, t)));
 }
 block.appendChild(ul);
+// The Settings page (tab "settings", gr.Tabs elem_id "settings") holds the
+// setting when it is not pinned to the quicksettings row.
+if (scenario === "settings-page") new El("div", { id: "tab_settings" }).appendChild(block);
 const refreshButton = new El("button", { id: "refresh_localization" });
 
 // ── globals ─────────────────────────────────────────────────────────
@@ -196,6 +200,17 @@ function report(step) {
             named: wrap.classList.has("forge-flag-named"),
         }),
     );
+}
+
+// AUTOMATIC1111 hints.js updateTooltip(): keeps an existing title, else
+// looks the text, the value, then data-value up in its titles.
+const hintTitles = { None: "Do not do anything special" };
+function hint(el) {
+    if (el.title) return el.title;
+    const look = (k) => (k ? sandbox.localization[hintTitles[k]] || hintTitles[k] : undefined);
+    const tip = look(el.textContent) || look(el.value) || look(el.getAttribute("data-value"));
+    if (tip) el.title = tip;
+    return el.title || "";
 }
 
 // The user clicks the picker and the input takes the focus; a pick (click
@@ -316,6 +331,26 @@ if (scenario === "typed") {
     type("zh");
     tick();
     report("unknown");
+} else if (scenario === "settings-page") {
+    // A pick on the Settings page is saved only by "Apply settings":
+    // reloading would throw it away.
+    mount();
+    focus();
+    tick();
+    input.value = show("de_DE", "Deutsch");
+    blur();
+    tick();
+    tick();
+    report("picked");
+} else if (scenario === "tooltip") {
+    // English in use; hints.js runs ~1 s after the list or the input changed.
+    mount();
+    focus();
+    tick();
+    console.log(JSON.stringify({ step: "hovered", options: ul.children.map(hint), input: hint(input) }));
+    input.title = ""; // hints.js clears it whenever the option list changes
+    tick();
+    console.log(JSON.stringify({ step: "relisted", input: hint(input) }));
 } else if (gradio === "gradio3") {
     tick();
     report("mounted");
