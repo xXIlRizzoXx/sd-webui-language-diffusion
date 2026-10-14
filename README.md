@@ -84,9 +84,10 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
 
 - **Ten complete locale dictionaries** (Italian, Spanish, French, German,
   Simplified Chinese, Japanese, Brazilian Portuguese, Russian, Korean,
-  Polish), each translating roughly 1100 UI strings end to end — labels,
+  Polish), each translating 1930 UI strings end to end — labels,
   dropdown choices, settings descriptions, tooltips, error messages,
-  sub-tab names, modal text. Includes 138 keys covering every UI string
+  sub-tab names, modal text, for both the Forge Neo and the
+  AUTOMATIC1111 1.10 core UI. Includes 188 keys covering every UI string
   in the [ADetailer Ultimate](https://github.com/xXIlRizzoXx/adetailer-ultimate)
   extension (when installed) so the ADetailer panel translates in place
   with the rest of the UI.
@@ -100,7 +101,7 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
   no tooltip at all (because Forge's stock tooltip system indexes by
   the English label and the visible text is no longer English).
 
-The extension is **pure frontend** — six JSON files, two JavaScript files,
+The extension is **pure frontend** — ten JSON files, three JavaScript files,
 one CSS file. It does **not** modify Forge's source, it does not
 monkey-patch Python, it adds zero startup overhead on launches when you
 don't use it. Removing the extension folder fully uninstalls it.
@@ -132,9 +133,10 @@ don't use it. Removing the extension folder fully uninstalls it.
 
 Each non-English JSON is approximately 75–95 KB and contains every
 English UI string that Forge's localization system can match against,
-mapped to its translation in that locale — both Forge core (~959 keys)
-and ADetailer Ultimate (~151 keys, used only if that extension is
-installed; harmless otherwise).
+mapped to its translation in that locale — the Forge Neo and
+AUTOMATIC1111 core UI (1594 keys), ADetailer Ultimate (188 keys) and
+Metadata Removal + Image Browser (148 keys); extension keys are used only
+if that extension is installed and are harmless otherwise.
 
 ---
 
@@ -332,8 +334,8 @@ extension stays English if Language Diffusion isn't installed.
 
 | Extension | Strings | Languages | Status |
 |-----------|:-------:|:---------:|--------|
-| 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) **(core UI)** | ~959 | 10 | base coverage |
-| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) | ~158 | **10 / 10** | ✅ verified |
+| 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 1594 | 10 | base coverage |
+| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.8 | 188 | **10 / 10** | ✅ verified |
 | ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) | 39 | **10 / 10** | ✅ native-reviewed |
 | 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) | 113 | **10 / 10** | ✅ native-reviewed |
 
@@ -484,6 +486,7 @@ sd-webui-language-diffusion/
 ├── scripts/
 │   └── language_diffusion_setup.py        ← Language sidebar section relocator
 ├── javascript/
+│   ├── adetailer_ordinal_i18n.js          ← ADetailer tabs 2..N labels
 │   ├── forge_language_flags.js            ← flag decorator for the dropdown
 │   └── hints_i18n_patch.js                ← tooltip alias bridge
 └── localizations/
@@ -608,6 +611,18 @@ The flag decorator + auto-reload trigger. Self-contained IIFE
 There is no `MutationObserver` on `document.body` or any global node.
 Tab switches in Forge generate a lot of DOM churn — observing it
 globally was tried in early prototypes and caused visible flicker.
+
+### `javascript/adetailer_ordinal_i18n.js`
+
+ADetailer builds the labels of its second and later tabs as
+`<label> 2nd`, `<label> 3rd`, ... (and the prompt placeholders as
+`ADetailer prompt 2nd` plus the usual second line), which are never exact
+dictionary keys. Inside the ADetailer panels only, this script looks up
+the text without the ordinal and, when that is a key, writes the
+translation followed by the translated ordinal (from the `2nd`, `3rd`,
+... keys; later tabs reuse the `2nd` translation with their own number).
+It uses the WebUI's `onUiUpdate`/`onUiLoaded` hooks, adds no Gradio event
+listener, and does nothing when no language is selected.
 
 ### `javascript/hints_i18n_patch.js`
 
