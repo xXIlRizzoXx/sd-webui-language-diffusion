@@ -69,6 +69,9 @@ ADETAILER_PLUS8 = [
     "📥 Paste from 2nd tab",
     "📥 Paste from 3rd tab",
     "📥 Paste from 4th tab",
+    # Preset dropdown default (PRESET_NONE) and the Settings placeholder.
+    "(none)",
+    "comma-separated list of script names",
 ]
 
 # Forge Neo img2img Resize Mode, renamed upstream (choices and hints.js tooltips).

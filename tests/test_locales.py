@@ -82,11 +82,49 @@ class LocaleFileTests(unittest.TestCase):
                 self.assertFalse(data["Pixel Composite Settings"].startswith("#"))
 
     def test_schedule_rho_is_not_called_a_scheduler(self):
-        # "Schedule rho" is the rho of the sigma schedule, not the Scheduler setting.
+        # "Schedule rho/min sigma/max sigma" are consecutive X/Y/Z axis options
+        # about the sigma schedule, not the Scheduler setting.
         for code, (_, data) in self.locales.items():
-            for word in ("Scheduler", "スケジューラ", "스케줄러", "调度器"):
-                with self.subTest(locale=code, word=word):
-                    self.assertNotIn(word, data["Schedule rho"])
+            for key in ("Schedule rho", "Schedule min sigma", "Schedule max sigma"):
+                for word in ("Scheduler", "スケジューラ", "스케줄러", "调度器"):
+                    with self.subTest(locale=code, key=key, word=word):
+                        self.assertNotIn(word, data[key])
+
+    def test_sampler_scheduler_upscaler_stay_english_in_cjk_and_russian(self):
+        # Most keys of these locales keep the English word ("使用独立的 sampler");
+        # the A1111 settings keys must follow the same convention.
+        for code in ("zh_CN", "ja_JP", "ru_RU", "ko_KR"):
+            for key, value in self.locales[code][1].items():
+                for term in ("sampler", "scheduler", "upscaler"):
+                    if term in key.lower():
+                        with self.subTest(locale=code, key=key, term=term):
+                            self.assertIn(term, value.lower())
+
+    def test_noise_multiplier_is_translated_in_adetailer_keys(self):
+        # "Noise multiplier for img2img" is also the A1111 core img2img setting.
+        for code, (_, data) in self.locales.items():
+            for key in ("Use separate noise multiplier", "Noise multiplier for img2img"):
+                with self.subTest(locale=code, key=key):
+                    self.assertNotIn("noise multiplier", data[key].lower())
+            with self.subTest(locale=code, key="Noise multiplier for img2img"):
+                self.assertEqual(data["Noise multiplier for img2img"].lower(),
+                                 data["Noise Multiplier for img2img"].lower())
+
+    def test_adetailer_hints_name_the_translated_settings_tab(self):
+        # The top tab bar shows the translated "Settings", not the English word.
+        keys = [
+            '📖 A full guide to every option is available as its own top tab — turn on "Show the ADetailer Guide tab" in Settings → ADetailer to display it.',
+            "Scales this tab's denoise by the detected region's size — smaller regions get more denoise. 0 = use the global Settings value (off unless set there); 2-4 is a good range.",
+            "(Adds a '📖 ADetailer Guide' tab next to Settings with the full option reference)",
+        ]
+        for code, (_, data) in self.locales.items():
+            settings = data["Settings"]
+            self.assertNotEqual(settings, "Settings")
+            for key in keys:
+                with self.subTest(locale=code, key=key[:40]):
+                    self.assertNotRegex(data[key], r"\bSettings\b")
+            with self.subTest(locale=code, key="path"):
+                self.assertIn(settings + " → ADetailer", data[keys[0]])
 
     def test_listed_values_are_not_left_in_english(self):
         # Keys a locale left untranslated although it translates their siblings.

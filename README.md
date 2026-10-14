@@ -85,10 +85,10 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
 
 - **Ten complete locale dictionaries** (Italian, Spanish, French, German,
   Simplified Chinese, Japanese, Brazilian Portuguese, Russian, Korean,
-  Polish), each translating 2115 UI strings end to end — labels,
+  Polish), each translating 2117 UI strings end to end — labels,
   dropdown choices, settings descriptions, tooltips, error messages,
   sub-tab names, modal text, for both the Forge Neo and the
-  AUTOMATIC1111 1.10 core UI. Includes 210 keys covering every UI string
+  AUTOMATIC1111 1.10 core UI. Includes 212 keys covering every UI string
   in the [ADetailer Ultimate](https://github.com/xXIlRizzoXx/adetailer-ultimate)
   extension (when installed) so the ADetailer panel translates in place
   with the rest of the UI.
@@ -138,7 +138,7 @@ Quicksettings list in `config.json` — see [Uninstall](#uninstall).
 Each non-English JSON is approximately 184–264 KB and contains every
 English UI string that Forge's localization system can match against,
 mapped to its translation in that locale — the Forge Neo and
-AUTOMATIC1111 core UI (1757 keys), ADetailer Ultimate (210 keys) and
+AUTOMATIC1111 core UI (1757 keys), ADetailer Ultimate (212 keys) and
 Metadata Removal + Image Browser (148 keys); extension keys are used only
 if that extension is installed and are harmless otherwise.
 
@@ -362,7 +362,7 @@ extension stays English if Language Diffusion isn't installed.
 | Extension | Strings | Languages | Status |
 |-----------|:-------:|:---------:|--------|
 | 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 1757 | 10 | base coverage |
-| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.8 | 210 | **10 / 10** | ✅ verified |
+| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.8 | 212 | **10 / 10** | ✅ verified |
 | ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) v1.0.0 | 39 | **10 / 10** | ✅ native-reviewed |
 | 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 113 | **10 / 10** | ✅ native-reviewed |
 
