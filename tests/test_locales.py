@@ -126,6 +126,43 @@ class LocaleFileTests(unittest.TestCase):
             with self.subTest(locale=code, key="path"):
                 self.assertIn(settings + " → ADetailer", data[keys[0]])
 
+    def test_help_texts_name_the_translated_buttons_and_tabs(self):
+        # A hint that names a button or tab must use the name the translated
+        # UI shows, not the English one ("Generateクリック" counts too, so the
+        # boundary is ASCII letters only, not \b).
+        cases = [
+            ("(requires Reload UI)", "Reload UI"),
+            ("Reload UI scripts when using Reload UI option", "Reload UI"),
+            ('Additionally reload the "modules.ui" scripts when using "Reload UI"', "Reload UI"),
+            ("(when using Interrupt button, if generating more than one image, stop after the generation of an image has finished, instead of immediately)", "Interrupt"),
+            ("(when using the Interrupt button, if generating more than one image, stop after the current generation of an image has finished instead of immediately)", "Interrupt"),
+            ("when using the Interrupt button, if generating more than one image, stop after the current generation of an image has finished instead of immediately", "Interrupt"),
+            ('For video longer than 1 minute, please extract the frames and use "Batch from Directory" instead', "Batch from Directory"),
+            ("(When enabled, ADetailer's tab settings (detector, prompts, denoise, padding, etc.) are saved on every Generate click and restored at the next WebUI start. Cache file: extensions/<this-extension>/user_state.json. Disable to always start with the extension's defaults.)", "Generate"),
+            ("Reset ADetailer settings — restores every option on this page (max tabs, save paths, bbox sort, manual mode, remember-last, etc.) to the value declared in the extension's source. Per-tab widget values saved in user_state.json are kept. To reset them, use Reset in the ADetailer panel; with Remember last-used settings enabled, the defaults are saved on the next Generate click.", "Generate"),
+            ("(setting entries that appear at the top of page rather than in settings tab)", "Settings"),
+            ("settings that appear at the top of the page <b>instead of</b> in the Settings tab", "Settings"),
+        ]
+        for code, (_, data) in self.locales.items():
+            for key, label in cases:
+                if data[label] == label:
+                    continue
+                with self.subTest(locale=code, key=key[:40]):
+                    self.assertNotRegex(data[key], r"(?<![A-Za-z])%s(?![A-Za-z])" % re.escape(label))
+
+    def test_masked_content_choices_are_translated(self):
+        # Inpaint "Masked content" radio (type="index" on both hosts).
+        same = {("es_ES", "original"), ("pt_BR", "original")}
+        for code, (_, data) in self.locales.items():
+            for key in ("fill", "original", "latent noise", "latent nothing"):
+                with self.subTest(locale=code, key=key):
+                    if (code, key) in same:
+                        self.assertEqual(data[key], key)
+                    else:
+                        self.assertNotEqual(data[key], key)
+                    if key.startswith("latent"):
+                        self.assertIn("latent", data[key].lower())
+
     def test_listed_values_are_not_left_in_english(self):
         # Keys a locale left untranslated although it translates their siblings.
         cases = {

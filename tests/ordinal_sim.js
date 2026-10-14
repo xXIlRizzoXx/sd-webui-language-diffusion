@@ -62,11 +62,25 @@ const root = new El("DIV", "root", [panel, other]);
 
 const updateCallbacks = [];
 const loadedCallbacks = [];
+// The hosts' onUiUpdate observer is childList only: attribute changes (a
+// placeholder set by gr.update) reach only an observer of the script's own.
+const observers = [];
+class FakeMutationObserver {
+    constructor(cb) {
+        this.cb = cb;
+        this.targets = [];
+        observers.push(this);
+    }
+    observe(target, options) {
+        this.targets.push({ root: target === root, options });
+    }
+}
 const ctx = {
     window: { localization: dict },
     onUiUpdate: (cb) => updateCallbacks.push(cb),
     onUiLoaded: (cb) => loadedCallbacks.push(cb),
     gradioApp: () => root,
+    MutationObserver: FakeMutationObserver,
     console,
 };
 vm.createContext(ctx);
@@ -99,3 +113,19 @@ snapshot("updated");
 loadedCallbacks.forEach((cb) => cb());
 updateCallbacks.forEach((cb) => cb([{ type: "childList", addedNodes: [panel] }]));
 snapshot("again");
+
+// ADetailer sets the YOLO-World classes placeholder only with gr.update():
+// an attribute change on a textarea that is already in the DOM.
+const WORLD = "Comma separated class names to detect, ex: 'person,cat'. default: COCO 80 classes";
+t.world = panel.append(new El("TEXTAREA", "", [], ""));
+t.notKey = panel.append(new El("TEXTAREA", "", [], ""));
+t.outsideWorld = other.append(new El("TEXTAREA", "", [], ""));
+t.world.placeholder = WORLD;
+t.notKey.placeholder = "person,cat";
+t.outsideWorld.placeholder = WORLD;
+const records = [t.world, t.notKey, t.outsideWorld].map((target) => ({ type: "attributes", attributeName: "placeholder", target }));
+observers.forEach((o) => o.cb(records));
+snapshot("placeholder", { observers: observers.map((o) => o.targets) });
+// The write itself is another placeholder mutation: nothing must change.
+observers.forEach((o) => o.cb(records));
+snapshot("placeholderAgain");

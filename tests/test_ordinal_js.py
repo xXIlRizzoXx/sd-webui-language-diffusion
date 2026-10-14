@@ -70,6 +70,25 @@ class AdetailerOrdinalScriptTests(unittest.TestCase):
             with self.subTest(text=name):
                 self.assertEqual(done[name], before[name])
 
+    def test_placeholder_set_later_by_gr_update_is_translated(self):
+        # ADetailer sets the YOLO-World classes placeholder only via
+        # gr.update(): an attribute change the hosts' childList observer misses.
+        key = "Comma separated class names to detect, ex: 'person,cat'. default: COCO 80 classes"
+        for code in ("it_IT", "zh_CN"):
+            with self.subTest(locale=code):
+                with open(os.path.join(LOCALE_DIR, code + ".json"), encoding="utf-8") as f:
+                    loc = json.load(f)
+                steps = self.simulate(code)
+                done = steps["placeholder"]
+                self.assertEqual(done["world"], loc[key])
+                self.assertEqual(done["notKey"], "person,cat")
+                self.assertEqual(done["outsideWorld"], key)
+                # One observer, even though onUiLoaded ran twice.
+                self.assertEqual(done["observers"], [[{"root": True, "options": {
+                    "attributes": True, "attributeFilter": ["placeholder"], "subtree": True}}]])
+                again = dict(steps["placeholderAgain"], step="placeholder", observers=done["observers"])
+                self.assertEqual(again, done)
+
     def test_no_language_selected_changes_nothing(self):
         steps = self.simulate(None)
         before = dict(steps["before"])

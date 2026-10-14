@@ -614,5 +614,7 @@
     "Will upscale the image by the selected scale factor; use width and height sliders to set tile size",
     "Recommended settings: Sampling Steps: 80-100, Sampler: Euler a, Denoising strength: 0.8",
     "Train an embedding or Hypernetwork; you must specify a directory with a set of 1:1 ratio images",
-    "FP8 mode"
+    "FP8 mode",
+    "Uncategorized",
+    "Other"
 ]

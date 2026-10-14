@@ -85,7 +85,7 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
 
 - **Ten complete locale dictionaries** (Italian, Spanish, French, German,
   Simplified Chinese, Japanese, Brazilian Portuguese, Russian, Korean,
-  Polish), each translating 2117 UI strings end to end — labels,
+  Polish), each translating 2165 UI strings end to end — labels,
   dropdown choices, settings descriptions, tooltips, error messages,
   sub-tab names, modal text, for both the Forge Neo and the
   AUTOMATIC1111 1.10 core UI. Includes 212 keys covering every UI string
@@ -135,10 +135,10 @@ Quicksettings list in `config.json` — see [Uninstall](#uninstall).
 | 한국어 | `localizations/ko_KR.json` | 🇰🇷 | full seed translation |
 | Polski | `localizations/pl_PL.json` | 🇵🇱 | full seed translation |
 
-Each non-English JSON is approximately 184–264 KB and contains every
+Each non-English JSON is approximately 186–268 KB and contains every
 English UI string that Forge's localization system can match against,
 mapped to its translation in that locale — the Forge Neo and
-AUTOMATIC1111 core UI (1757 keys), ADetailer Ultimate (212 keys) and
+AUTOMATIC1111 core UI (1805 keys), ADetailer Ultimate (212 keys) and
 Metadata Removal + Image Browser (148 keys); extension keys are used only
 if that extension is installed and are harmless otherwise.
 
@@ -366,7 +366,7 @@ extension stays English if Language Diffusion isn't installed.
 
 | Extension | Strings | Languages | Status |
 |-----------|:-------:|:---------:|--------|
-| 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 1757 | 10 | base coverage |
+| 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 1805 | 10 | base coverage |
 | ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.8 | 212 | **10 / 10** | ✅ verified |
 | ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) v1.0.0 | 39 | **10 / 10** | ✅ native-reviewed |
 | 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 113 | **10 / 10** | ✅ native-reviewed |
@@ -542,16 +542,16 @@ sd-webui-language-diffusion/
 │   ├── forge_language_flags.js            ← flag decorator for the dropdown
 │   └── hints_i18n_patch.js                ← tooltip alias bridge
 └── localizations/
-    ├── it_IT.json    ← Italiano                  ~204 KB
-    ├── es_ES.json    ← Español                   ~207 KB
-    ├── fr_FR.json    ← Français                  ~210 KB
-    ├── de_DE.json    ← Deutsch                   ~204 KB
-    ├── zh_CN.json    ← Simplified Chinese        ~184 KB
-    ├── ja_JP.json    ← 日本語                     ~214 KB
-    ├── pt_BR.json    ← Português (Brasil)        ~203 KB
-    ├── ru_RU.json    ← Русский                   ~264 KB
-    ├── ko_KR.json    ← 한국어                     ~203 KB
-    └── pl_PL.json    ← Polski                    ~200 KB
+    ├── it_IT.json    ← Italiano                  ~207 KB
+    ├── es_ES.json    ← Español                   ~210 KB
+    ├── fr_FR.json    ← Français                  ~213 KB
+    ├── de_DE.json    ← Deutsch                   ~207 KB
+    ├── zh_CN.json    ← Simplified Chinese        ~187 KB
+    ├── ja_JP.json    ← 日本語                     ~217 KB
+    ├── pt_BR.json    ← Português (Brasil)        ~206 KB
+    ├── ru_RU.json    ← Русский                   ~268 KB
+    ├── ko_KR.json    ← 한국어                     ~206 KB
+    └── pl_PL.json    ← Polski                    ~202 KB
 ```
 
 ### `install.py`
@@ -692,6 +692,10 @@ dictionary keys. Inside the ADetailer panels only, this script looks up
 the text without the ordinal and, when that is a key, writes the
 translation followed by the translated ordinal (from the `2nd`, `3rd`,
 ... keys; later tabs reuse the `2nd` translation with their own number).
+It also translates placeholders that ADetailer sets later with
+`gr.update()` (the YOLO-World classes box), which the WebUI never sees:
+a DOM `MutationObserver` on the `placeholder` attribute, inside the
+ADetailer panels, writes the translation when the new text is a key.
 It uses the WebUI's `onUiUpdate`/`onUiLoaded` hooks, adds no Gradio event
 listener, and does nothing when no language is selected.
 

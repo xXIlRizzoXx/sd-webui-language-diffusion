@@ -13,8 +13,15 @@
  * "2nd" translation with the number changed. The result is no longer an
  * English "<label> Nth" text, so a second pass leaves it alone.
  *
- * DOM only: it uses the WebUI's onUiUpdate/onUiLoaded hooks and adds no
- * Gradio event listener. No-op when no language is selected.
+ * ADetailer also sets some placeholders only with gr.update() (the
+ * YOLO-World classes box): an attribute change on a node already in the
+ * DOM, which the WebUI's childList observer never reports. A DOM
+ * MutationObserver on the placeholder attribute translates those inside
+ * the ADetailer panels when the new text is exactly a key.
+ *
+ * DOM only: it uses the WebUI's onUiUpdate/onUiLoaded hooks and a DOM
+ * MutationObserver, and adds no Gradio event listener. No-op when no
+ * language is selected.
  */
 (function () {
     "use strict";
@@ -109,9 +116,41 @@
             });
         });
     }
+    // Placeholder set after mount: exact key, or "<key> Nth" as above. The
+    // written text is remembered, so the mutation it causes is ignored.
+    function onPlaceholderChange(records) {
+        var loc = dict();
+        if (!loc) return;
+        records.forEach(function (r) {
+            var el = r.target;
+            if (r.attributeName !== "placeholder" || !el || !el.placeholder) return;
+            if (el.placeholder === el._ldPlaceholder || !inPanel(el)) return;
+            var tl = Object.prototype.hasOwnProperty.call(loc, el.placeholder) ? loc[el.placeholder] : translate(el.placeholder);
+            if (typeof tl !== "string" || !tl || tl === el.placeholder) return;
+            el._ldPlaceholder = tl;
+            el.placeholder = tl;
+        });
+    }
+
+    var observing = false;
+    function observePlaceholders() {
+        if (observing || !dict() || typeof MutationObserver !== "function") return;
+        var root = gradioApp();
+        if (!root) return;
+        observing = true;
+        new MutationObserver(onPlaceholderChange).observe(root, {
+            attributes: true, attributeFilter: ["placeholder"], subtree: true,
+        });
+    }
+
     if (typeof onUiLoaded === "function" && typeof gradioApp === "function") {
         onUiLoaded(function () {
             process(gradioApp());
+            try {
+                observePlaceholders();
+            } catch (e) {
+                // Never break the page over a placeholder.
+            }
         });
     }
 })();

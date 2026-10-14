@@ -202,10 +202,33 @@ A1111_STILL_USED = [
     "Sampling Method", "Batch Count", "User Interface",
 ]
 
+# Save / Save-zip tooltips are f-strings ending in opts.outdir_save, whose
+# default is a relative path: output/images on Forge Neo, log/images on
+# AUTOMATIC1111, with the separator of the OS.
+SAVE_TOOLTIP_TEMPLATES = [
+    "Save the image to a dedicated directory ({}).",
+    "Save zip archive with images to a dedicated directory ({})",
+]
+SAVE_DIRS = {"forge": ("output/images", "output\\images"), "a1111": ("log/images", "log\\images")}
+SAVE_TOOLTIPS = [t.format(d) for t in SAVE_TOOLTIP_TEMPLATES for dirs in SAVE_DIRS.values() for d in dirs]
+
+# X/Y/Z plot axis types (scripts/xyz_grid.py AxisOption labels) that are
+# technical names and stay English in every locale, so they have no key.
+XYZ_AXIS_KEPT_ENGLISH = {"Prompt S/R", "Shift", "Sigma Churn"}
+
+# X/Y/Z plot axis types added as keys (both hosts; "Initial noise
+# multiplier" and "Cond. Image Mask Weight" are img2img-only axes).
+XYZ_AXIS_LABELS = [
+    "Nothing", "Steps", "Size", "Prompt order", "Var. seed", "Var. strength", "Denoising", "Checkpoint name",
+    "Face restore", "Hires sampler", "Hires upscaler", "Initial noise multiplier", "Refiner checkpoint",
+    "Refiner switch at", "RNG source", "Sigma min", "Sigma max", "Beta schedule alpha", "Beta schedule beta",
+    "Cond. Image Mask Weight", "UniPC Order", "Token merging ratio high-res",
+]
+
 # Keys whose translation may equal the English text: technical vocabulary,
 # or words spelled the same in some languages.
 SAME_AS_ENGLISH = {"Latent Upscale", "📖 Guide", "Horizontal", "Vertical", "Linear", "Modules", "Name", "Notes", "Training",
-                   "(in MB)", "(in ms)", "(EXPERIMENTAL)", "Rectangle", "Oval", "Styles"}
+                   "(in MB)", "(in ms)", "(EXPERIMENTAL)", "Rectangle", "Oval", "Styles", "Steps"}
 
 
 def _is_forge(root):
@@ -278,6 +301,91 @@ def _tooltip_kwargs(root):
     return found
 
 
+def _name(node):
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return None
+
+
+def _label_kwarg(call):
+    for kw in call.keywords:
+        if kw.arg == "label" and isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, str):
+            return kw.value.value
+    return None
+
+
+def _refresh_tooltips(root):
+    """Tooltips of the refresh buttons: ui_common.create_refresh_button draws
+    f"{label}: refresh", label = the first refreshed component's label.
+
+    Settings with refresh= get one too (ui_settings), labelled with the
+    OptionInfo label; Language Diffusion relabels "Localization" to "Language".
+    """
+    labels = set()
+    for path in _host_sources(root, ("modules", "modules_forge", "scripts", "extensions-builtin")):
+        if not path.endswith(".py"):
+            continue
+        try:
+            tree = ast.parse(_read(path))
+        except SyntaxError:
+            continue
+        assigned = {}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
+                label = _label_kwarg(node.value)
+                for target in node.targets:
+                    if label is not None and _name(target):
+                        assigned[_name(target)] = label
+            if (isinstance(node, ast.Call) and _name(node.func) == "OptionInfo"
+                    and any(kw.arg == "refresh" for kw in node.keywords)):
+                label = _label_kwarg(node)
+                if label is None and len(node.args) > 1 and isinstance(node.args[1], ast.Constant):
+                    label = node.args[1].value
+                if isinstance(label, str) and label:
+                    labels.add("Language" if label == "Localization" else label)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and _name(node.func) == "create_refresh_button" and node.args:
+                first = node.args[0]
+                if isinstance(first, ast.List) and first.elts:
+                    first = first.elts[0]
+                if _name(first) in assigned:
+                    labels.add(assigned[_name(first)])
+    return {"%s: refresh" % label for label in labels}
+
+
+def _save_tooltips(root):
+    """The Save / Save-zip tooltip f-strings, drawn with the default outdir_save."""
+    dirs = SAVE_DIRS["forge" if _is_forge(root) else "a1111"]
+    tree = ast.parse(_read(os.path.join(root, "modules", "ui_common.py")))
+    found = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        for kw in node.keywords:
+            if kw.arg != "tooltip" or not isinstance(kw.value, ast.JoinedStr):
+                continue
+            values = kw.value.values
+            fields = [v for v in values if isinstance(v, ast.FormattedValue)]
+            if len(fields) != 1 or _name(fields[0].value) != "outdir_save":
+                continue
+            for d in dirs:
+                found.add("".join(d if isinstance(v, ast.FormattedValue) else v.value for v in values))
+    return found
+
+
+def _xyz_axis_labels(root):
+    """Labels of the X/Y/Z plot axis types (the X/Y/Z type dropdown choices)."""
+    tree = ast.parse(_read(os.path.join(root, "scripts", "xyz_grid.py")))
+    found = set()
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.Call) and _name(node.func) in ("AxisOption", "AxisOptionImg2Img", "AxisOptionTxt2Img")
+                and node.args and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str)):
+            found.add(node.args[0].value)
+    return found
+
+
 class HostStringKeyTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -343,6 +451,44 @@ class HostStringKeyTests(unittest.TestCase):
         tooltips = sorted(t for t in _tooltip_kwargs(HOST_ROOT) if t.strip())
         self.assertGreater(len(tooltips), 20)
         self.assertTranslated(tooltips)
+
+    def test_save_button_tooltips_are_keys(self):
+        # Default outdir_save of both hosts, both path separators.
+        self.assertEqual(len(set(SAVE_TOOLTIPS)), 8)
+        self.assertTranslated(SAVE_TOOLTIPS)
+
+    @unittest.skipUnless(HOST_ROOT and os.path.isfile(os.path.join(HOST_ROOT, "modules", "ui_common.py")),
+                         "LD_HOST_ROOT not set: host save tooltips not checked")
+    def test_host_save_button_tooltips_are_listed(self):
+        tooltips = _save_tooltips(HOST_ROOT)
+        self.assertEqual(len(tooltips), 4)
+        self.assertLessEqual(tooltips, set(SAVE_TOOLTIPS))
+
+    @unittest.skipUnless(HOST_ROOT and os.path.isdir(os.path.join(HOST_ROOT, "modules")),
+                         "LD_HOST_ROOT not set: host refresh tooltips not checked")
+    def test_refresh_button_tooltips_are_keys(self):
+        # f"{label}: refresh" f-strings, invisible to test_tooltip_kwargs_are_keys.
+        tooltips = sorted(_refresh_tooltips(HOST_ROOT))
+        self.assertIn("Language: refresh", tooltips)
+        self.assertIn("Styles: refresh", tooltips)
+        self.assertGreater(len(tooltips), 5)
+        self.assertTranslated(tooltips)
+
+    def test_xyz_axis_labels_are_keys(self):
+        self.assertEqual(len(XYZ_AXIS_LABELS), len(set(XYZ_AXIS_LABELS)))
+        self.assertTranslated(XYZ_AXIS_LABELS)
+
+    @unittest.skipUnless(HOST_ROOT and os.path.isfile(os.path.join(HOST_ROOT, "scripts", "xyz_grid.py")),
+                         "LD_HOST_ROOT not set: host X/Y/Z axis labels not checked")
+    def test_host_xyz_axis_labels_have_keys(self):
+        # The X/Y/Z type dropdown lists every axis label; type="index", so the
+        # translated option text does not change the value.
+        labels = _xyz_axis_labels(HOST_ROOT)
+        self.assertGreater(len(labels), 40)
+        for code, data in sorted(self.locales.items()):
+            for label in sorted(labels - XYZ_AXIS_KEPT_ENGLISH):
+                with self.subTest(locale=code, label=label):
+                    self.assertIn(label, data)
 
     @unittest.skipUnless(HOST_ROOT and os.path.isdir(os.path.join(HOST_ROOT, "modules")),
                          "LD_HOST_ROOT not set: host source check skipped")
