@@ -118,9 +118,14 @@ Korean dialects, etc.):
    - `scripts/language_diffusion_setup.py` →
      `LOCALE_DISPLAY_NAMES` dict (add `"xx_XX": "Autoglottonym"`)
    - `javascript/forge_language_flags.js`:
-     - `LABEL_TO_CODE` (add autoglottonym → flag-code mapping)
+     - `LABEL_TO_CODE` (add autoglottonym → flag-code mapping, and
+       the new language's word for "English" → `"uk"`; that word must
+       equal the `"English"` value in the new `localizations/xx_XX.json`)
      - `RAW_CODE_TO_FLAG` (add `"xx_XX"` → flag-code mapping, used
        on AUTOMATIC1111 / Gradio 3)
+     - `RAW_CODE_TO_NAME` (add `"xx_XX": "Autoglottonym"`, the same
+       name as in `LOCALE_DISPLAY_NAMES`; AUTOMATIC1111 / Gradio 3
+       shows it over the raw code)
      - `FLAG_SVG` (add inline-SVG flag)
 4. Add the row to the locale table in the README.
 5. Add the new code to `EXPECTED_LOCALES` in `tests/test_locales.py`,

@@ -897,8 +897,10 @@ below uses Dutch, `nl_NL`):
    Open `javascript/forge_language_flags.js` and:
 
    - Add the autoglottonym to `LABEL_TO_CODE`, mapped to a flag key,
-     plus your language's word for "English" if you want the flag on
-     the English entry too. Do **not** add the raw code here: the
+     plus your language's word for "English" mapped to `"uk"`. That
+     word is required: it must equal the `"English"` value in your new
+     `localizations/nl_NL.json`, or the English entry loses its flag
+     when the UI is in your language. Do **not** add the raw code here: the
      dropdown shows it briefly while mounting, and the code-to-label
      transition would be read as a user pick (reload loop).
      ```javascript
@@ -910,6 +912,13 @@ below uses Dutch, `nl_NL`):
      whose Gradio 3 picker shows raw codes):
      ```javascript
      "nl_NL": "nl",
+     ```
+
+   - Add the raw code to `RAW_CODE_TO_NAME`, with the same name as in
+     `LOCALE_DISPLAY_NAMES`. AUTOMATIC1111 (Gradio 3) draws this name
+     over the raw code in the dropdown:
+     ```javascript
+     "nl_NL": "Nederlands",
      ```
 
    - Add the inline SVG to `FLAG_SVG`. Keep it compact — see the

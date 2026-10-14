@@ -241,6 +241,25 @@ class ReadmeBehaviourTests(unittest.TestCase):
                 self.assertIn("`EXPECTED_LOCALES` in `tests/test_locales.py`", recipe)
                 self.assertIn("tests/test_docs.py", recipe)
 
+    def test_new_language_recipes_name_every_locale_map(self):
+        # Every per-locale map in the picker script (the ones holding the
+        # Italian entry) must be in both new-language recipes.
+        js = _read(FLAGS_JS)
+        maps = []
+        for m in re.finditer(r"^([ \t]*)const ([A-Z_]+) = \{\n", js, re.MULTILINE):
+            body = js[m.end():js.index("\n%s};" % m.group(1), m.end())]
+            if re.search(r'"it_IT"\s*:|"Italiano"\s*:|^\s*it:', body, re.MULTILINE):
+                maps.append(m.group(2))
+        self.assertIn("RAW_CODE_TO_NAME", maps)
+        recipes = {
+            "README": _section(self.readme, "## Adding a brand-new language"),
+            "CONTRIBUTING": _section(_read(os.path.join(REPO, "CONTRIBUTING.md")), "## Tier D"),
+        }
+        for doc, recipe in recipes.items():
+            for name in maps:
+                with self.subTest(doc=doc, map=name):
+                    self.assertIn("`%s`" % name, recipe)
+
     def test_in_page_links_resolve(self):
         for doc in (README, os.path.join(REPO, "CONTRIBUTING.md")):
             text = re.sub(r"```.*?```", "", _read(doc), flags=re.DOTALL)

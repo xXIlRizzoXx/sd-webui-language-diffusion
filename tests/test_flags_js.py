@@ -35,21 +35,63 @@ NODE = find_node()
 
 
 
+def _js_block(start):
+    # Body of a map in the picker script, from its "const NAME = {" line to
+    # the matching closing "};" (same indentation).
+    with open(FLAGS_JS, encoding="utf-8") as f:
+        text = f.read().replace("\r\n", "\n")
+    m = re.search(r"^([ \t]*)const %s = \{\n" % re.escape(start), text, re.M)
+    return text[m.end():text.index("\n%s};" % m.group(1), m.end())]
+
+
+_PAIR = re.compile(r'^\s*"([^"]+)": "([^"]+)",(?:\s*//.*)?$', re.M)
+
+
+def _js_pairs(name):
+    return dict(_PAIR.findall(_js_block(name)))
+
+
+def _locale_codes():
+    folder = os.path.join(REPO, "localizations")
+    return {os.path.splitext(n)[0] for n in os.listdir(folder) if n.endswith(".json")}
+
+
 class PickerNamesTests(unittest.TestCase):
     def test_gradio_3_names_match_the_setup_script(self):
-        # Gradio 3 must show the same names Forge Neo gets from the setup script.
-        pair = re.compile(r'^\s*"([^"]+)": "([^"]+)",\s*$', re.M)
+        # Gradio 3 must show the same names Forge Neo gets from the setup script,
+        # for "None" (English) and every shipped locale file.
+        with open(os.path.join(REPO, "scripts", "language_diffusion_setup.py"), encoding="utf-8") as f:
+            text = f.read()
+        text = text[text.index("LOCALE_DISPLAY_NAMES = {"):]
+        py = dict(_PAIR.findall(text[:text.index("}")]))
+        self.assertEqual(set(py), {"None"} | _locale_codes())
+        self.assertEqual(_js_pairs("RAW_CODE_TO_NAME"), py)
 
-        def block(path, start):
-            with open(path, encoding="utf-8") as f:
-                text = f.read()
-            text = text[text.index(start):]
-            return dict(pair.findall(text[:text.index("}")]))
+    def test_raw_code_maps_agree(self):
+        # Gradio 3: the flag of a raw code is the flag of its name.
+        names = _js_pairs("RAW_CODE_TO_NAME")
+        flags = _js_pairs("RAW_CODE_TO_FLAG")
+        labels = _js_pairs("LABEL_TO_CODE")
+        self.assertEqual(set(flags), set(names))
+        for code, flag in flags.items():
+            with self.subTest(code=code):
+                self.assertEqual(labels.get(names[code]), flag)
 
-        js = block(FLAGS_JS, "const RAW_CODE_TO_NAME = {")
-        py = block(os.path.join(REPO, "scripts", "language_diffusion_setup.py"), "LOCALE_DISPLAY_NAMES = {")
-        self.assertEqual(len(py), 11)
-        self.assertEqual(js, py)
+    def test_every_flag_has_an_svg(self):
+        svgs = set(re.findall(r"^\s*(\w+):\s*$", _js_block("FLAG_SVG"), re.M))
+        used = set(_js_pairs("LABEL_TO_CODE").values()) | set(_js_pairs("RAW_CODE_TO_FLAG").values())
+        self.assertTrue(used)
+        self.assertEqual(used - svgs, set())
+
+    def test_every_locale_english_word_has_the_uk_flag(self):
+        # Forge Neo shows "English" through the UI translation: the English
+        # entry keeps its flag only if that word is in LABEL_TO_CODE.
+        labels = _js_pairs("LABEL_TO_CODE")
+        for code in sorted(_locale_codes()):
+            with self.subTest(locale=code):
+                with open(os.path.join(REPO, "localizations", code + ".json"), encoding="utf-8") as f:
+                    english = json.load(f)["English"]
+                self.assertEqual(labels.get(english), "uk")
 
 
 @unittest.skipUnless(NODE, "node not found (set LD_NODE): picker script tests skipped")
