@@ -214,14 +214,16 @@ def pin_to_quicksettings_once() -> None:
 
     if "localization" not in items:
         items.append("localization")
-        shared.opts.quicksettings_list = items
         # Persist immediately so the change survives the launch even
         # if the user never clicks "Apply settings" again.
         try:
+            # Raises when the host freezes settings (--freeze-settings,
+            # --freeze-settings-in-sections, --freeze-specific-settings).
+            shared.opts.quicksettings_list = items
             shared.opts.save(shared.config_filename)
         except Exception:
-            # Persistence failed — don't claim "first run done" so we
-            # retry next launch.
+            # Frozen or persistence failed — don't claim "first run done"
+            # so we retry next launch.
             return
 
     # Mark first-run setup as complete (reached when localization is in

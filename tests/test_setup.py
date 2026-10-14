@@ -114,6 +114,29 @@ class SetupScriptTests(unittest.TestCase):
         self.run_setup(host)
         self.assertEqual(host.opts.quicksettings_list, [])
 
+    def test_frozen_quicksettings_list_does_not_abort_startup(self):
+        # --freeze-specific-settings / --freeze-settings / --freeze-settings-in-sections
+        # make Options.__setattr__ assert: the first-run pin must give up quietly
+        # (no marker, list untouched) and the later startup steps must still run.
+        frozen = (
+            {"freeze_specific_settings": "quicksettings_list"},
+            {"freeze_settings": True},
+            {"freeze_settings_in_sections": "ui"},
+        )
+        for flags in frozen:
+            with self.subTest(**flags):
+                host = self.make_host(quicksettings=["sd_model_checkpoint"])
+                cmd_opts = host.options.cmd_opts
+                for name, value in flags.items():
+                    setattr(cmd_opts, name, value)
+                _, out = self.run_setup(host)
+                self.assertEqual(host.opts.quicksettings_list, ["sd_model_checkpoint"])
+                self.assertFalse(os.path.exists(host.marker))
+                self.assertIn("[Language Diffusion] loaded", out)
+                self.assertIsNone(host.opts.data_labels["localization"].section[0])
+                self.assertEqual(host.rescan_calls, 1)
+                self.assertIsNotNone(host.opts.data_labels["localization"].onchange)
+
     def test_language_change_rebuilds_cached_page_head(self):
         host = self.make_host()
         _, _ = self.run_setup(host)
