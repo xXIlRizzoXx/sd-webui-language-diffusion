@@ -11,6 +11,7 @@ against its real files, so a typo in a list cannot pass unnoticed.
 import ast
 import json
 import os
+import re
 import unittest
 
 from _host import HOST_ROOT
@@ -21,7 +22,8 @@ TESTS = os.path.dirname(os.path.abspath(__file__))
 # AUTOMATIC1111 1.10.1 core and builtin extensions. Many labels are the
 # sentence-case twins of Forge Neo's Title Case keys ("Sampling method" vs
 # "Sampling Method"); the rest exist only in A1111 (Train tab, scripts,
-# settings). Settings hints are listed as drawn: "(hint)".
+# settings, hints.js tooltips, Script dropdown titles). Settings hints are
+# listed as drawn: "(hint)".
 with open(os.path.join(TESTS, "a1111_strings.json"), encoding="utf-8") as _f:
     A1111_STRINGS = json.load(_f)
 
@@ -200,7 +202,7 @@ A1111_STILL_USED = [
 # Keys whose translation may equal the English text: technical vocabulary,
 # or words spelled the same in some languages.
 SAME_AS_ENGLISH = {"Latent Upscale", "📖 Guide", "Horizontal", "Vertical", "Linear", "Modules", "Name", "Notes", "Training",
-                   "(in MB)", "(in ms)", "(EXPERIMENTAL)", "Rectangle", "Oval"}
+                   "(in MB)", "(in ms)", "(EXPERIMENTAL)", "Rectangle", "Oval", "Styles"}
 
 
 def _is_forge(root):
@@ -237,6 +239,39 @@ def _settings_hints(root):
                     and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str)
                     and "<" not in node.args[0].value):
                 found.add(node.args[0].value)
+    return found
+
+
+_JS_STRING = r"""(?:"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')"""
+
+
+def _hints_js_tooltips(root):
+    """Tooltip texts of the `titles` table in the host's javascript/hints.js.
+
+    hints.js shows localization[titles[label]] || titles[label], so the
+    English tooltip text itself must be a dictionary key.
+    """
+    src = _read(os.path.join(root, "javascript", "hints.js"))
+    table = re.search(r"\btitles\s*=\s*\{(.*?)\n\};", src, re.S).group(1)
+    entry = re.compile(r"^\s*%s\s*:\s*(%s)\s*,?\s*$" % (_JS_STRING, _JS_STRING), re.M)
+    return [ast.literal_eval(m.group(1)) for m in entry.finditer(table)]
+
+
+def _tooltip_kwargs(root):
+    """Plain-text literals passed as tooltip= (drawn as the title attribute)."""
+    found = set()
+    for path in _host_sources(root, ("modules", "modules_forge", "scripts", "extensions-builtin")):
+        if not path.endswith(".py"):
+            continue
+        try:
+            tree = ast.parse(_read(path))
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                for kw in node.keywords:
+                    if kw.arg == "tooltip" and isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, str):
+                        found.add(kw.value.value)
     return found
 
 
@@ -291,6 +326,20 @@ class HostStringKeyTests(unittest.TestCase):
         self.assertGreater(len(hints), 20)
         keyed = sorted(h for h in hints if h in self.locales["it_IT"])
         self.assertTranslated(["(%s)" % h for h in keyed])
+
+    @unittest.skipUnless(HOST_ROOT and os.path.isfile(os.path.join(HOST_ROOT, "javascript", "hints.js")),
+                         "LD_HOST_ROOT not set: host hints.js not checked")
+    def test_hints_js_tooltips_are_keys(self):
+        tooltips = sorted(set(_hints_js_tooltips(HOST_ROOT)))
+        self.assertGreater(len(tooltips), 20)
+        self.assertTranslated(tooltips)
+
+    @unittest.skipUnless(HOST_ROOT and os.path.isdir(os.path.join(HOST_ROOT, "modules")),
+                         "LD_HOST_ROOT not set: host tooltips not checked")
+    def test_tooltip_kwargs_are_keys(self):
+        tooltips = sorted(t for t in _tooltip_kwargs(HOST_ROOT) if t.strip())
+        self.assertGreater(len(tooltips), 20)
+        self.assertTranslated(tooltips)
 
     @unittest.skipUnless(HOST_ROOT and os.path.isdir(os.path.join(HOST_ROOT, "modules")),
                          "LD_HOST_ROOT not set: host source check skipped")
