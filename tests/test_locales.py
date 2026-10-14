@@ -132,6 +132,22 @@ class LocaleFileTests(unittest.TestCase):
                 english = data["English"]
                 self.assertRegex(js, r'"%s"\s*:\s*"uk"' % re.escape(english))
 
+    def test_every_adetailer_tab_has_its_enable_and_paste_keys(self):
+        # ADetailer builds these labels with ordinal(n) for every tab up to
+        # its "Max tabs" slider maximum (15); adetailer_ordinal_i18n.js only
+        # handles a trailing ordinal, so each tab needs its own key.
+        def ordinal(n):
+            suffix = "th" if 11 <= n % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+            return f"{n}{suffix}"
+
+        for code, (_, data) in self.locales.items():
+            for n in range(1, 16):
+                for key in (f"Enable this tab ({ordinal(n)})", f"📥 Paste from {ordinal(n)} tab"):
+                    with self.subTest(locale=code, key=key):
+                        self.assertIn(key, data)
+                        self.assertIn(str(n), data[key])
+                        self.assertNotEqual(data[key], key)
+
 
 if __name__ == "__main__":
     unittest.main()

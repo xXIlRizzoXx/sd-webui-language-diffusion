@@ -131,6 +131,18 @@ class ReadmeBehaviourTests(unittest.TestCase):
                 self.assertFalse(claim in self.flat, claim)
         self.assertTrue("reloads automatically" in _flat(_section(self.readme, "## Daily use")))
 
+    def test_code_comments_describe_the_pinned_picker(self):
+        # The setup script hides the setting from Settings and pins it; the
+        # picker script reloads the page itself. Comments must say the same.
+        sources = [FLAGS_JS, os.path.join(REPO, "style.css")]
+        sources += glob.glob(os.path.join(REPO, "scripts", "*.py"))
+        for path in sources:
+            text = _flat(_read(path))
+            for claim in ("Apply-Settings-then-Reload-UI", "both in Settings > User Interface",
+                          "If the user adds `localization`"):
+                with self.subTest(file=os.path.basename(path), claim=claim):
+                    self.assertFalse(claim in text, claim)
+
     def test_automatic1111_row_states_the_checked_version(self):
         rows = [line for line in self.readme.splitlines() if line.startswith("| AUTOMATIC1111")]
         self.assertEqual(len(rows), 1)

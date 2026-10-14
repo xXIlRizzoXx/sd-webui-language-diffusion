@@ -5,8 +5,8 @@
  * when it binds. Nothing in this file touches any other Gradio dropdown.
  */
 
-/* If the user adds `localization` to Settings > User Interface >
- * Quicksettings list, the dropdown shows up in the top-right row.
+/* The setup script pins `localization` to the quicksettings row, so the
+ * dropdown shows up in the top-right row.
  * Right-pin it so it ends up next to UI Preset / Checkpoint / VAE.
  * min-width is !important to beat AUTOMATIC1111's `#quicksettings >
  * div.gradio-dropdown { min-width: 24em !important }`; `unset` is the value

@@ -85,10 +85,10 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
 
 - **Ten complete locale dictionaries** (Italian, Spanish, French, German,
   Simplified Chinese, Japanese, Brazilian Portuguese, Russian, Korean,
-  Polish), each translating 2093 UI strings end to end — labels,
+  Polish), each translating 2115 UI strings end to end — labels,
   dropdown choices, settings descriptions, tooltips, error messages,
   sub-tab names, modal text, for both the Forge Neo and the
-  AUTOMATIC1111 1.10 core UI. Includes 188 keys covering every UI string
+  AUTOMATIC1111 1.10 core UI. Includes 210 keys covering every UI string
   in the [ADetailer Ultimate](https://github.com/xXIlRizzoXx/adetailer-ultimate)
   extension (when installed) so the ADetailer panel translates in place
   with the rest of the UI.
@@ -135,10 +135,10 @@ Quicksettings list in `config.json` — see [Uninstall](#uninstall).
 | 한국어 | `localizations/ko_KR.json` | 🇰🇷 | full seed translation |
 | Polski | `localizations/pl_PL.json` | 🇵🇱 | full seed translation |
 
-Each non-English JSON is approximately 183–262 KB and contains every
+Each non-English JSON is approximately 184–264 KB and contains every
 English UI string that Forge's localization system can match against,
 mapped to its translation in that locale — the Forge Neo and
-AUTOMATIC1111 core UI (1757 keys), ADetailer Ultimate (188 keys) and
+AUTOMATIC1111 core UI (1757 keys), ADetailer Ultimate (210 keys) and
 Metadata Removal + Image Browser (148 keys); extension keys are used only
 if that extension is installed and are harmless otherwise.
 
@@ -362,7 +362,7 @@ extension stays English if Language Diffusion isn't installed.
 | Extension | Strings | Languages | Status |
 |-----------|:-------:|:---------:|--------|
 | 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 1757 | 10 | base coverage |
-| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.8 | 188 | **10 / 10** | ✅ verified |
+| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.8 | 210 | **10 / 10** | ✅ verified |
 | ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) v1.0.0 | 39 | **10 / 10** | ✅ native-reviewed |
 | 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 113 | **10 / 10** | ✅ native-reviewed |
 
@@ -531,16 +531,16 @@ sd-webui-language-diffusion/
 │   ├── forge_language_flags.js            ← flag decorator for the dropdown
 │   └── hints_i18n_patch.js                ← tooltip alias bridge
 └── localizations/
-    ├── it_IT.json    ← Italiano                  ~203 KB
-    ├── es_ES.json    ← Español                   ~205 KB
-    ├── fr_FR.json    ← Français                  ~209 KB
-    ├── de_DE.json    ← Deutsch                   ~202 KB
-    ├── zh_CN.json    ← Simplified Chinese        ~183 KB
-    ├── ja_JP.json    ← 日本語                     ~212 KB
-    ├── pt_BR.json    ← Português (Brasil)        ~202 KB
-    ├── ru_RU.json    ← Русский                   ~262 KB
-    ├── ko_KR.json    ← 한국어                     ~202 KB
-    └── pl_PL.json    ← Polski                    ~198 KB
+    ├── it_IT.json    ← Italiano                  ~204 KB
+    ├── es_ES.json    ← Español                   ~207 KB
+    ├── fr_FR.json    ← Français                  ~210 KB
+    ├── de_DE.json    ← Deutsch                   ~204 KB
+    ├── zh_CN.json    ← Simplified Chinese        ~184 KB
+    ├── ja_JP.json    ← 日本語                     ~214 KB
+    ├── pt_BR.json    ← Português (Brasil)        ~203 KB
+    ├── ru_RU.json    ← Русский                   ~264 KB
+    ├── ko_KR.json    ← 한국어                     ~203 KB
+    └── pl_PL.json    ← Polski                    ~200 KB
 ```
 
 ### `install.py`
@@ -617,8 +617,8 @@ The flag decorator + auto-reload trigger. Self-contained IIFE
    Gradio 4 (autoglottonyms like `Italiano` plus the translated forms
    of `English`) to a short flag key (`it`, `es`, ...). Raw locale
    codes are deliberately left out: Gradio shows them briefly while
-   mounting the dropdown, and mapping them would make that transition
-   look like a user pick (reload loop).
+   mounting the dropdown, and the reload poller treats them as
+   transient, so that transition never counts as a user pick.
    `RAW_CODE_TO_FLAG` maps the raw codes (`None`, `it_IT`, ...) and
    is used only on Gradio 3 (AUTOMATIC1111 1.10), whose dropdown
    input has no `role` attribute and shows the raw codes;
@@ -626,7 +626,8 @@ The flag decorator + auto-reload trigger. Self-contained IIFE
 2. `FLAG_SVG` — for each flag key, an inline SVG data URI of that
    national flag at roughly 3:2 aspect ratio.
 3. `decorateOption(li)` — prepends a flag `<img>` to a single option
-   `<li>` inside the open dropdown.
+   `<li>` inside the open dropdown, and swaps it when Gradio reuses the
+   `<li>` for another language while the list is filtered by typing.
 4. `decorateOpenList(dropdown)` — finds the floating `<ul.options>`
    panel (Gradio mounts it as a detached node referenced via
    `aria-controls` on the input) and runs `decorateOption` on each
@@ -638,8 +639,11 @@ The flag decorator + auto-reload trigger. Self-contained IIFE
    available, otherwise `location.reload()`.
 7. `bindDropdown(dropdown)` — attaches click/focus/input listeners to
    the dropdown, so the option list gets decorated every time the user
-   opens it. Also adds a `change` listener on the input element that
-   fires `triggerReload()` 700 ms after the value changes. This is the
+   opens it. Also polls the input value every 200 ms and fires
+   `triggerReload()` 700 ms after the user picks another language: a
+   new value that is still there once the input has lost the focus
+   (text typed to filter the list does not count; Gradio blurs the
+   input after a pick). This is the
    missing link in Forge's quicksettings flow: `run_settings_single()`
    persists the new value to `config.json` but does not reload the
    page, so without this hook the user has to manually click "Reload

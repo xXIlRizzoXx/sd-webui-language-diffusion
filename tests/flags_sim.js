@@ -1,5 +1,5 @@
 // Node simulation of javascript/forge_language_flags.js on a tiny fake DOM.
-// Usage: node flags_sim.js <path to forge_language_flags.js> <gradio3|gradio4>
+// Usage: node flags_sim.js <path to forge_language_flags.js> <gradio3|gradio4> [scenario]
 // Prints one JSON line per scenario step; run by tests/test_flags_js.py.
 
 "use strict";
@@ -8,6 +8,7 @@ const vm = require("vm");
 
 const src = fs.readFileSync(process.argv[2], "utf8");
 const gradio = process.argv[3];
+const scenario = process.argv[4] || "default";
 
 function El(tag, attrs, text) {
     this.tagName = tag.toUpperCase();
@@ -86,10 +87,17 @@ El.prototype.querySelectorAll = function (sel) {
     if (sel === ":scope > .forge-flag-indicator") {
         return this.children.filter((e) => e.className === "forge-flag-indicator");
     }
+    if (sel === ":scope > img.forge-flag") {
+        return this.children.filter((e) => e.tagName === "IMG" && e.className === "forge-flag");
+    }
     throw new Error("unsupported selector " + sel);
 };
 El.prototype.querySelector = function (sel) {
     return this.querySelectorAll(sel)[0] || null;
+};
+El.prototype.matches = function (sel) {
+    if (sel === ":focus") return sandbox.document.activeElement === this;
+    throw new Error("unsupported selector " + sel);
 };
 El.prototype.closest = function (sel) {
     let e = this;
@@ -104,6 +112,9 @@ El.prototype.closest = function (sel) {
 const block = new El("div", { id: "setting_localization" });
 const wrap = block.appendChild(new El("div", { class: "wrap" }));
 let input;
+// Value the input shows when the script binds.
+const initial = { "thirdparty-from": "zh_TW", "mount-click": "" }[scenario];
+const firstValue = initial === undefined ? "it_IT" : initial;
 const choiceNodes = [];
 const ul = new El("ul", { class: "options" });
 if (gradio === "gradio3") {
@@ -111,7 +122,7 @@ if (gradio === "gradio3") {
     // text = check mark span + bare text nodes " ", choice, " " (core
     // localization.js translates "None"; "zh_TW" stands for a locale of
     // another extension that LD does not know).
-    input = wrap.appendChild(new El("input", { class: "border-none", autocomplete: "off", value: "it_IT" }));
+    input = wrap.appendChild(new El("input", { class: "border-none", autocomplete: "off", value: firstValue }));
     [["None", "Nessuno"], ["it_IT", "it_IT"], ["de_DE", "de_DE"], ["zh_TW", "zh_TW"]].forEach(([v, t]) => {
         const li = ul.appendChild(new El("li", { class: "item", role: "button", "data-value": v, "aria-label": v }));
         li.appendChild(new El("span", { class: "inner-item" }, "✓"));
@@ -123,7 +134,7 @@ if (gradio === "gradio3") {
 } else {
     // Gradio 4.40: role=listbox, (label, value) tuples show labels; the
     // raw code shows up briefly while mounting.
-    input = wrap.appendChild(new El("input", { role: "listbox", "aria-controls": "dropdown-options", value: "it_IT" }));
+    input = wrap.appendChild(new El("input", { role: "listbox", "aria-controls": "dropdown-options", value: firstValue }));
     ["Inglese", "Italiano", "Deutsch"].forEach((t) => ul.appendChild(new El("li", { class: "item", role: "option" }, t)));
 }
 block.appendChild(ul);
@@ -139,6 +150,7 @@ const sandbox = {
         getElementById: (id) => (id === "setting_localization" ? block : null),
         querySelectorAll: () => [block, refreshButton],
         createElement: (t) => new El(t),
+        activeElement: null,
     },
     location: { reload: () => reloads++ },
     setInterval: (f) => (intervals.push(f), intervals.length),
@@ -160,6 +172,7 @@ function tick() {
 }
 function report(step) {
     const flags = ul.children.map((li) => (li.children[0] && li.children[0].src ? "flag" : "-"));
+    const flagSrcs = ul.children.map((li) => li.children.filter((c) => c.className === "forge-flag").map((c) => c.src));
     const ind = wrap.children.find((e) => e.className === "forge-flag-indicator");
     const name = ind && ind.children.find((e) => e.className === "forge-flag-name");
     const labels = ul.children.map((li) =>
@@ -174,6 +187,7 @@ function report(step) {
             pollers: intervals.length,
             reloads,
             optionFlags: flags,
+            optionFlagSrcs: flagSrcs,
             optionLabels: labels,
             optionValues: ul.children.map((li) => li.getAttribute("data-value")),
             inputValue: input.value,
@@ -184,7 +198,125 @@ function report(step) {
     );
 }
 
-if (gradio === "gradio3") {
+// The user clicks the picker and the input takes the focus; a pick (click
+// or Enter on an option) blurs it on both Gradio versions.
+function focus() {
+    block.fire("click");
+    sandbox.document.activeElement = input;
+    input.fire("focus");
+}
+function blur() {
+    sandbox.document.activeElement = null;
+}
+function type(text) {
+    input.value = text;
+    input.fire("input");
+}
+// Raw code on Gradio 3, (label, value) label on Gradio 4.
+const show = (g3, g4) => (gradio === "gradio3" ? g3 : g4);
+// Page load: Gradio 4 swaps the raw code for its label while mounting.
+function mount() {
+    tick();
+    if (gradio === "gradio4" && input.value === "it_IT") input.value = "Italiano";
+    tick();
+}
+
+if (scenario === "typed") {
+    // Type to filter the list, then pick the remaining entry.
+    mount();
+    focus();
+    tick();
+    report("opened");
+    type(show("d", "Deut"));
+    tick();
+    type(show("de", "Deutsch")); // the exact label, still typing
+    tick();
+    tick();
+    report("typing");
+    input.value = show("de_DE", "Deutsch"); // Enter / click on the option
+    blur();
+    tick();
+    tick();
+    report("picked");
+} else if (scenario === "typed-blur") {
+    // Type, then leave the picker without picking: nothing was saved.
+    mount();
+    focus();
+    tick();
+    type(show("de", "Deut"));
+    tick();
+    input.value = show("", "Italiano"); // Gradio resets the text on blur
+    blur();
+    tick();
+    tick();
+    report("left");
+    focus(); // a later real pick still reloads
+    tick();
+    input.value = show("de_DE", "Deutsch");
+    blur();
+    tick();
+    tick();
+    report("picked");
+} else if (scenario === "thirdparty-to" || scenario === "thirdparty-from") {
+    // zh_TW stands for a locale of another extension: LD shows its raw code.
+    mount();
+    focus();
+    tick();
+    report("opened");
+    input.value = scenario === "thirdparty-to" ? "zh_TW" : show("it_IT", "Italiano");
+    blur();
+    tick();
+    tick();
+    report("picked");
+} else if (scenario === "mount-click") {
+    // Gradio 4 mount (empty -> raw code -> label) while the user already
+    // clicked the picker: still not a pick.
+    focus();
+    blur();
+    tick();
+    input.value = "it_IT";
+    tick();
+    input.value = show("it_IT", "Italiano");
+    tick();
+    tick();
+    report("mounted");
+    focus();
+    input.value = show("de_DE", "Deutsch");
+    blur();
+    tick();
+    tick();
+    report("picked");
+} else if (scenario === "refilter-flags") {
+    // Typing to filter reuses the first option element for another
+    // language (unkeyed each block on both Gradio versions).
+    mount();
+    focus();
+    tick();
+    report("opened");
+    const first = ul.children[0];
+    if (gradio === "gradio3") {
+        first.attrs["data-value"] = "it_IT";
+        first.attrs["aria-label"] = "it_IT";
+        choiceNodes[0].nodeValue = "it_IT";
+    } else {
+        first.textContent = "Italiano";
+    }
+    type("ital");
+    tick();
+    report("filtered");
+    input.fire("input"); // decorated again, nothing changed
+    tick();
+    report("again");
+    if (gradio === "gradio3") {
+        first.attrs["data-value"] = "zh_TW";
+        choiceNodes[0].nodeValue = "zh_TW";
+    } else {
+        first.textContent = "zh_TW";
+    }
+    type("zh");
+    tick();
+    report("unknown");
+} else if (gradio === "gradio3") {
     tick();
     report("mounted");
     input.value = "de_DE"; // value pushed without any user interaction
@@ -227,10 +359,10 @@ if (gradio === "gradio3") {
     input.value = "it_IT"; // a raw code must never count as a pick here
     tick();
     report("raw-code");
-    input.value = "Deutsch"; // unknown -> known: not a pick either
+    input.value = "Italiano"; // back to the language in use: not a pick
     tick();
     report("after-raw");
-    input.value = "Italiano"; // known -> known after interaction: pick
+    input.value = "Deutsch"; // another language after interaction: pick
     tick();
     tick();
     report("picked");

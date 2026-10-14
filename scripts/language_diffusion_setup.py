@@ -33,10 +33,11 @@ This script does three things at Forge startup:
        so pin gets re-added on next launch.
 
 All three actions are pure UI reorganisation. The setting key,
-dropdown options, persistence, Apply-Settings-then-Reload-UI flow,
-and PNG infotext format are unchanged. Disabling the extension
-shows the setting on the Settings page again, but the quicksettings
-pin is saved in config.json and stays until the user removes it.
+dropdown options, persistence and PNG infotext format are unchanged
+(the picker script reloads the page itself after a pick). Disabling
+the extension shows the setting on the Settings page again, but the
+quicksettings pin is saved in config.json and stays until the user
+removes it.
 """
 
 import os

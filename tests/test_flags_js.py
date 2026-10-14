@@ -54,9 +54,9 @@ class PickerNamesTests(unittest.TestCase):
 
 @unittest.skipUnless(NODE, "node not found (set LD_NODE): picker script tests skipped")
 class LanguagePickerScriptTests(unittest.TestCase):
-    def simulate(self, gradio):
+    def simulate(self, gradio, scenario="default"):
         proc = subprocess.run(
-            [NODE, SIM_JS, FLAGS_JS, gradio],
+            [NODE, SIM_JS, FLAGS_JS, gradio, scenario],
             capture_output=True, text=True, encoding="utf-8", timeout=120,
         )
         self.assertEqual(proc.returncode, 0, proc.stderr)
@@ -109,6 +109,52 @@ class LanguagePickerScriptTests(unittest.TestCase):
         self.assertEqual(steps["picked"]["optionLabels"], ["Inglese", "Italiano", "Deutsch"])
         self.assertIsNone(steps["picked"]["indicatorName"])
         self.assertFalse(steps["picked"]["named"])
+
+    def test_pick_after_typing_a_filter_reloads_once(self):
+        # Typed text is not a pick, even the exact label while still typing;
+        # the option picked after it is (Gradio has saved it by then).
+        for gradio in ("gradio3", "gradio4"):
+            with self.subTest(gradio=gradio):
+                steps = self.simulate(gradio, "typed")
+                self.assertEqual(steps["typing"]["reloads"], 0)
+                self.assertEqual(steps["picked"]["reloads"], 1)
+
+    def test_typing_then_leaving_without_a_pick_does_not_reload(self):
+        for gradio in ("gradio3", "gradio4"):
+            with self.subTest(gradio=gradio):
+                steps = self.simulate(gradio, "typed-blur")
+                self.assertEqual(steps["left"]["reloads"], 0)
+                self.assertEqual(steps["picked"]["reloads"], 1)
+
+    def test_picks_to_and_from_a_locale_of_another_extension_reload(self):
+        for gradio in ("gradio3", "gradio4"):
+            for scenario in ("thirdparty-to", "thirdparty-from"):
+                with self.subTest(gradio=gradio, scenario=scenario):
+                    steps = self.simulate(gradio, scenario)
+                    self.assertEqual(steps["opened"]["reloads"], 0)
+                    self.assertEqual(steps["picked"]["reloads"], 1)
+
+    def test_mount_after_an_early_click_is_not_a_pick(self):
+        for gradio in ("gradio3", "gradio4"):
+            with self.subTest(gradio=gradio):
+                steps = self.simulate(gradio, "mount-click")
+                self.assertEqual(steps["mounted"]["reloads"], 0)
+                self.assertEqual(steps["picked"]["reloads"], 1)
+
+    def test_reused_option_gets_the_flag_of_its_new_language(self):
+        # Filtering reuses the first option element for another language.
+        for gradio in ("gradio3", "gradio4"):
+            with self.subTest(gradio=gradio):
+                steps = self.simulate(gradio, "refilter-flags")
+                uk, it = steps["opened"]["optionFlagSrcs"][:2]
+                self.assertEqual(len(uk), 1)
+                self.assertNotEqual(uk, it)
+                self.assertEqual(steps["filtered"]["optionFlagSrcs"][0], it)
+                self.assertEqual(steps["again"]["optionFlagSrcs"][0], it)
+                # Unknown code: the stale flag goes, no new one.
+                self.assertEqual(steps["unknown"]["optionFlagSrcs"][0], [])
+                self.assertEqual(steps["unknown"]["optionFlagSrcs"][1], it)
+                self.assertEqual(steps["unknown"]["reloads"], 0)
 
 
 if __name__ == "__main__":

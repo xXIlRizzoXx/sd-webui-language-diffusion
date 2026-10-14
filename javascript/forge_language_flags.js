@@ -26,10 +26,10 @@
     //     choices `("English", "None")`.
     //   - Raw locale codes ("it_IT", "es_ES", ...) — Gradio briefly
     //     shows the raw value when mounting the dropdown before the
-    //     (label, value) tuple resolution kicks in. If raw codes were
-    //     mapped here, the transition "it_IT" → "Italiano" during
-    //     mount would be misread as a user pick and trigger an
-    //     infinite reload loop.
+    //     (label, value) tuple resolution kicks in. That raw value
+    //     gets no flag, and the poller in bindDropdown treats it as
+    //     transient, so the mount transition "it_IT" → "Italiano" is
+    //     never read as a user pick (that caused a reload loop).
     const LABEL_TO_CODE = {
         "English": "uk",
         "Inglese": "uk",       // English in it_IT
@@ -273,14 +273,19 @@
         // filtering, and the core translator rewrites "None": relabel on
         // every pass.
         if (rawCodes) labelRawCodeOption(el);
-        if (el.dataset.forgeFlagApplied) return;
         // Gradio 3 options carry the raw code in data-value; their text
         // also holds the check mark and may be translated ("None").
         const text = rawCodes ? el.getAttribute("data-value") : el.textContent;
         const code = flagFor(text, rawCodes);
+        // Svelte also reuses the option element itself for another
+        // language while filtering: swap the flag when the code changed.
+        const existing = el.querySelector(":scope > img.forge-flag");
+        if (existing && el.dataset.forgeFlagCode === code) return;
+        if (existing) existing.remove();
+        delete el.dataset.forgeFlagCode;
         if (!code) return;
         el.insertBefore(makeFlagImg(code), el.firstChild);
-        el.dataset.forgeFlagApplied = "1";
+        el.dataset.forgeFlagCode = code;
     }
 
     function decorateOpenList(dropdown) {
@@ -395,20 +400,43 @@
             // input value every 200 ms — bulletproof against whatever
             // mechanism Gradio uses to update the visible value.
             //
-            // Three guards combine to suppress spurious reloads:
+            // A pick is a change of the language in use (`committed`).
+            // Four guards combine to suppress spurious reloads:
             //   1. `userInteracted` — must be true. This is the main
             //      defence against the initial-mount transition loop
             //      (empty → "it_IT" → "Italiano") that previously
             //      caused infinite reloads. The user hasn't touched
-            //      the dropdown yet, so nothing should reload.
-            //   2. `wasKnown && isKnown` — both the previous and new
-            //      values must be recognised language labels.
-            //      Excludes any transient state Gradio writes during
-            //      re-render.
-            //   3. `reloadScheduled` — once a reload is queued, no
+            //      the dropdown yet, so nothing should reload: the
+            //      value just becomes the language in use.
+            //   2. Transient text never counts and never becomes the
+            //      language in use: an empty input, or on Gradio 4 a
+            //      raw code shown while mounting. When the language in
+            //      use is itself transient, the next value replaces it
+            //      without a reload.
+            //   3. Focus — while the input has the focus the text is
+            //      what the user types to filter the list. Both Gradio
+            //      versions blur the input after a pick (click or
+            //      Enter) and reset the typed text when it loses focus
+            //      without one, so any other language that remains
+            //      once the focus is gone was picked (and saved). This
+            //      also covers locales of other extensions, shown with
+            //      their raw code.
+            //   4. `reloadScheduled` — once a reload is queued, no
             //      further reloads are scheduled even if Gradio keeps
             //      mutating the input value before the reload fires.
+            const isTransient = (text) => {
+                const t = text ? text.trim() : "";
+                return !t || (!rawCodes && Object.prototype.hasOwnProperty.call(RAW_CODE_TO_FLAG, t));
+            };
+            const hasFocus = () => {
+                try {
+                    return input.matches(":focus");
+                } catch (_) {
+                    return document.activeElement === input;
+                }
+            };
             let lastValue = input.value;
+            let committed = input.value;
             let reloadScheduled = false;
             const handle = setInterval(() => {
                 if (reloadScheduled) {
@@ -417,26 +445,27 @@
                 }
                 const v = input.value;
                 if (v !== lastValue) {
-                    const wasKnown = flagFor(lastValue, rawCodes) !== null;
-                    const isKnown = flagFor(v, rawCodes) !== null;
                     lastValue = v;
                     updateInputIndicator(dropdown);
-                    if (userInteracted && wasKnown && isKnown) {
-                        reloadScheduled = true;
-                        // 700 ms gives Forge's run_settings_single()
-                        // time to persist the new value to config.json
-                        // before we reload.
-                        setTimeout(triggerReload, 700);
-                    }
                 }
+                if (v === committed || isTransient(v) || hasFocus()) return;
+                if (!userInteracted || isTransient(committed)) {
+                    committed = v;
+                    return;
+                }
+                committed = v;
+                reloadScheduled = true;
+                // 700 ms gives Forge's run_settings_single()
+                // time to persist the new value to config.json
+                // before we reload.
+                setTimeout(triggerReload, 700);
             }, 200);
         }
     }
 
-    // Locate Forge's localization dropdown. It is rendered with
-    // elem_id="setting_localization" both in Settings > User Interface
-    // and in the quicksettings row (when the user adds it via the
-    // Quicksettings list setting).
+    // Locate the localization dropdown (elem_id="setting_localization").
+    // The setup script hides it from Settings and pins it to the
+    // quicksettings row, so it is rendered only there.
     function findDropdowns() {
         const found = [];
         const direct = document.getElementById("setting_localization");
