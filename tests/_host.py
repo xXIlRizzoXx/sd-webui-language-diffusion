@@ -33,6 +33,16 @@ def host_available():
     return bool(HOST_ROOT) and os.path.isfile(os.path.join(HOST_ROOT, "modules", "options.py"))
 
 
+def installed_gradio_version():
+    """Version of the gradio package installed for this interpreter, or None."""
+    try:
+        from importlib.metadata import version
+
+        return version("gradio")
+    except Exception:
+        return None
+
+
 class _Any:
     """Callable placeholder for gradio components and FormRow."""
 
@@ -43,7 +53,10 @@ class _Any:
 class FakeHost:
     """A minimal WebUI: real Options/OptionInfo, stubbed everything else."""
 
-    def __init__(self, quicksettings=None, locales=("it_IT", "de_DE")):
+    def __init__(self, quicksettings=None, locales=("it_IT", "de_DE"), gradio_version="host"):
+        # "host": the stub reports the gradio version installed for this
+        # interpreter (Gradio 4 on Forge Neo, Gradio 3 on A1111 1.10).
+        self.gradio_version = installed_gradio_version() if gradio_version == "host" else gradio_version
         self._saved = {name: sys.modules.get(name) for name in _STUB_NAMES}
         self.tmp = tempfile.mkdtemp(prefix="ld-test-")
         self.config_file = os.path.join(self.tmp, "config.json")
@@ -68,6 +81,8 @@ class FakeHost:
     def _install_stubs(self):
         host = self
         gr = self._module("gradio", Dropdown=_Any, HTML=_Any, Textbox=_Any, Checkbox=_Any)
+        if self.gradio_version is not None:
+            gr.__version__ = self.gradio_version
         modules = self._module("modules")
         modules.__path__ = []
         self._module(

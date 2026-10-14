@@ -55,6 +55,25 @@
         "Polski": "pl",
     };
 
+    // Gradio 3 (AUTOMATIC1111 1.10) has no (label, value) choices, so the
+    // setup script keeps the raw codes there and the dropdown shows and
+    // stores them directly. Used ONLY for a Gradio 3 input (no role
+    // attribute): it never goes through the Gradio 4 mount transition
+    // described above, so mapping raw codes cannot cause a reload loop.
+    const RAW_CODE_TO_FLAG = {
+        "None": "uk",
+        "it_IT": "it",
+        "es_ES": "es",
+        "fr_FR": "fr",
+        "de_DE": "de",
+        "zh_CN": "cn",
+        "ja_JP": "jp",
+        "pt_BR": "br",
+        "ru_RU": "ru",
+        "ko_KR": "kr",
+        "pl_PL": "pl",
+    };
+
     // Each entry is a compact SVG with a roughly 3:2 aspect ratio,
     // encoded as a data URI so no static file fetch is required.
     const FLAG_SVG = {
@@ -170,6 +189,27 @@
         return null;
     }
 
+    // Gradio 4 marks the dropdown input with role="listbox"/"combobox";
+    // the Gradio 3 input has no role at all.
+    function findInput(dropdown) {
+        return (
+            dropdown.querySelector("input[role='listbox'], input[role='combobox']") ||
+            dropdown.querySelector("input:not([role]):not([type])")
+        );
+    }
+
+    function isRawCodeInput(input) {
+        return !!input && !input.hasAttribute("role");
+    }
+
+    function flagFor(text, rawCodes) {
+        const raw = text ? text.trim() : "";
+        if (rawCodes && Object.prototype.hasOwnProperty.call(RAW_CODE_TO_FLAG, raw)) {
+            return RAW_CODE_TO_FLAG[raw];
+        }
+        return codeFromLabel(text);
+    }
+
     function makeFlagImg(code) {
         const img = document.createElement("img");
         img.src = FLAG_SVG[code];
@@ -179,9 +219,12 @@
         return img;
     }
 
-    function decorateOption(el) {
+    function decorateOption(el, rawCodes) {
         if (!el || el.dataset.forgeFlagApplied) return;
-        const code = codeFromLabel(el.textContent);
+        // Gradio 3 options carry the raw code in data-value; their text
+        // also holds the check mark and may be translated ("None").
+        const text = rawCodes ? el.getAttribute("data-value") : el.textContent;
+        const code = flagFor(text, rawCodes);
         if (!code) return;
         el.insertBefore(makeFlagImg(code), el.firstChild);
         el.dataset.forgeFlagApplied = "1";
@@ -189,9 +232,8 @@
 
     function decorateOpenList(dropdown) {
         if (!dropdown) return;
-        const input = dropdown.querySelector(
-            "input[role='listbox'], input[role='combobox']",
-        );
+        const input = findInput(dropdown);
+        const rawCodes = isRawCodeInput(input);
         const controlledId = input && input.getAttribute("aria-controls");
         let ul = null;
         if (controlledId) {
@@ -202,18 +244,18 @@
         }
         if (!ul) return;
         ul.classList.add("forge-language-options");
-        ul.querySelectorAll("li.item, [role='option']").forEach(decorateOption);
+        ul.querySelectorAll("li.item, [role='option']").forEach((el) =>
+            decorateOption(el, rawCodes),
+        );
     }
 
     function updateInputIndicator(dropdown) {
         if (!dropdown) return;
-        const input = dropdown.querySelector(
-            "input[role='listbox'], input[role='combobox']",
-        );
+        const input = findInput(dropdown);
         if (!input) return;
         const row = input.closest(".wrap") || input.parentElement;
         if (!row) return;
-        const code = codeFromLabel(input.value);
+        const code = flagFor(input.value, isRawCodeInput(input));
         const existing = row.querySelector(":scope > .forge-flag-indicator");
         if (existing && existing.dataset.forgeFlagCode === code) return;
         if (existing) existing.remove();
@@ -268,10 +310,9 @@
         dropdown.addEventListener("click", refreshOpen);
         dropdown.addEventListener("keydown", markInteracted);
 
-        const input = dropdown.querySelector(
-            "input[role='listbox'], input[role='combobox']",
-        );
+        const input = findInput(dropdown);
         if (input) {
+            const rawCodes = isRawCodeInput(input);
             input.addEventListener("focus", refreshOpen);
             input.addEventListener("input", refreshOpen);
             input.addEventListener("keydown", markInteracted);
@@ -310,8 +351,8 @@
                 }
                 const v = input.value;
                 if (v !== lastValue) {
-                    const wasKnown = codeFromLabel(lastValue) !== null;
-                    const isKnown = codeFromLabel(v) !== null;
+                    const wasKnown = flagFor(lastValue, rawCodes) !== null;
+                    const isKnown = flagFor(v, rawCodes) !== null;
                     lastValue = v;
                     updateInputIndicator(dropdown);
                     if (userInteracted && wasKnown && isKnown) {

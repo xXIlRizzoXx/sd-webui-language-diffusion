@@ -119,6 +119,8 @@ Korean dialects, etc.):
      `LOCALE_DISPLAY_NAMES` dict (add `"xx_XX": "Autoglottonym"`)
    - `javascript/forge_language_flags.js`:
      - `LABEL_TO_CODE` (add autoglottonym → flag-code mapping)
+     - `RAW_CODE_TO_FLAG` (add `"xx_XX"` → flag-code mapping, used
+       on AUTOMATIC1111 / Gradio 3)
      - `FLAG_SVG` (add inline-SVG flag)
 4. Add the row to the locale table in the README.
 5. Open a PR.

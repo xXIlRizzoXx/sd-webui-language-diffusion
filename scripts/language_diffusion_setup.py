@@ -65,6 +65,17 @@ LOCALE_DISPLAY_NAMES = {
 }
 
 
+def _gradio_supports_tuple_choices() -> bool:
+    """True on Gradio 4+, whose Dropdown accepts (label, value) choices.
+    False on Gradio 3 or when the version cannot be read."""
+    try:
+        import gradio
+
+        return int(str(gradio.__version__).split(".")[0]) >= 4
+    except Exception:
+        return False
+
+
 def relocate_localization_setting() -> None:
     """Hide the localization setting from the Settings page sidebar
     (so it lives exclusively in the top-bar quicksettings dropdown)
@@ -87,7 +98,8 @@ def relocate_localization_setting() -> None:
        (auto-translated to Inglese / Inglés / Anglais / Englisch /
        英语 / 英語 by the bundled locale JSONs), while the underlying
        value remains "None" — preserving Forge's existing semantics
-       (no JSON loaded → English source strings).
+       (no JSON loaded → English source strings). Gradio 4+ only: on
+       Gradio 3 (AUTOMATIC1111 1.10) the raw codes are kept.
 
     No-op on forks where the setting isn't registered. Idempotent
     on every attribute that we touch.
@@ -128,6 +140,12 @@ def relocate_localization_setting() -> None:
 
     # Guard against re-wrapping if we have already patched this entry.
     if getattr(original_args, "_language_diffusion_patched", False):
+        return
+
+    # Gradio 3 (A1111 1.10) has no (label, value) choices: it would show
+    # and save the str() of each tuple. Keep the raw codes there; the
+    # picker script maps them to flags instead.
+    if not _gradio_supports_tuple_choices():
         return
 
     def _to_autoglottonym_choices(choices):

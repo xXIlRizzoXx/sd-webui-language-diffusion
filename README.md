@@ -399,6 +399,9 @@ it does not invent a new system. The flow is:
    - Patches `component_args` so the dropdown choices render
      `"None"` as the tuple `("English", "None")` — visible label
      "English" (auto-translated), persisted value still "None".
+     Gradio 4+ only: Gradio 3 (AUTOMATIC1111 1.10) has no
+     (label, value) choices, so there the raw codes are kept and the
+     picker shows them with their flags.
    - On first launch, appends `localization` to
      `shared.opts.quicksettings_list` so the dropdown is rendered
      in the top-right of the WebUI.
@@ -522,7 +525,9 @@ Runs once at Forge startup and performs three UI rearrangements:
    raw string `"None"`. The visible label "English" is
    auto-translated by the bundled locale JSONs (Inglese / Inglés /
    Anglais / Englisch / 英语 / 英語), while the persisted value
-   remains "None" for backwards compatibility.
+   remains "None" for backwards compatibility. Skipped on Gradio 3
+   (AUTOMATIC1111 1.10), which has no (label, value) choices: the raw
+   codes stay as they are.
 
 3. **First-install quicksettings auto-pin.** Checks for a
    `.first-run-pinned` marker file in the extension folder; if absent,
@@ -568,6 +573,9 @@ The flag decorator + auto-reload trigger. Self-contained IIFE
 1. `LABEL_TO_CODE` — maps every label the dropdown might display (raw
    locale codes like `it_IT` plus autoglottonyms like `Italiano`) to a
    short flag key (`it`, `es`, ...).
+   `RAW_CODE_TO_FLAG` maps the raw codes (`None`, `it_IT`, ...) and
+   is used only on Gradio 3 (AUTOMATIC1111 1.10), whose dropdown
+   input has no `role` attribute and shows the raw codes.
 2. `FLAG_SVG` — for each flag key, an inline SVG data URI of that
    national flag at roughly 3:2 aspect ratio.
 3. `decorateOption(li)` — prepends a flag `<img>` to a single option
@@ -757,6 +765,12 @@ Want to add Polish, Portuguese, Korean, Arabic? Here's the full path:
      ```javascript
      "pl_PL": "pl",
      "Polski": "pl",
+     ```
+
+   - Add the raw code to `RAW_CODE_TO_FLAG` (used on AUTOMATIC1111,
+     whose Gradio 3 picker shows raw codes):
+     ```javascript
+     "pl_PL": "pl",
      ```
 
    - Add the inline SVG to `FLAG_SVG`. Keep it compact — see the
