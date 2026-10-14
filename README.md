@@ -63,7 +63,7 @@
 3. [Install](#install)
 4. [First-time setup](#first-time-setup)
 5. [Daily use](#daily-use)
-6. [Optional: language picker in the top bar](#optional-language-picker-in-the-top-bar)
+6. [The language picker in the top bar](#the-language-picker-in-the-top-bar)
 7. [What gets translated and what doesn't](#what-gets-translated-and-what-doesnt)
 8. [How it works internally](#how-it-works-internally)
 9. [File-by-file reference](#file-by-file-reference)
@@ -238,8 +238,9 @@ the **top-right corner of the WebUI** (next to UI Preset / Checkpoint
    by convention.*
 3. Pick the locale you want.
 
-The UI **auto-reloads** within a second — no need to click anything
-else. The new language is applied immediately.
+The UI **auto-reloads** — no need to click anything else. About a
+second after the pick a "Reloading..." screen appears, and the page
+comes back in the new language a few seconds later.
 
 > [!Note]
 > Forge's stock quicksettings handlers only save the new value to
@@ -309,7 +310,7 @@ delete `.first-run-pinned` inside the extension folder and restart Forge.
 
 1. Go to **Settings → User Interface**.
 2. Find the **Quicksettings list** field.
-3. Remove `localization` from the comma-separated list.
+3. Remove the `localization` entry (click the × on its chip).
 4. **Apply settings** → **Reload UI**.
 
 > [!Warning]
@@ -429,7 +430,10 @@ it does not invent a new system. The flow is:
      in `shared.opts.data_labels` to `(None, "Language Diffusion")`.
      Forge's `modules/ui_settings.py` skips any setting whose
      `section[0]` is `None` — so the entry never appears in the
-     Settings page.
+     Settings page. Skipped when the WebUI is started with
+     `--freeze-settings-in-sections` naming the setting's section
+     (`ui`): the freeze keeps applying, and the setting stays in its
+     normal Settings section.
    - Patches `component_args` so the dropdown choices render
      `"None"` as the tuple `("English", "None")` — visible label
      "English" (auto-translated), persisted value still "None".
@@ -562,6 +566,10 @@ Runs once at Forge startup and performs three UI rearrangements:
    the right-pane component when that flag is True. So the
    Localization dropdown disappears from Settings entirely — the
    top-bar quicksettings is the only place to control the language.
+   Skipped when the WebUI is started with
+   `--freeze-settings-in-sections` naming the setting's section
+   (`ui`): the freeze keeps applying, and the setting stays in its
+   normal Settings section.
 
 2. **Rename 'None' to 'English'.** Wraps the OptionInfo's
    `component_args` callable so the choices list returns
@@ -865,14 +873,18 @@ below uses Dutch, `nl_NL`):
          ),
      ```
 
-4. **Reload Forge** (full restart, not just Reload UI — the new JSON
-   has to be picked up by `list_localizations()` which runs at
-   process start).
+4. **Restart Forge** (full restart, not just Reload UI — Reload UI
+   picks up the new JSON, but the dropdown labels from
+   `LOCALE_DISPLAY_NAMES` are applied once per process by the setup
+   script).
 
 5. Your locale appears in the dropdown, with its flag.
 
 6. (Optional) Open a PR adding the new locale to this extension so
-   other users benefit.
+   other users benefit. Before opening it, add the new code to
+   `EXPECTED_LOCALES` in `tests/test_locales.py`, update the locale
+   count and the locale lists in this README (the figures are checked
+   by `tests/test_docs.py`), and run the unit tests.
 
 ---
 
@@ -931,24 +943,30 @@ with the WebUI fork name and version.
   one level deeper, e.g. `.../extensions/sd-webui-language-diffusion-main/`
   — common ZIP download mistake).
 - Confirm `localizations/it_IT.json` (etc.) exist inside that folder.
-- Confirm you did a **full restart** (not just Reload UI) after
-  installation. The JSONs are loaded at process start.
+- Confirm you restarted the UI after installation: **Reload UI** or
+  **Apply and restart UI** is enough to pick up the JSONs. If the
+  languages still do not appear, do a full restart of the WebUI.
 
 ### I picked a language, but the UI did not change
 
-- The page reloads by itself about a second after the pick; no
+- About a second after the pick a "Reloading..." screen appears and
+  the page reloads by itself a few seconds later; no
   **Apply settings** click is needed. If it does not reload, refresh
   the page (`F5`): the pick is already saved.
 - If the UI is still in English after the refresh, open the browser
   console (`F12`) and look for JS errors, then check the points of the
-  previous entry (folder location, JSON files, full restart).
+  previous entry (folder location, JSON files, restart).
 
 ### Some parts of the UI are still in English
 
-- The extension covers Forge **core + built-in extensions**. Third-party
-  extensions ship their own labels which Forge cannot translate without
-  their own localization JSON. Ask the third-party extension author to
-  add localization support.
+- The extension covers Forge **core**, the **built-in extensions** and
+  the extensions listed under
+  [Translated extensions](#translated-extensions). English text left in
+  one of those listed extensions is a missing translation here:
+  [open an issue](https://github.com/xXIlRizzoXx/sd-webui-language-diffusion/issues).
+  Other third-party extensions ship their own labels which Forge cannot
+  translate without their own localization JSON. Ask that extension's
+  author to add localization support.
 - Some f-string-formatted runtime messages (e.g. dynamic error reports)
   cannot be statically translated.
 - Some labels are constructed at runtime from translated fragments —
@@ -990,15 +1008,21 @@ To remove the extension:
 2. **Or** disable it in Forge's **Extensions → Installed** tab
    (untick the checkbox, then Apply and restart UI).
 
-Forge automatically falls back to English (`None` in the Localization
-dropdown) the next time the UI is loaded if no other localization
-extension is installed. Your models, generations and prompts are
-untouched.
+The UI text falls back to English the next time the UI is loaded if
+no other localization extension is installed. Your models,
+generations and prompts are untouched.
 
-One setting stays behind: on its first launch the extension added
-`localization` to the **Quicksettings list** and saved it in
-`config.json`, so after removal the top bar still shows a plain
-**Localization** dropdown. If you don't want it, open
+Two settings stay behind in `config.json`:
+
+- The saved `localization` value (e.g. `it_IT`): it is not reset, so
+  the **Localization** dropdown keeps showing that code until you set
+  it back to `None`.
+- The `localization` entry in the **Quicksettings list**, added on the
+  extension's first launch: the top bar still shows a plain
+  **Localization** dropdown.
+
+Easiest: switch the picker to English before removing the extension.
+Then, if you don't want the dropdown in the top bar, open
 **Settings → User Interface → Quicksettings list**, remove
 `localization`, then **Apply settings** and **Reload UI**.
 
@@ -1015,10 +1039,11 @@ One setting stays behind: on its first launch the extension added
   failed: {reason}") and a handful of "Send to {tab}" buttons —
   most of which have been hand-translated nonetheless.
 
-- **Third-party extensions.** This extension covers only Forge core
-  and Forge's built-in extensions. Strings shipped by other extensions
-  (third-party node packs, custom scripts) are unaffected and remain
-  in their original language.
+- **Third-party extensions.** This extension covers Forge core,
+  Forge's built-in extensions and the extensions listed under
+  [Translated extensions](#translated-extensions). Strings shipped by
+  other extensions (third-party node packs, custom scripts) are
+  unaffected and remain in their original language.
 
 - **Translation quality.** The seed translations are machine-assisted
   with manual sanity passes. They are correct enough to ship but will

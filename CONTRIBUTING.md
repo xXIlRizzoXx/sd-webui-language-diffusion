@@ -123,7 +123,11 @@ Korean dialects, etc.):
        on AUTOMATIC1111 / Gradio 3)
      - `FLAG_SVG` (add inline-SVG flag)
 4. Add the row to the locale table in the README.
-5. Open a PR.
+5. Add the new code to `EXPECTED_LOCALES` in `tests/test_locales.py`,
+   update the locale count and the locale lists in the README (the
+   figures are checked by `tests/test_docs.py`), and run the unit
+   tests.
+6. Open a PR.
 
 ---
 

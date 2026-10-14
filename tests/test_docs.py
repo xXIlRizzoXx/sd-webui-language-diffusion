@@ -198,6 +198,77 @@ class ReadmeBehaviourTests(unittest.TestCase):
                 self.assertIn(version, versions)
         self.assertTrue("[Releases](#releases)" in self.readme)
 
+    def test_reload_delay_is_not_understated(self):
+        # Poll 200 ms + 700 ms, then restart_reload() shows "Reloading..."
+        # and pings only after 2000 ms: the page comes back after ~3 s.
+        for claim in ("within a second", "about a second after the pick"):
+            with self.subTest(claim=claim):
+                self.assertFalse(claim in self.flat, claim)
+        trouble = _flat(_section(self.readme, "### I picked a language, but the UI did not change"))
+        self.assertIn("Reloading...", trouble)
+        self.assertIn("F5", trouble)
+
+    def test_freeze_settings_flag_is_documented(self):
+        # The setup script leaves a frozen section alone, so the setting
+        # stays in its normal Settings section.
+        for heading in ("## How it works internally", "### `scripts/language_diffusion_setup.py`"):
+            with self.subTest(section=heading):
+                self.assertIn("--freeze-settings-in-sections", _section(self.readme, heading))
+
+    def test_uninstall_lists_both_leftover_settings(self):
+        # The saved code (e.g. it_IT) is not reset: the dropdown keeps it.
+        uninstall = _flat(_section(self.readme, "## Uninstall"))
+        for claim in ("`None` in the Localization", "One setting stays behind"):
+            with self.subTest(claim=claim):
+                self.assertFalse(claim in uninstall, claim)
+        self.assertIn("`localization` value", uninstall)
+        self.assertIn("before removing", uninstall)
+
+    def test_new_language_recipe_updates_the_tests_and_counts(self):
+        with open(os.path.join(REPO, "tests", "test_locales.py"), encoding="utf-8") as f:
+            self.assertIn("EXPECTED_LOCALES = {", f.read())
+        recipes = [
+            _flat(_section(self.readme, "## Adding a brand-new language")),
+            _flat(_section(_read(os.path.join(REPO, "CONTRIBUTING.md")), "## Tier D")),
+        ]
+        for recipe in recipes:
+            with self.subTest(recipe=recipe[:30]):
+                self.assertIn("`EXPECTED_LOCALES` in `tests/test_locales.py`", recipe)
+                self.assertIn("tests/test_docs.py", recipe)
+
+    def test_in_page_links_resolve(self):
+        for doc in (README, os.path.join(REPO, "CONTRIBUTING.md")):
+            text = re.sub(r"```.*?```", "", _read(doc), flags=re.DOTALL)
+            anchors, seen = set(), {}
+            for heading in re.findall(r"^(?:> )?#{1,6} (.+)$", text, re.MULTILINE):
+                slug = re.sub(r"[^\w\- ]", "", heading.strip().lower()).replace(" ", "-")
+                anchors.add(slug if slug not in seen else "%s-%d" % (slug, seen[slug]))
+                seen[slug] = seen.get(slug, 0) + 1
+            for target in re.findall(r"\]\(#([^)]+)\)", text):
+                with self.subTest(doc=os.path.basename(doc), target=target):
+                    self.assertIn(target, anchors)
+
+    def test_coverage_includes_the_translated_extensions(self):
+        trouble = _flat(_section(self.readme, "### Some parts of the UI are still in English"))
+        limits = _flat(_section(self.readme, "### Known limitations"))
+        self.assertIn("Translated extensions", trouble)
+        self.assertIn("Translated extensions", limits)
+        self.assertFalse("covers only Forge core" in limits)
+
+    def test_ui_restart_is_enough_to_load_the_json_files(self):
+        # Reload UI / Apply and restart UI re-run list_localizations();
+        # only LOCALE_DISPLAY_NAMES needs a new process.
+        for claim in ("loaded at process start", "runs at process start"):
+            with self.subTest(claim=claim):
+                self.assertFalse(claim in self.flat, claim)
+        recipe = _flat(_section(self.readme, "## Adding a brand-new language"))
+        self.assertIn("once per process", recipe)
+
+    def test_quicksettings_list_is_not_a_text_field(self):
+        section = _flat(_section(self.readme, "### How to remove the pin manually"))
+        self.assertFalse("comma-separated" in section)
+        self.assertIn("chip", section)
+
 
 class DocsExampleKeysTests(unittest.TestCase):
     def test_example_entries_are_real_it_IT_keys(self):
