@@ -87,7 +87,8 @@ ul.options.forge-language-options li.item {
 
 /* Gradio 3 (AUTOMATIC1111): the input holds the raw locale code, so the
  * indicator also carries the language name. The code is hidden while the
- * input is not focused and shown again (name hidden) while typing. */
+ * input is not focused; while it has the focus (list open, since Gradio 3
+ * opens the list on focus) the code is shown and the name hidden. */
 #setting_localization .wrap.forge-flag-named > .forge-flag-indicator,
 .forge-language-dropdown .wrap.forge-flag-named > .forge-flag-indicator {
     display: flex;

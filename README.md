@@ -197,9 +197,14 @@ as on Forge Neo. Differences:
 
 - Gradio 3 dropdowns cannot show a name different from the saved
   value, so the saved values stay the locale codes (`it_IT`, `es_ES`,
-  ...); the picker script draws the native language names over them,
-  in the open list and in the closed picker, as on Forge Neo. While
-  you type to filter the list, the box shows the code you are typing.
+  ...; `None` for English). The picker script draws the native names
+  and flags in the open list and in the closed picker. While the
+  picker has the focus (as soon as you click it, because the list
+  opens on focus) the box shows the saved code instead of the name.
+  Typing filters the list by code only (`de`, `ja`; `ne` for
+  English), not by language name, and the typed text is added to the
+  code already in the box, so clear the box first. The simplest way
+  to pick is to click an entry, or to use the arrow keys and Enter.
 - English is the 🇬🇧 entry: its saved value is `None`, and it is shown
   as *English* in your current language (e.g. *Inglese* in Italian).
 - The AUTOMATIC1111 core UI and ADetailer Ultimate are translated; the

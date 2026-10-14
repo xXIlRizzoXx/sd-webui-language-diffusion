@@ -339,6 +339,22 @@ class ReadmeBehaviourTests(unittest.TestCase):
         self.assertFalse("comma-separated" in section)
         self.assertIn("chip", section)
 
+    def test_a1111_picker_limit_matches_css(self):
+        # Gradio 3 opens the list on focus and filters on the raw codes: the
+        # README must describe that limit in terms of the CSS focus rules.
+        start = self.readme.index("### AUTOMATIC1111 notes")
+        end = self.readme.find("\n---", start)
+        section = _flat(self.readme[start:end]).lower()
+        css = _read(os.path.join(REPO, "style.css"))
+        if ":focus-within .forge-flag-name" in css:
+            self.assertIn("has the focus", section)
+            self.assertNotIn("while you type", section)
+        self.assertIn("filters the list by code", section)
+        self.assertIn("`none` for english", section)
+        comment = _flat(css[:css.index(".forge-flag-named")]).lower()
+        comment = comment[comment.rfind("/*"):]
+        self.assertNotIn("while typing", comment)
+
 
 class DocsExampleKeysTests(unittest.TestCase):
     def test_example_entries_are_real_it_IT_keys(self):
