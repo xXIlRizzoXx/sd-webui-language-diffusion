@@ -194,6 +194,15 @@ FORGE_SINCE_MAY = [
     "Download Preview",
 ]
 
+# Core strings shown by both hosts: the Generate / Interrupt right-click menu
+# (contextMenus.js) and the img2img Batch "Parameters to take from png info"
+# checkboxes.
+BOTH_HOSTS_CORE = ["Generate forever", "Cancel generate forever", "Model hash", "CFG scale"]
+
+# Forge Neo only: the Refiner "Switch at" slider info (one or the other,
+# depending on the refiner_use_steps setting).
+FORGE_REFINER_INFO = ["(in sigmas)", "(in steps)"]
+
 # Older spellings that AUTOMATIC1111 1.10.1 still shows: they must stay.
 A1111_STILL_USED = [
     "Just resize", "Crop and resize", "Resize and fill", "Just resize (latent upscale)",
@@ -375,6 +384,17 @@ def _save_tooltips(root):
     return found
 
 
+def _settings_categories(root):
+    """Labels of categories.register_category(id, label) in shared_options.py (Settings sidebar headers)."""
+    tree = ast.parse(_read(os.path.join(root, "modules", "shared_options.py")))
+    found = set()
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.Call) and _name(node.func) == "register_category" and len(node.args) > 1
+                and isinstance(node.args[1], ast.Constant) and isinstance(node.args[1].value, str)):
+            found.add(node.args[1].value)
+    return found
+
+
 def _xyz_axis_labels(root):
     """Labels of the X/Y/Z plot axis types (the X/Y/Z type dropdown choices)."""
     tree = ast.parse(_read(os.path.join(root, "scripts", "xyz_grid.py")))
@@ -490,15 +510,33 @@ class HostStringKeyTests(unittest.TestCase):
                 with self.subTest(locale=code, label=label):
                     self.assertIn(label, data)
 
+    def test_both_hosts_menu_and_batch_strings_are_keys(self):
+        self.assertTranslated(BOTH_HOSTS_CORE)
+
+    def test_forge_refiner_info_strings_are_keys(self):
+        self.assertTranslated(FORGE_REFINER_INFO)
+
+    @unittest.skipUnless(HOST_ROOT and os.path.isfile(os.path.join(HOST_ROOT, "modules", "shared_options.py")),
+                         "LD_HOST_ROOT not set: host settings categories not checked")
+    def test_host_settings_categories_are_keys(self):
+        # settings.js draws the sidebar header as localization[label] ?? label.
+        labels = _settings_categories(HOST_ROOT)
+        self.assertIn("Stable Diffusion", labels)
+        self.assertGreater(len(labels), 4)
+        for code, data in sorted(self.locales.items()):
+            for label in sorted(labels):
+                with self.subTest(locale=code, label=label):
+                    self.assertIn(label, data)
+
     @unittest.skipUnless(HOST_ROOT and os.path.isdir(os.path.join(HOST_ROOT, "modules")),
                          "LD_HOST_ROOT not set: host source check skipped")
     def test_listed_strings_exist_in_the_host_sources(self):
         # Guards the lists above against typos: each string of this host must
         # appear verbatim (a hint without its parentheses) in its sources.
         if _is_forge(HOST_ROOT):
-            expected = FORGE_RESIZE_MODE + FORGE_MERGER + FORGE_SINCE_MAY
+            expected = FORGE_RESIZE_MODE + FORGE_MERGER + FORGE_SINCE_MAY + FORGE_REFINER_INFO + BOTH_HOSTS_CORE
         else:
-            expected = A1111_STRINGS
+            expected = A1111_STRINGS + BOTH_HOSTS_CORE
         blob = "\n".join(_read(p) for p in _host_sources(HOST_ROOT, ("modules", "scripts", "extensions-builtin", "javascript")))
         hints = _settings_hints(HOST_ROOT)
         for text in expected + RELOAD_HINTS:

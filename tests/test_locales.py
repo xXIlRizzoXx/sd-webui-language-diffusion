@@ -150,6 +150,16 @@ class LocaleFileTests(unittest.TestCase):
                 with self.subTest(locale=code, key=key[:40]):
                     self.assertNotRegex(data[key], r"(?<![A-Za-z])%s(?![A-Za-z])" % re.escape(label))
 
+    def test_generate_forever_hints_name_the_translated_menu_entry(self):
+        # The Generate tooltip and the settings hint point at the right-click
+        # menu entry, so they must use the name that menu shows.
+        for code, (_, data) in self.locales.items():
+            entry = data["Generate forever"]
+            for key in ('(for "Generate forever")', "Right click generate forever menu"):
+                with self.subTest(locale=code, key=key):
+                    self.assertIn(entry, data[key])
+                    self.assertNotIn("generate forever", data[key].lower())
+
     def test_masked_content_choices_are_translated(self):
         # Inpaint "Masked content" radio (type="index" on both hosts).
         same = {("es_ES", "original"), ("pt_BR", "original")}
