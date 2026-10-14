@@ -1,15 +1,14 @@
 // Inject SVG flag icons into Forge's localization dropdown.
 //
-// In Forge, the `localization` setting renders as a Gradio Dropdown in two
-// possible places:
-//   1. Settings > User Interface > Localization (always present)
-//   2. The quicksettings row, if the user adds `localization` to
-//      Settings > User Interface > Quicksettings list
+// The `localization` setting renders as a Gradio Dropdown only in the
+// quicksettings row: the setup script pins it there and hides it from the
+// Settings page (section[0] = None), so nothing is rendered when the user
+// removes it from Settings > User Interface > Quicksettings list.
 //
-// Both share elem_id="setting_localization". The dropdown values are the
-// raw locale codes ("None", "it_IT", "es_ES", "fr_FR", "de_DE", "zh_CN",
-// "ja_JP"). This script decorates whichever instances are mounted on
-// the page with the matching national flag.
+// It has elem_id="setting_localization". The dropdown values are the
+// raw locale codes ("None", "it_IT", "es_ES", ... "pl_PL"). This script
+// decorates whichever instances are mounted on the page with the
+// matching national flag.
 //
 // No document-wide MutationObserver: tab switches in Forge produce a lot
 // of DOM churn, and watching everything would tank scroll/repaint perf.

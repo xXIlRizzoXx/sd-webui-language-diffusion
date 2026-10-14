@@ -131,7 +131,7 @@ don't use it. Removing the extension folder fully uninstalls it.
 | 한국어 | `localizations/ko_KR.json` | 🇰🇷 | full seed translation |
 | Polski | `localizations/pl_PL.json` | 🇵🇱 | full seed translation |
 
-Each non-English JSON is approximately 75–95 KB and contains every
+Each non-English JSON is approximately 160–230 KB and contains every
 English UI string that Forge's localization system can match against,
 mapped to its translation in that locale — the Forge Neo and
 AUTOMATIC1111 core UI (1594 keys), ADetailer Ultimate (188 keys) and
@@ -182,11 +182,28 @@ For people without git:
 5. Drop it inside the `extensions/` folder of your Forge installation.
 6. Restart Forge.
 
+### AUTOMATIC1111 notes
+
+Language Diffusion also runs on **AUTOMATIC1111 1.10.1** (Gradio 3.41).
+Install it with any of the methods above, in the `extensions/` folder
+of your AUTOMATIC1111 installation, then restart the WebUI. The picker
+is pinned to the top bar and the page reloads by itself after a pick,
+as on Forge Neo. Differences:
+
+- Gradio 3 dropdowns cannot show a name different from the saved
+  value, so the picker lists the locale codes (`it_IT`, `es_ES`, ...)
+  with their flags instead of the native language names.
+- English is the 🇬🇧 entry: its saved value is `None`, and in the open
+  list it is shown translated (e.g. *Nessuno* in Italian).
+- The AUTOMATIC1111 core UI and ADetailer Ultimate are translated; the
+  AUTOMATIC1111 spellings of shared labels (e.g. "Sampling method",
+  "Batch count") have their own keys.
+
 ---
 
 ## First-time setup
 
-After installing, the six languages are now **registered** with Forge.
+After installing, the ten languages are now **registered** with Forge.
 On first launch, the extension also auto-pins the language picker to
 the **top-right corner of the WebUI** (next to UI Preset / Checkpoint
 / VAE / Diffusion in Low Bits). To pick a language:
@@ -228,18 +245,15 @@ else. The new language is applied immediately.
 > persist the change.
 
 > [!Note]
-> Language Diffusion deliberately keeps the Localization picker out
+> Language Diffusion deliberately keeps the Language picker out
 > of the Settings page sidebar — the top-bar dropdown is the single
 > point of control for the entire extension. Less clutter, faster
 > access.
 
 The UI reloads. Once it comes back, every label, dropdown choice,
-setting description, and tooltip is translated.
-
-> [!Important]
-> **Apply settings** alone is not enough — you must also click **Reload
-> UI** for the new language to take effect. This is how Forge's stock
-> localization system works; the extension does not change that flow.
+setting description, and tooltip is translated. There is no
+**Apply settings** or **Reload UI** step: the pick is saved and the page
+reloads by itself.
 
 ---
 
@@ -251,15 +265,17 @@ Forge, the UI comes up in that language automatically.
 To switch language later, repeat the [First-time setup](#first-time-setup)
 steps and pick a different locale.
 
-To **switch back to English**, pick **None** in the Localization
-dropdown, then Apply settings + Reload UI.
+To **switch back to English**, pick **English** in the **Language**
+picker (it is shown in your current language, e.g. *Inglese* in
+Italian); the page reloads automatically. On AUTOMATIC1111 the English
+entry is the 🇬🇧 one (see [AUTOMATIC1111 notes](#automatic1111-notes)).
 
 ---
 
 ## The language picker in the top bar
 
 **Default behaviour** — on first install, the extension automatically
-pins the Localization dropdown to the **quicksettings row** at the top
+pins the Language dropdown to the **quicksettings row** at the top
 of the WebUI (next to **UI Preset** / **Checkpoint** / **VAE**), so the
 language is always one click away. No manual setup required.
 
@@ -290,14 +306,19 @@ delete `.first-run-pinned` inside the extension folder and restart Forge.
 3. Remove `localization` from the comma-separated list.
 4. **Apply settings** → **Reload UI**.
 
-The Localization dropdown disappears from the top bar but remains
-available in **Settings → Language**.
+> [!Warning]
+> The top-bar dropdown is the **only language picker**: Language
+> Diffusion keeps the setting off the Settings page, so after this the
+> language can no longer be changed from the UI. To get the picker back,
+> add `localization` to the **Quicksettings list** again (same field,
+> then **Apply settings** → **Reload UI**), or delete `.first-run-pinned`
+> inside the extension folder and restart the WebUI so the extension
+> pins it again.
 
 > [!Tip]
-> The extension decorates **every** Localization dropdown Forge renders
-> with flags — the one in Settings → Language, the one in the
-> quicksettings row, both at the same time if you want. The decoration
-> is automatic and uses zero extra configuration.
+> The extension decorates the Language dropdown in the quicksettings
+> row with flags. The decoration is automatic and uses zero extra
+> configuration.
 
 ---
 
@@ -412,7 +433,7 @@ it does not invent a new system. The flow is:
    which scans these folders for `*.json` files:
    - `localizations/`
    - `extensions-builtin/*/localizations/`
-   - `extensions/*/localizations/` *← where this extension's six files live*
+   - `extensions/*/localizations/` *← where this extension's ten files live*
 
    Each JSON file is registered under its filename stem (`it_IT`,
    `es_ES`, ...) and added to the **Localization** dropdown options.
@@ -435,9 +456,13 @@ it does not invent a new system. The flow is:
    `setting_localization`), then:
 
    - When the dropdown is opened, it prepends an SVG `<img>` to each
-     option `<li>` whose visible text matches one of the seven
-     supported locale labels (`None`, `it_IT`, `es_ES`, `fr_FR`,
-     `de_DE`, `zh_CN`, `ja_JP` — and their autoglottonym aliases).
+     option `<li>` whose visible text matches one of the eleven
+     supported labels (`English` and the autoglottonyms `Italiano`,
+     `Español`, ... `Polski`, plus the translated forms of `English`).
+     On Gradio 3 (AUTOMATIC1111 1.10), where the options are the raw
+     values, it matches each option's `data-value` against `None`,
+     `it_IT`, `es_ES`, `fr_FR`, `de_DE`, `zh_CN`, `ja_JP`, `pt_BR`,
+     `ru_RU`, `ko_KR` and `pl_PL` instead.
    - It pins a static flag indicator inside the closed dropdown
      showing the flag of the currently-selected locale.
 
@@ -490,16 +515,16 @@ sd-webui-language-diffusion/
 │   ├── forge_language_flags.js            ← flag decorator for the dropdown
 │   └── hints_i18n_patch.js                ← tooltip alias bridge
 └── localizations/
-    ├── it_IT.json    ← Italiano                  ~72 KB
-    ├── es_ES.json    ← Español                   ~74 KB
-    ├── fr_FR.json    ← Français                  ~74 KB
-    ├── de_DE.json    ← Deutsch                   ~72 KB
-    ├── zh_CN.json    ← Simplified Chinese        ~66 KB
-    ├── ja_JP.json    ← 日本語                     ~75 KB
-    ├── pt_BR.json    ← Português (Brasil)        ~73 KB
-    ├── ru_RU.json    ← Русский                   ~85 KB
-    ├── ko_KR.json    ← 한국어                     ~70 KB
-    └── pl_PL.json    ← Polski                    ~74 KB
+    ├── it_IT.json    ← Italiano                  ~177 KB
+    ├── es_ES.json    ← Español                   ~179 KB
+    ├── fr_FR.json    ← Français                  ~182 KB
+    ├── de_DE.json    ← Deutsch                   ~176 KB
+    ├── zh_CN.json    ← Simplified Chinese        ~160 KB
+    ├── ja_JP.json    ← 日本語                     ~186 KB
+    ├── pt_BR.json    ← Português (Brasil)        ~177 KB
+    ├── ru_RU.json    ← Русский                   ~229 KB
+    ├── ko_KR.json    ← 한국어                     ~176 KB
+    └── pl_PL.json    ← Polski                    ~173 KB
 ```
 
 ### `install.py`
@@ -539,18 +564,17 @@ Runs once at Forge startup and performs three UI rearrangements:
    launches do not re-add the pin — letting the user remove it via
    *Settings → User Interface → Quicksettings List* if they prefer.
 
-Pure UI reorganisation: the setting key, options, persistence,
-Apply-Settings-then-Reload-UI flow, and PNG infotext format are all
-unchanged. Idempotent. No-op on forks where the localization setting
-isn't registered.
+Pure UI reorganisation: the setting key, the saved values, persistence
+and PNG infotext format are all unchanged. Idempotent. No-op on forks
+where the localization setting isn't registered.
 
 ### `style.css`
 
 Targets two selectors only:
 
 - `#setting_localization` — Forge's stock localization dropdown
-  element id. Used both in the Settings tab and in the quicksettings
-  row (if added).
+  element id. The dropdown is rendered only in the quicksettings row,
+  since the extension keeps it off the Settings page.
 - `.forge-language-dropdown` — a marker class added by
   `forge_language_flags.js` to whatever dropdown it has bound to,
   for future-proofing if the elem_id ever changes upstream.
@@ -820,7 +844,7 @@ Want to add Polish, Portuguese, Korean, Arabic? Here's the full path:
 | **Forge Neo** (`Haoming02/sd-webui-forge-classic`, branch `neo`) | primary target — tested |
 | Forge Classic (same repo, branch `classic`) | should work, same localization stack |
 | Forge (`lllyasviel/stable-diffusion-webui-forge`) | should work |
-| AUTOMATIC1111 (`stable-diffusion-webui`) | should work — Forge inherits A1111's localization stack |
+| AUTOMATIC1111 (`stable-diffusion-webui`) 1.10.1, Gradio 3.41 | supported — checked against the 1.10.1 sources by the automated tests; see [AUTOMATIC1111 notes](#automatic1111-notes) |
 | Vladmandic SD.Next | not tested; may have different elem_id |
 
 The extension only relies on:
@@ -829,8 +853,9 @@ The extension only relies on:
   in A1111, Forge, Forge Neo, Forge Classic.
 - The localization dropdown having `elem_id="setting_localization"` —
   true in every upstream variant the author is aware of.
-- `hints.js` declaring `titles` as a top-level `const` — true since
-  the original A1111 hints implementation, preserved through every fork.
+- `hints.js` declaring `titles` at top level (`var` in AUTOMATIC1111,
+  `const` in Forge Neo) — true since the original A1111 hints
+  implementation, preserved through every fork.
 
 If you're running a variant where the extension does not work,
 [open an issue](https://github.com/xXIlRizzoXx/sd-webui-language-diffusion/issues)
@@ -840,7 +865,7 @@ with the WebUI fork name and version.
 
 ## Troubleshooting
 
-### The new languages don't appear in the Localization dropdown
+### The new languages don't appear in the Language dropdown
 
 - Confirm the extension folder is exactly at
   `<forge-folder>/extensions/sd-webui-language-diffusion/` (NOT nested
@@ -850,11 +875,14 @@ with the WebUI fork name and version.
 - Confirm you did a **full restart** (not just Reload UI) after
   installation. The JSONs are loaded at process start.
 
-### I picked a language, clicked Apply Settings, but nothing happened
+### I picked a language, but the UI did not change
 
-- You also need to click **Reload UI** (orange button next to Apply
-  Settings). Apply Settings persists the choice; Reload UI rebuilds
-  the page with the new language injected.
+- The page reloads by itself about a second after the pick; no
+  **Apply settings** click is needed. If it does not reload, refresh
+  the page (`F5`): the pick is already saved.
+- If the UI is still in English after the refresh, open the browser
+  console (`F12`) and look for JS errors, then check the points of the
+  previous entry (folder location, JSON files, full restart).
 
 ### Some parts of the UI are still in English
 
