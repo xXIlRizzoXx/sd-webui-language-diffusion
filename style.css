@@ -7,10 +7,13 @@
 
 /* If the user adds `localization` to Settings > User Interface >
  * Quicksettings list, the dropdown shows up in the top-right row.
- * Right-pin it so it ends up next to UI Preset / Checkpoint / VAE. */
+ * Right-pin it so it ends up next to UI Preset / Checkpoint / VAE.
+ * min-width is !important to beat AUTOMATIC1111's `#quicksettings >
+ * div.gradio-dropdown { min-width: 24em !important }`; `unset` is the value
+ * Forge Neo already applies (`#quicksettings>*`), so both hosts match. */
 #quicksettings>div#setting_localization {
     margin-left: auto;
-    min-width: 11em;
+    min-width: unset !important;
     max-width: 14em;
     flex: 0 0 auto;
     position: relative;

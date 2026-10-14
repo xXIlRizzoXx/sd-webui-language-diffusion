@@ -8,7 +8,9 @@ This script does three things at Forge startup:
    Forge's `modules/ui_settings.py` interprets a `None` section_id
    as "skip this setting" — neither the sidebar entry nor the
    right-pane field are rendered. The setting still works in
-   quicksettings because that loop ignores `section[0]`.
+   quicksettings because that loop ignores `section[0]`. Skipped when
+   the host freezes the setting's section with
+   --freeze-settings-in-sections, so the freeze keeps applying.
 
 2. **Rename 'None' to 'English' in the dropdown.** Wraps the
    OptionInfo's `component_args` callable so the choices list now
@@ -33,7 +35,8 @@ This script does three things at Forge startup:
 All three actions are pure UI reorganisation. The setting key,
 dropdown options, persistence, Apply-Settings-then-Reload-UI flow,
 and PNG infotext format are unchanged. Disabling the extension
-restores the upstream layout entirely.
+shows the setting on the Settings page again, but the quicksettings
+pin is saved in config.json and stays until the user removes it.
 """
 
 import os
@@ -76,6 +79,21 @@ def _gradio_supports_tuple_choices() -> bool:
         return False
 
 
+def _section_is_frozen(section_id) -> bool:
+    """True when the host was started with --freeze-settings-in-sections
+    naming `section_id` (same parsing as the host's Options.__setattr__).
+    False when the flag is unset or cannot be read."""
+    try:
+        from modules.shared_cmd_options import cmd_opts
+
+        frozen = getattr(cmd_opts, "freeze_settings_in_sections", None)
+        if not frozen:
+            return False
+        return section_id in [s.strip() for s in frozen.split(",")]
+    except Exception:
+        return False
+
+
 def relocate_localization_setting() -> None:
     """Hide the localization setting from the Settings page sidebar
     (so it lives exclusively in the top-bar quicksettings dropdown)
@@ -101,7 +119,9 @@ def relocate_localization_setting() -> None:
        (no JSON loaded → English source strings). Gradio 4+ only: on
        Gradio 3 (AUTOMATIC1111 1.10) the raw codes are kept.
 
-    No-op on forks where the setting isn't registered. Idempotent
+    Change 1 is skipped when --freeze-settings-in-sections names the
+    setting's original section (the host checks `section[0]` to enforce
+    it). No-op on forks where the setting isn't registered. Idempotent
     on every attribute that we touch.
     """
     info = shared.opts.data_labels.get("localization")
@@ -112,13 +132,18 @@ def relocate_localization_setting() -> None:
     # Keep the label "Language Diffusion" in the tuple anyway so any
     # debug tooling that reads `info.section[1]` still has a sensible
     # name to display.
-    target_section = (None, "Language Diffusion")
-    if info.section != target_section:
-        info.section = target_section
-    # category_id is now irrelevant (no section tab will be built),
-    # but normalise it to None for cleanliness.
-    if info.category_id is not None:
-        info.category_id = None
+    # Skipped when the host freezes the setting's own section: the host's
+    # Options.__setattr__ checks `info.section[0]` against
+    # --freeze-settings-in-sections, so moving the setting out of it would
+    # silently make the language writable again.
+    if not _section_is_frozen(info.section[0]):
+        target_section = (None, "Language Diffusion")
+        if info.section != target_section:
+            info.section = target_section
+        # category_id is now irrelevant (no section tab will be built),
+        # but normalise it to None for cleanliness.
+        if info.category_id is not None:
+            info.category_id = None
 
     # ── rename visible field label "Localization" → "Language" ──
     # "Language" is a key in every bundled locale JSON
@@ -247,18 +272,17 @@ def force_localization_rescan() -> None:
     """Force Forge to re-scan all localization JSON files (root +
     extensions) after our extension has loaded.
 
-    Forge calls `list_localizations()` once in `modules/initialize.py`
-    BEFORE extension scripts are loaded. In some environments — fresh
-    installs, certain extension orderings, or after the user adds
-    locale files at runtime — that first scan does not see our
-    bundled JSONs and the dropdown ends up offering them but
-    `localization_js()` produces `window.localization = {}` because
-    the `localizations` dict has no path for the active code.
+    Both hosts (Forge Neo and AUTOMATIC1111) call
+    `extensions.list_extensions()` and then `list_localizations()` in
+    `modules/initialize.py` before extension scripts are loaded, and
+    that scan already includes every extension's `localizations/`
+    folder (via `scripts.list_scripts`). So the first scan normally
+    sees our bundled JSONs.
 
-    Calling `list_localizations()` again from inside our extension's
-    script (which runs after `extensions.list_extensions()` has fully
-    populated the extension registry) guarantees that the dict is in
-    sync with what is actually on disk before the UI is built.
+    This second call is only a safety net: it re-syncs the
+    `localizations` dict with what is on disk (for example if locale
+    files were added or changed after the first scan) before the UI
+    is built.
 
     Best-effort: silently swallow failures. If the rescan can't run
     for any reason, we just fall back to whatever Forge already
@@ -290,13 +314,14 @@ def register_reload_on_localization_change() -> None:
     updated to e.g. `localization="de_DE"`, the cached head still
     says `window.localization = {<italian contents>}`.
 
-    `modules/ui_settings.py:253` re-invokes `reload_javascript()`
-    after a Settings-page Apply button click, but NOT after a
-    quicksettings change (`run_settings_single`). We bridge that gap
-    by registering an `onchange` callback on the `localization`
-    option: `opts.set(key, value)` invokes `option.onchange()`
-    automatically, so when run_settings_single saves the new locale,
-    our callback fires and rebuilds the cached head.
+    `modules/ui_settings.py` calls `reload_javascript()` only from the
+    "Reload custom script bodies" button (Forge Neo and AUTOMATIC1111
+    alike); neither Settings-page Apply (`run_settings`) nor a
+    quicksettings change (`run_settings_single`) rebuilds the head.
+    We bridge that gap by registering an `onchange` callback on the
+    `localization` option: `opts.set(key, value)` invokes
+    `option.onchange()` automatically, so whenever the new locale is
+    saved, our callback fires and rebuilds the cached head.
 
     The browser's subsequent `location.reload()` (triggered by our
     forge_language_flags.js polling) then fetches the fresh head

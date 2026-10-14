@@ -133,9 +133,37 @@ class SetupScriptTests(unittest.TestCase):
                 self.assertEqual(host.opts.quicksettings_list, ["sd_model_checkpoint"])
                 self.assertFalse(os.path.exists(host.marker))
                 self.assertIn("[Language Diffusion] loaded", out)
-                self.assertIsNone(host.opts.data_labels["localization"].section[0])
+                # A frozen 'ui' section keeps localization in it (see the test below).
+                expected_section = "ui" if "freeze_settings_in_sections" in flags else None
+                self.assertEqual(host.opts.data_labels["localization"].section[0], expected_section)
                 self.assertEqual(host.rescan_calls, 1)
                 self.assertIsNotNone(host.opts.data_labels["localization"].onchange)
+
+    def test_section_freeze_still_freezes_localization(self):
+        # --freeze-settings-in-sections ui must keep the language frozen:
+        # Options.__setattr__ checks info.section[0], so moving the setting
+        # out of 'ui' would silently make it writable again.
+        for frozen in ("ui", " saving-images , ui "):
+            with self.subTest(freeze_settings_in_sections=frozen):
+                host = self.make_host()
+                host.options.cmd_opts.freeze_settings_in_sections = frozen
+                self.run_setup(host)
+                info = host.opts.data_labels["localization"]
+                self.assertEqual(info.section[0], "ui")
+                self.assertEqual(info.label, "Language")
+                with self.assertRaises(AssertionError):
+                    host.opts.localization = "it_IT"
+                self.assertEqual(host.opts.localization, "None")
+
+    def test_other_frozen_sections_still_hide_the_setting(self):
+        for frozen in (None, "saving-images", "uix"):
+            with self.subTest(freeze_settings_in_sections=frozen):
+                host = self.make_host()
+                host.options.cmd_opts.freeze_settings_in_sections = frozen
+                self.run_setup(host)
+                self.assertIsNone(host.opts.data_labels["localization"].section[0])
+                host.opts.localization = "it_IT"
+                self.assertEqual(host.opts.localization, "it_IT")
 
     def test_language_change_rebuilds_cached_page_head(self):
         host = self.make_host()
