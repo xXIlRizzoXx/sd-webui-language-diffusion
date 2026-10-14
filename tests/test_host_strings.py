@@ -203,6 +203,12 @@ BOTH_HOSTS_CORE = ["Generate forever", "Cancel generate forever", "Model hash", 
 # depending on the refiner_use_steps setting).
 FORGE_REFINER_INFO = ["(in sigmas)", "(in steps)"]
 
+# Image Browser "Sort by" choices (scripts/image_browser.py). The other
+# choices are technical words kept in English in every locale.
+IMAGE_BROWSER_SORT_KEPT_ENGLISH = {"aesthetic_score", "cfg scale", "steps", "seed", "sampler"}
+IMAGE_BROWSER_SORT = ["path name", "date", "random", "size", "model", "model hash", "ranking"]
+IMAGE_BROWSER_SCRIPT = os.path.join("extensions", "stable-diffusion-webui-images-browser", "scripts", "image_browser.py")
+
 # Older spellings that AUTOMATIC1111 1.10.1 still shows: they must stay.
 A1111_STILL_USED = [
     "Just resize", "Crop and resize", "Resize and fill", "Just resize (latent upscale)",
@@ -515,6 +521,23 @@ class HostStringKeyTests(unittest.TestCase):
 
     def test_forge_refiner_info_strings_are_keys(self):
         self.assertTranslated(FORGE_REFINER_INFO)
+
+    def test_image_browser_sort_choices_are_keys(self):
+        # Some locales write "model" / "ranking" like English: only presence is checked.
+        for code, data in sorted(self.locales.items()):
+            for key in IMAGE_BROWSER_SORT:
+                with self.subTest(locale=code, key=key):
+                    self.assertTrue(data.get(key, "").strip())
+        self.assertTranslated(["model hash"])
+
+    @unittest.skipUnless(HOST_ROOT and os.path.isfile(os.path.join(HOST_ROOT, IMAGE_BROWSER_SCRIPT)),
+                         "Image Browser not installed in LD_HOST_ROOT")
+    def test_host_image_browser_sort_choices_are_listed(self):
+        source = _read(os.path.join(HOST_ROOT, IMAGE_BROWSER_SCRIPT))
+        match = re.search(r'choices=(\[[^\]]*\]), label="Sort by"', source)
+        self.assertIsNotNone(match)
+        choices = set(ast.literal_eval(match.group(1)))
+        self.assertEqual(choices - IMAGE_BROWSER_SORT_KEPT_ENGLISH, set(IMAGE_BROWSER_SORT))
 
     @unittest.skipUnless(HOST_ROOT and os.path.isfile(os.path.join(HOST_ROOT, "modules", "shared_options.py")),
                          "LD_HOST_ROOT not set: host settings categories not checked")

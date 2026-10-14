@@ -1,7 +1,8 @@
 """
 sd-webui-language-diffusion — UI setup: top-bar picker only, no Settings entry.
 
-This script does three things at Forge startup:
+This script does three UI things at Forge startup, plus the
+housekeeping in items 4 and 5:
 
 1. **Hide the Localization setting from the Settings page.** Sets the
    first element of the OptionInfo's `section` tuple to `None`.
@@ -35,7 +36,15 @@ This script does three things at Forge startup:
      - User uninstalls and reinstalls: marker is gone with the folder,
        so pin gets re-added on next launch.
 
-All three actions are pure UI reorganisation. The setting key,
+4. **Locale rescan and head rebuild.** Re-runs list_localizations()
+   and registers an opts.onchange("localization") callback that calls
+   ui_gradio_extensions.reload_javascript(), so the cached <head> (and
+   with it window.localization) is rebuilt when the language changes.
+
+5. **Console log.** Prints the "[Language Diffusion] loaded" startup
+   banner and a "UI language changed" line on every switch.
+
+The three UI actions are pure reorganisation. The setting key,
 dropdown options, persistence and PNG infotext format are unchanged
 (the picker script reloads the page itself after a pick). Disabling
 the extension shows the setting on the Settings page again, but the

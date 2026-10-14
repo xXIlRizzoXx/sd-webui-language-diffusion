@@ -10,8 +10,8 @@
 // so the index miss leaves the element with no tooltip on every
 // non-English locale.
 //
-// This script runs after hints.js (alphabetical script load order:
-// `hints.js` < `hints_i18n_patch.js`) and augments `titles` with the
+// This script runs after hints.js (the WebUI loads its core javascript/
+// files before any extension's scripts) and augments `titles` with the
 // translated variant of every key, pointing at the same tooltip:
 //
 //     titles["Sampling Method"]    = "The algorithm used..."   (already there)

@@ -14,8 +14,9 @@
 //
 // No document-wide MutationObserver: tab switches in Forge produce a lot
 // of DOM churn, and watching everything would tank scroll/repaint perf.
-// We only touch the DOM during page load and when the user actually
-// clicks the dropdown.
+// The DOM is touched at page load, when the user interacts with the
+// dropdown, and when the 200 ms value poller sees a new value (to update
+// the indicator and, after a pick, reload the page).
 
 (function () {
     "use strict";

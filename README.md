@@ -85,13 +85,14 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
 
 - **Ten complete locale dictionaries** (Italian, Spanish, French, German,
   Simplified Chinese, Japanese, Brazilian Portuguese, Russian, Korean,
-  Polish), each translating 2172 UI strings end to end — labels,
+  Polish), each translating 2173 UI strings end to end — labels,
   dropdown choices, settings descriptions, tooltips, error messages,
   sub-tab names, modal text, for both the Forge Neo and the
-  AUTOMATIC1111 1.10 core UI. Includes 212 keys covering every UI string
-  in the [ADetailer Ultimate](https://github.com/xXIlRizzoXx/adetailer-ultimate)
+  AUTOMATIC1111 1.10 core UI. Includes 212 keys covering the panel and
+  settings of the [ADetailer Ultimate](https://github.com/xXIlRizzoXx/adetailer-ultimate)
   extension (when installed) so the ADetailer panel translates in place
-  with the rest of the UI.
+  with the rest of the UI (a few parts stay English by that extension's
+  design, see [Translated extensions](#translated-extensions)).
 - **Inline SVG national flags** decorating the localization dropdown so
   you can pick a language at a glance. The flags are vector graphics
   embedded in the JavaScript, so they render identically on Windows,
@@ -106,9 +107,9 @@ The extension is **almost entirely frontend** — ten JSON files, three
 JavaScript files, one CSS file — plus one small Python startup script
 that adjusts the host's Localization setting in memory (hides it from
 the Settings page while pinned, labels the choices, pins it to the top bar). It does
-**not** modify Forge's source files. The only thing it leaves behind
-after removal is the `localization` entry it added once to the
-Quicksettings list in `config.json` — see [Uninstall](#uninstall).
+**not** modify Forge's source files. After removal two settings stay
+behind in `config.json`: the saved language and the `localization`
+entry in the Quicksettings list — see [Uninstall](#uninstall).
 
 > [!Tip]
 > The translations were produced with machine assistance against the
@@ -139,7 +140,7 @@ Each non-English JSON is approximately 186–268 KB and contains every
 English UI string that Forge's localization system can match against,
 mapped to its translation in that locale — the Forge Neo and
 AUTOMATIC1111 core UI (1812 keys), ADetailer Ultimate (212 keys) and
-Metadata Removal + Image Browser (148 keys); extension keys are used only
+Metadata Removal + Image Browser (149 keys); extension keys are used only
 if that extension is installed and are harmless otherwise.
 
 ---
@@ -246,10 +247,10 @@ comes back in the new language a few seconds later.
 > Forge's stock quicksettings handlers only save the new value to
 > `config.json`; they do not trigger a page reload. For most settings
 > that's fine, but `localization` needs a reload to swap the
-> translation file. This extension wires a small JS hook to the
-> dropdown's change event that calls `restart_reload()` automatically
-> ~700 ms after you pick a new language — long enough for Forge to
-> persist the change.
+> translation file. A small JS poller in this extension checks the
+> dropdown value every 200 ms and, once a new language is picked and
+> the box has lost focus, calls `restart_reload()` ~700 ms later — long
+> enough for Forge to persist the change.
 
 > [!Note]
 > Language Diffusion deliberately keeps the Language picker out
@@ -369,7 +370,7 @@ extension stays English if Language Diffusion isn't installed.
 | 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 1812 | 10 | base coverage |
 | ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.8 | 212 | **10 / 10** | ✅ verified |
 | ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) v1.0.0 | 39 | **10 / 10** | ✅ native-reviewed |
-| 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 113 | **10 / 10** | ✅ native-reviewed |
+| 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 114 | **10 / 10** | ✅ native-reviewed |
 
 **Languages** (all 10 covered for every extension above):
 🇮🇹 Italiano · 🇪🇸 Español · 🇫🇷 Français · 🇩🇪 Deutsch · 🇨🇳 简体中文 ·
@@ -380,12 +381,18 @@ extension stays English if Language Diffusion isn't installed.
   only in a beta of an extension ship in a separate beta pre-release of
   Language Diffusion. See [Releases](#releases) for what each published
   release covers.
-- **10 / 10** = every string of that extension is translated in all 10 languages.
+- **10 / 10** = every translatable string of that extension is translated
+  in all 10 languages (the exceptions are listed below).
 - **native-reviewed** = each locale was checked end-to-end by a native-language
   pass for accuracy, naturalness and cross-reference consistency.
 - A handful of transient, count-interpolated status messages (e.g.
   `✅ 3 cleaned, 0 errors`) and a few internal/technical tokens stay in
   English by design.
+- ADetailer Ultimate: the opt-in **ADetailer Guide** tab is English-only
+  reference documentation by that extension's design. The tab-count pill
+  in the panel header (`1x Tab`, `2x Tabs` and its tooltip) and the
+  confirmation dialog of *Reset ADetailer settings* are built in
+  ADetailer's own code and stay English too.
 
 ### Not translated (kept in English on purpose)
 
@@ -490,9 +497,11 @@ it does not invent a new system. The flow is:
      showing the flag of the currently-selected locale (on Gradio 3
      also its native name, drawn over the raw code).
 
-   The decorator is event-driven (binds to click, focus, and input
-   events on the dropdown only) — there is **no** document-wide
-   observer, so tab switches in the UI stay smooth.
+   The option decoration is driven by click, focus, and input events
+   on the dropdown only, and a lightweight value poller (every 200 ms)
+   updates the indicator and triggers the reload after a pick — there
+   is **no** document-wide observer, so tab switches in the UI stay
+   smooth.
 
 5. **Tooltip fix**: Forge's `javascript/hints.js` builds a `titles`
    dictionary at startup, keyed by the **English** label of each
@@ -505,8 +514,8 @@ it does not invent a new system. The flow is:
    tooltip is shown.
 
    This extension's `javascript/hints_i18n_patch.js` runs **after**
-   `hints.js` (alphabetical order in Forge's script loader: `hints.js`
-   loads before `hints_i18n_patch.js`). It iterates the original
+   `hints.js` (the WebUI loads its core `javascript/` files before any
+   extension's scripts). It iterates the original
    English keys of `titles` and adds the translated label as an
    **alias** pointing at the same English tooltip text. So:
 
@@ -523,7 +532,7 @@ That's the entire system: the dictionaries and scripts above, plus the
 startup script described under
 [`scripts/language_diffusion_setup.py`](#scriptslanguage_diffusion_setuppy),
 which adjusts the Localization setting in memory at launch. No core
-files are modified and there are no asynchronous hooks.
+files are modified.
 
 ---
 
@@ -536,7 +545,7 @@ sd-webui-language-diffusion/
 ├── .gitignore
 ├── style.css                              ← scoped flag/dropdown layout
 ├── scripts/
-│   └── language_diffusion_setup.py        ← Language sidebar section relocator
+│   └── language_diffusion_setup.py        ← hides the setting, pins the top-bar picker
 ├── javascript/
 │   ├── adetailer_ordinal_i18n.js          ← ADetailer tabs 2..N labels
 │   ├── forge_language_flags.js            ← flag decorator for the dropdown
@@ -564,7 +573,8 @@ runtime Python lives in `scripts/language_diffusion_setup.py`.
 
 ### `scripts/language_diffusion_setup.py`
 
-Runs once at Forge startup and performs three UI rearrangements:
+Runs once at Forge startup and performs three UI rearrangements plus
+some startup housekeeping (items 4 and 5):
 
 1. **Hide from Settings page.** Reassigns the OptionInfo's `section`
    to `(None, "Language Diffusion")`. Forge's
@@ -598,9 +608,26 @@ Runs once at Forge startup and performs three UI rearrangements:
    launches do not re-add the pin — letting the user remove it via
    *Settings → User Interface → Quicksettings List* if they prefer.
 
-Pure UI reorganisation: the setting key, the saved values, persistence
-and PNG infotext format are all unchanged. Idempotent. No-op on forks
-where the localization setting isn't registered.
+4. **Locale rescan and head rebuild on language change.** Re-runs
+   the host's `list_localizations()` so the choices list matches the
+   JSON files on disk, and registers an `opts.onchange("localization")`
+   callback that calls `ui_gradio_extensions.reload_javascript()`
+   whenever the language changes. The host builds the page `<head>`
+   (with `window.localization` inlined) once and caches it; without
+   this callback the reload after a pick, or a manual refresh, would
+   still serve the old language.
+
+5. **Console log.** Prints a one-line banner to the WebUI console at
+   startup, `[Language Diffusion] loaded — UI language: Italiano (it_IT)`
+   (with the number of locales the host can see), and a
+   `[Language Diffusion] UI language changed: old → new` line on every
+   switch. The banner is the quickest way to check that the extension
+   loaded.
+
+Items 1-3 are pure UI reorganisation: the setting key, the saved
+values, persistence and PNG infotext format are all unchanged.
+Idempotent. No-op on forks where the localization setting isn't
+registered.
 
 ### `style.css`
 
@@ -914,7 +941,7 @@ Published releases, newest first. Full notes are on the
 
 | Version | Date | Type | Contents |
 |---|---|---|---|
-| v1.1.2 | 2026-07-10 | stable | ADetailer Ultimate aligned to v26.3.0+plus.6 (detection-preview split, run-on-image tool, preview help paragraphs) |
+| v1.1.2 | 2026-07-13 | stable | ADetailer Ultimate aligned to v26.3.0+plus.6 (detection-preview split, run-on-image tool, preview help paragraphs) |
 | v1.1.2-beta.2 | 2026-07-10 | beta | ADetailer Ultimate preview help paragraphs |
 | v1.1.2-beta.1 | 2026-07-09 | beta | ADetailer Ultimate detection-preview split and run-on-image tool |
 | v1.1.1 | 2026-07-03 | stable | ADetailer Ultimate per-pass text encoder |
@@ -962,6 +989,10 @@ with the WebUI fork name and version.
   one level deeper, e.g. `.../extensions/sd-webui-language-diffusion-main/`
   — common ZIP download mistake).
 - Confirm `localizations/it_IT.json` (etc.) exist inside that folder.
+- Look in the WebUI console for the startup line
+  `[Language Diffusion] loaded — UI language: ...`. If it is missing,
+  the extension did not load; if it is there, it also shows the active
+  language and how many locales the WebUI can see.
 - Confirm you restarted the UI after installation: **Reload UI** or
   **Apply and restart UI** is enough to pick up the JSONs. If the
   languages still do not appear, do a full restart of the WebUI.
@@ -982,12 +1013,18 @@ with the WebUI fork name and version.
   the extensions listed under
   [Translated extensions](#translated-extensions). English text left in
   one of those listed extensions is a missing translation here:
-  [open an issue](https://github.com/xXIlRizzoXx/sd-webui-language-diffusion/issues).
-  Other third-party extensions ship their own labels which Forge cannot
-  translate without their own localization JSON. Ask that extension's
+  [open an issue](https://github.com/xXIlRizzoXx/sd-webui-language-diffusion/issues),
+  except for the parts that stay English by design (listed under that
+  heading). Other third-party extensions ship their own labels which
+  Forge cannot translate without their own localization JSON. Ask that extension's
   author to add localization support.
 - Some f-string-formatted runtime messages (e.g. dynamic error reports)
   cannot be statically translated.
+- ADetailer Ultimate: the **ADetailer Guide** tab (an opt-in English-only
+  reference by that extension's design), the tab-count pill in the panel
+  header (`1x Tab`, `2x Tabs`) and the confirmation dialog of
+  *Reset ADetailer settings* stay English: they are not missing
+  translations.
 - Some labels are constructed at runtime from translated fragments —
   let me know which ones,
   [open an issue](https://github.com/xXIlRizzoXx/sd-webui-language-diffusion/issues).
@@ -1033,9 +1070,10 @@ generations and prompts are untouched.
 
 Two settings stay behind in `config.json`:
 
-- The saved `localization` value (e.g. `it_IT`): it is not reset, so
-  the **Localization** dropdown keeps showing that code until you set
-  it back to `None`.
+- The saved `localization` value (e.g. `it_IT`): it is not reset.
+  After removal the **Localization** dropdown shows an empty box on
+  Forge Neo, or the code itself on AUTOMATIC1111, until you set it back
+  to `None`.
 - The `localization` entry in the **Quicksettings list**, added on the
   extension's first launch: the top bar still shows a plain
   **Localization** dropdown.
@@ -1103,9 +1141,10 @@ This extension stands on the shoulders of:
   — Forge Neo, the actively-maintained continuation of Forge that is
   this extension's main test target.
 
-The extension code is released as open source — feel free to study,
-fork, learn from, and improve it. Translations are released for
-community use; please attribute and contribute back when you can.
+Released under the MIT License (see [LICENSE](LICENSE)): this covers
+the code and the translation dictionaries. Feel free to study, fork,
+learn from, and improve it. Attribution and contributions back are
+appreciated as a courtesy, not as a license condition.
 
 ### Translation contributors
 

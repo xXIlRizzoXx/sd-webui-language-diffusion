@@ -80,7 +80,7 @@ class ReadmeFiguresTests(unittest.TestCase):
         self.assertEqual(sum(int(n) for n in parts.groups()), len(self.keys))
 
     def test_adetailer_key_figure_is_the_same_everywhere(self):
-        figures = set(re.findall(r"Includes (\d+) keys covering every UI string", self.flat))
+        figures = set(re.findall(r"Includes (\d+) keys covering the panel", self.flat))
         figures |= set(re.findall(r"ADetailer Ultimate \((\d+) keys\)", self.flat))
         figures |= set(re.findall(r"ADetailer Ultimate\*\*\]\([^)]*\) v\S+ \| (\d+) \|", self.flat))
         self.assertEqual(len(figures), 1, figures)
@@ -268,6 +268,71 @@ class ReadmeBehaviourTests(unittest.TestCase):
                 self.assertFalse(claim in self.flat, claim)
         recipe = _flat(_section(self.readme, "## Adding a brand-new language"))
         self.assertIn("once per process", recipe)
+
+    def test_adetailer_parts_kept_english_are_documented(self):
+        # The Guide tab is English by ADetailer's design; the tab-count pill and
+        # the reset confirm() are built in ADetailer's own code.
+        self.assertFalse("covering every UI string" in self.flat)
+        for heading in ("### Translated extensions", "### Some parts of the UI are still in English"):
+            section = _flat(_section(self.readme, heading))
+            for part in ("ADetailer Guide", "tab-count pill", "confirmation dialog"):
+                with self.subTest(section=heading, part=part):
+                    self.assertIn(part, section)
+
+    def test_leftover_settings_are_described_the_same_everywhere(self):
+        # Both the saved code and the pin outlive the extension; on Gradio 4
+        # (Forge Neo) a value missing from the choices shows an empty box.
+        self.assertFalse("The only thing it leaves behind" in self.flat)
+        uninstall = _flat(_section(self.readme, "## Uninstall"))
+        self.assertFalse("keeps showing that code" in uninstall)
+        self.assertIn("empty box on Forge Neo", uninstall)
+        self.assertIn("AUTOMATIC1111", uninstall)
+
+    def test_reload_trigger_is_described_as_a_poller(self):
+        # forge_language_flags.js polls input.value every 200 ms; no change
+        # listener exists. Core javascript/ files load before any extension's.
+        docs = {
+            "README.md": self.flat,
+            "forge_language_flags.js": _flat(_read(FLAGS_JS)),
+            "hints_i18n_patch.js": _flat(_read(os.path.join(REPO, "javascript", "hints_i18n_patch.js"))),
+        }
+        for name, text in docs.items():
+            for claim in ("change event", "no asynchronous hooks", "alphabetical",
+                          "We only touch the DOM during page load", "The decorator is event-driven"):
+                with self.subTest(file=name, claim=claim):
+                    self.assertFalse(claim in text, claim)
+        self.assertIn("every 200 ms", _flat(_section(self.readme, "## First-time setup")))
+        self.assertIn("every 200 ms", _flat(_section(self.readme, "## How it works internally")))
+
+    def test_setup_script_section_lists_every_startup_step(self):
+        section = _flat(_section(self.readme, "### `scripts/language_diffusion_setup.py`"))
+        self.assertFalse("three UI rearrangements:" in section)
+        for part in ("list_localizations", "onchange", "reload_javascript", "[Language Diffusion] loaded",
+                     "UI language changed"):
+            with self.subTest(part=part):
+                self.assertIn(part, section)
+        self.assertFalse("sidebar section relocator" in self.readme)
+        docstring = _flat(_read(os.path.join(REPO, "scripts", "language_diffusion_setup.py")).split('"""')[1])
+        for claim in ("does three things", "All three actions"):
+            with self.subTest(claim=claim):
+                self.assertFalse(claim in docstring, claim)
+        self.assertIn("onchange", docstring)
+        trouble = _flat(_section(self.readme, "### The new languages don't appear in the Language dropdown"))
+        self.assertIn("[Language Diffusion] loaded", trouble)
+
+    def test_release_dates_are_the_published_dates(self):
+        section = _section(self.readme, "## Releases")
+        rows = dict(re.findall(r"^\| (v[\w.\-]+) \| (\d{4}-\d\d-\d\d) \|", section, re.MULTILINE))
+        self.assertEqual(rows.get("v1.1.2"), "2026-07-13")
+        self.assertEqual(rows.get("v1.1.2-beta.2"), "2026-07-10")
+
+    def test_license_is_named_and_linked(self):
+        credits = _flat(_section(self.readme, "## Credits and license"))
+        self.assertIn("MIT License", credits)
+        self.assertIn("(LICENSE)", credits)
+        self.assertFalse("released for community use" in credits)
+        with open(os.path.join(REPO, "LICENSE"), encoding="utf-8") as f:
+            self.assertTrue(f.readline().startswith("MIT License"))
 
     def test_quicksettings_list_is_not_a_text_field(self):
         section = _flat(_section(self.readme, "### How to remove the pin manually"))

@@ -2115,6 +2115,7 @@
     "date": "fecha",
     "delete next": "eliminar siguiente",
     "model": "modelo",
+    "model hash": "hash del modelo",
     "path name": "nombre de ruta",
     "random": "aleatorio",
     "ranking": "valoración",
