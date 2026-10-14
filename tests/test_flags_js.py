@@ -1,7 +1,7 @@
 """Language picker script (javascript/forge_language_flags.js) on a fake DOM, run with Node.
 
-The simulation lives in tests/flags_sim.js. Node is taken from LD_NODE or PATH;
-without it these tests are skipped.
+The simulation lives in tests/flags_sim.js. Node is taken from LD_NODE, PATH or
+the default Windows install folder; without it these tests are skipped.
 """
 
 import json
@@ -13,7 +13,24 @@ import unittest
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FLAGS_JS = os.path.join(REPO, "javascript", "forge_language_flags.js")
 SIM_JS = os.path.join(REPO, "tests", "flags_sim.js")
-NODE = os.environ.get("LD_NODE") or shutil.which("node")
+
+
+def find_node():
+    # LD_NODE, then PATH, then the default Windows install folder (the test
+    # commands may run with a PATH that holds only the system folders).
+    node = os.environ.get("LD_NODE") or shutil.which("node")
+    if node:
+        return node
+    for var in ("ProgramFiles", "ProgramW6432", "ProgramFiles(x86)"):
+        base = os.environ.get(var)
+        if base:
+            candidate = os.path.join(base, "nodejs", "node.exe")
+            if os.path.isfile(candidate):
+                return candidate
+    return None
+
+
+NODE = find_node()
 
 
 @unittest.skipUnless(NODE, "node not found (set LD_NODE): picker script tests skipped")
