@@ -84,3 +84,31 @@ ul.options.forge-language-options li.item {
     margin-right: 0;
     display: block;
 }
+
+/* Gradio 3 (AUTOMATIC1111): the input holds the raw locale code, so the
+ * indicator also carries the language name. The code is hidden while the
+ * input is not focused and shown again (name hidden) while typing. */
+#setting_localization .wrap.forge-flag-named > .forge-flag-indicator,
+.forge-language-dropdown .wrap.forge-flag-named > .forge-flag-indicator {
+    display: flex;
+    align-items: center;
+}
+
+#setting_localization .forge-flag-indicator .forge-flag-name,
+.forge-language-dropdown .forge-flag-indicator .forge-flag-name {
+    margin-left: 0.5em;
+    line-height: normal;
+    white-space: nowrap;
+    color: var(--body-text-color);
+    font-size: var(--input-text-size);
+}
+
+#setting_localization .wrap.forge-flag-named input:not(:focus),
+.forge-language-dropdown .wrap.forge-flag-named input:not(:focus) {
+    color: transparent;
+}
+
+#setting_localization .wrap.forge-flag-named:focus-within .forge-flag-name,
+.forge-language-dropdown .wrap.forge-flag-named:focus-within .forge-flag-name {
+    visibility: hidden;
+}

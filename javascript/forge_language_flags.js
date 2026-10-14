@@ -73,6 +73,23 @@
         "pl_PL": "pl",
     };
 
+    // Names Forge Neo shows for the same codes (LOCALE_DISPLAY_NAMES in
+    // scripts/language_diffusion_setup.py). Gradio 3 only: shown over the
+    // raw codes, which stay the stored values.
+    const RAW_CODE_TO_NAME = {
+        "None": "English",
+        "it_IT": "Italiano",
+        "es_ES": "Español",
+        "fr_FR": "Français",
+        "de_DE": "Deutsch",
+        "zh_CN": "简体中文",
+        "ja_JP": "日本語",
+        "pt_BR": "Português",
+        "ru_RU": "Русский",
+        "ko_KR": "한국어",
+        "pl_PL": "Polski",
+    };
+
     // Each entry is a compact SVG with a roughly 3:2 aspect ratio,
     // encoded as a data URI so no static file fetch is required.
     const FLAG_SVG = {
@@ -218,8 +235,45 @@
         return img;
     }
 
+    // "English" goes through the UI translation, as the label does on
+    // Forge Neo ("Inglese", "Englisch", ...).
+    function nameForRawCode(raw) {
+        const value = raw ? raw.trim() : "";
+        if (!Object.prototype.hasOwnProperty.call(RAW_CODE_TO_NAME, value)) return null;
+        const name = RAW_CODE_TO_NAME[value];
+        try {
+            if (typeof localization === "object" && localization && typeof localization[name] === "string") {
+                return localization[name];
+            }
+        } catch (_) {
+            // ignore
+        }
+        return name;
+    }
+
+    // Gradio 3 option: <li data-value=code><span>✓</span> code </li>. Write
+    // the name into the bare text node that holds the choice, in place (Svelte
+    // keeps a reference to it and data-value is what a click selects).
+    function labelRawCodeOption(el) {
+        const name = nameForRawCode(el.getAttribute("data-value"));
+        if (!name) return;
+        const nodes = el.childNodes;
+        for (let i = 0; i < nodes.length; i++) {
+            const node = nodes[i];
+            if (node.nodeType === 3 && node.nodeValue.trim()) {
+                if (node.nodeValue !== name) node.nodeValue = name;
+                return;
+            }
+        }
+    }
+
     function decorateOption(el, rawCodes) {
-        if (!el || el.dataset.forgeFlagApplied) return;
+        if (!el) return;
+        // Svelte writes the raw choice back when it reuses an option while
+        // filtering, and the core translator rewrites "None": relabel on
+        // every pass.
+        if (rawCodes) labelRawCodeOption(el);
+        if (el.dataset.forgeFlagApplied) return;
         // Gradio 3 options carry the raw code in data-value; their text
         // also holds the check mark and may be translated ("None").
         const text = rawCodes ? el.getAttribute("data-value") : el.textContent;
@@ -254,15 +308,28 @@
         if (!input) return;
         const row = input.closest(".wrap") || input.parentElement;
         if (!row) return;
-        const code = flagFor(input.value, isRawCodeInput(input));
+        const rawCodes = isRawCodeInput(input);
+        const code = flagFor(input.value, rawCodes);
         const existing = row.querySelector(":scope > .forge-flag-indicator");
         if (existing && existing.dataset.forgeFlagCode === code) return;
         if (existing) existing.remove();
+        row.classList.remove("forge-flag-named");
         if (!code) return;
         const indicator = document.createElement("span");
         indicator.className = "forge-flag-indicator";
         indicator.dataset.forgeFlagCode = code;
         indicator.appendChild(makeFlagImg(code));
+        // Gradio 3: the input holds the raw code (the poller and Gradio
+        // read it), so the name is drawn over it; style.css hides the code
+        // while the input is not focused.
+        const name = rawCodes ? nameForRawCode(input.value) : null;
+        if (name) {
+            const label = document.createElement("span");
+            label.className = "forge-flag-name";
+            label.textContent = name;
+            indicator.appendChild(label);
+            row.classList.add("forge-flag-named");
+        }
         row.appendChild(indicator);
     }
 

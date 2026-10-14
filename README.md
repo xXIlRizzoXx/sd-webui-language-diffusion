@@ -195,10 +195,12 @@ is pinned to the top bar and the page reloads by itself after a pick,
 as on Forge Neo. Differences:
 
 - Gradio 3 dropdowns cannot show a name different from the saved
-  value, so the picker lists the locale codes (`it_IT`, `es_ES`, ...)
-  with their flags instead of the native language names.
-- English is the 🇬🇧 entry: its saved value is `None`, and in the open
-  list it is shown translated (e.g. *Nessuno* in Italian).
+  value, so the saved values stay the locale codes (`it_IT`, `es_ES`,
+  ...); the picker script draws the native language names over them,
+  in the open list and in the closed picker, as on Forge Neo. While
+  you type to filter the list, the box shows the code you are typing.
+- English is the 🇬🇧 entry: its saved value is `None`, and it is shown
+  as *English* in your current language (e.g. *Inglese* in Italian).
 - The AUTOMATIC1111 core UI and ADetailer Ultimate are translated; the
   AUTOMATIC1111 spellings of shared labels (e.g. "Sampling method",
   "Batch count") have their own keys.
@@ -271,8 +273,8 @@ steps and pick a different locale.
 
 To **switch back to English**, pick **English** in the **Language**
 picker (it is shown in your current language, e.g. *Inglese* in
-Italian); the page reloads automatically. On AUTOMATIC1111 the English
-entry is the 🇬🇧 one (see [AUTOMATIC1111 notes](#automatic1111-notes)).
+Italian); the page reloads automatically, on AUTOMATIC1111 too (see
+[AUTOMATIC1111 notes](#automatic1111-notes)).
 
 ---
 
@@ -433,7 +435,7 @@ it does not invent a new system. The flow is:
      "English" (auto-translated), persisted value still "None".
      Gradio 4+ only: Gradio 3 (AUTOMATIC1111 1.10) has no
      (label, value) choices, so there the raw codes are kept and the
-     picker shows them with their flags.
+     picker script shows the names over them.
    - On first launch, appends `localization` to
      `shared.opts.quicksettings_list` so the dropdown is rendered
      in the top-right of the WebUI.
@@ -471,9 +473,11 @@ it does not invent a new system. The flow is:
      On Gradio 3 (AUTOMATIC1111 1.10), where the options are the raw
      values, it matches each option's `data-value` against `None`,
      `it_IT`, `es_ES`, `fr_FR`, `de_DE`, `zh_CN`, `ja_JP`, `pt_BR`,
-     `ru_RU`, `ko_KR` and `pl_PL` instead.
+     `ru_RU`, `ko_KR` and `pl_PL` instead, and replaces the option
+     text with the native name (`data-value` is left as it is).
    - It pins a static flag indicator inside the closed dropdown
-     showing the flag of the currently-selected locale.
+     showing the flag of the currently-selected locale (on Gradio 3
+     also its native name, drawn over the raw code).
 
    The decorator is event-driven (binds to click, focus, and input
    events on the dropdown only) — there is **no** document-wide
@@ -617,7 +621,8 @@ The flag decorator + auto-reload trigger. Self-contained IIFE
    look like a user pick (reload loop).
    `RAW_CODE_TO_FLAG` maps the raw codes (`None`, `it_IT`, ...) and
    is used only on Gradio 3 (AUTOMATIC1111 1.10), whose dropdown
-   input has no `role` attribute and shows the raw codes.
+   input has no `role` attribute and shows the raw codes;
+   `RAW_CODE_TO_NAME` gives the native names drawn over them there.
 2. `FLAG_SVG` — for each flag key, an inline SVG data URI of that
    national flag at roughly 3:2 aspect ratio.
 3. `decorateOption(li)` — prepends a flag `<img>` to a single option

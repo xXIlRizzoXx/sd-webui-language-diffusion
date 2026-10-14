@@ -19,7 +19,20 @@ function El(tag, attrs, text) {
     this.textContent = text || "";
     this.value = this.attrs.value || "";
     const cls = new Set((this.attrs.class || "").split(" ").filter(Boolean));
-    this.classList = { add: (c) => cls.add(c), has: (c) => cls.has(c) };
+    this.classList = { add: (c) => cls.add(c), remove: (c) => cls.delete(c), has: (c) => cls.has(c) };
+}
+Object.defineProperty(El.prototype, "childNodes", {
+    get() {
+        return this.children;
+    },
+});
+// Bare text node, as Svelte creates for the Gradio 3 option label.
+function Text(value) {
+    this.nodeType = 3;
+    this.nodeValue = value;
+    this.attrs = {};
+    this.children = [];
+    this.parentElement = null;
 }
 El.prototype.getAttribute = function (n) {
     return n in this.attrs ? this.attrs[n] : null;
@@ -91,14 +104,22 @@ El.prototype.closest = function (sel) {
 const block = new El("div", { id: "setting_localization" });
 const wrap = block.appendChild(new El("div", { class: "wrap" }));
 let input;
+const choiceNodes = [];
 const ul = new El("ul", { class: "options" });
 if (gradio === "gradio3") {
     // Gradio 3.41: no role on the input, raw codes as values, option
-    // text = check mark + choice (core localization.js translates "None").
+    // text = check mark span + bare text nodes " ", choice, " " (core
+    // localization.js translates "None"; "zh_TW" stands for a locale of
+    // another extension that LD does not know).
     input = wrap.appendChild(new El("input", { class: "border-none", autocomplete: "off", value: "it_IT" }));
-    [["None", "✓ Nessuno"], ["it_IT", "✓ it_IT"], ["de_DE", "✓ de_DE"]].forEach(([v, t]) =>
-        ul.appendChild(new El("li", { class: "item", role: "button", "data-value": v }, t)),
-    );
+    [["None", "Nessuno"], ["it_IT", "it_IT"], ["de_DE", "de_DE"], ["zh_TW", "zh_TW"]].forEach(([v, t]) => {
+        const li = ul.appendChild(new El("li", { class: "item", role: "button", "data-value": v, "aria-label": v }));
+        li.appendChild(new El("span", { class: "inner-item" }, "✓"));
+        [" ", t, " "].forEach((x, i) => {
+            const node = li.appendChild(new Text(x));
+            if (i === 1) choiceNodes.push(node);
+        });
+    });
 } else {
     // Gradio 4.40: role=listbox, (label, value) tuples show labels; the
     // raw code shows up briefly while mounting.
@@ -125,6 +146,7 @@ const sandbox = {
     setTimeout: (f) => timeouts.push(f),
     requestAnimationFrame: (f) => timeouts.push(f),
     restart_reload: () => reloads++,
+    localization: { English: "Inglese", None: "Nessuno" },
     encodeURIComponent,
     Object,
     Set,
@@ -139,13 +161,25 @@ function tick() {
 function report(step) {
     const flags = ul.children.map((li) => (li.children[0] && li.children[0].src ? "flag" : "-"));
     const ind = wrap.children.find((e) => e.className === "forge-flag-indicator");
+    const name = ind && ind.children.find((e) => e.className === "forge-flag-name");
+    const labels = ul.children.map((li) =>
+        li.children
+            .filter((c) => (c.nodeType === 3 ? c.nodeValue.trim() : c.tagName === "SPAN"))
+            .map((c) => (c.nodeType === 3 ? c.nodeValue : c.textContent))
+            .join("|") || li.textContent,
+    );
     console.log(
         JSON.stringify({
             step,
             pollers: intervals.length,
             reloads,
             optionFlags: flags,
+            optionLabels: labels,
+            optionValues: ul.children.map((li) => li.getAttribute("data-value")),
+            inputValue: input.value,
             indicator: ind ? ind.dataset.forgeFlagCode : null,
+            indicatorName: name ? name.textContent : null,
+            named: wrap.classList.has("forge-flag-named"),
         }),
     );
 }
@@ -156,9 +190,29 @@ if (gradio === "gradio3") {
     input.value = "de_DE"; // value pushed without any user interaction
     tick();
     report("untouched-change");
+    input.value = "None";
+    tick();
+    report("english");
+    input.value = "zh_TW"; // a locale LD does not know keeps its raw code
+    tick();
+    report("unknown");
+    input.value = "de_DE";
+    tick();
     block.fire("click");
     tick();
     report("opened");
+    // Svelte reuses the unkeyed li while filtering and writes the raw
+    // choice back into the same text node.
+    choiceNodes[0].nodeValue = "it_IT";
+    ul.children[0].attrs["data-value"] = "it_IT";
+    input.fire("input");
+    tick();
+    report("refiltered");
+    choiceNodes[0].nodeValue = "Nessuno";
+    ul.children[0].attrs["data-value"] = "None";
+    input.fire("input");
+    tick();
+    report("unfiltered");
     input.value = "it_IT"; // user picks Italiano
     tick();
     tick();
