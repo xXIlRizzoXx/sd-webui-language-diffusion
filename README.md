@@ -69,11 +69,12 @@
 9. [File-by-file reference](#file-by-file-reference)
 10. [Contributing translations](#contributing-translations)
 11. [Adding a brand-new language](#adding-a-brand-new-language)
-12. [Compatibility](#compatibility)
-13. [Troubleshooting](#troubleshooting)
-14. [Uninstall](#uninstall)
-15. [Limitations and roadmap](#limitations-and-roadmap)
-16. [Credits and license](#credits-and-license)
+12. [Releases](#releases)
+13. [Compatibility](#compatibility)
+14. [Troubleshooting](#troubleshooting)
+15. [Uninstall](#uninstall)
+16. [Limitations and roadmap](#limitations-and-roadmap)
+17. [Credits and license](#credits-and-license)
 
 ---
 
@@ -101,10 +102,13 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
   no tooltip at all (because Forge's stock tooltip system indexes by
   the English label and the visible text is no longer English).
 
-The extension is **pure frontend** — ten JSON files, three JavaScript files,
-one CSS file. It does **not** modify Forge's source, it does not
-monkey-patch Python, it adds zero startup overhead on launches when you
-don't use it. Removing the extension folder fully uninstalls it.
+The extension is **almost entirely frontend** — ten JSON files, three
+JavaScript files, one CSS file — plus one small Python startup script
+that adjusts the host's Localization setting in memory (hides it from
+the Settings page, labels the choices, pins it to the top bar). It does
+**not** modify Forge's source files. The only thing it leaves behind
+after removal is the `localization` entry it added once to the
+Quicksettings list in `config.json` — see [Uninstall](#uninstall).
 
 > [!Tip]
 > The translations were produced with machine assistance against the
@@ -357,13 +361,18 @@ extension stays English if Language Diffusion isn't installed.
 |-----------|:-------:|:---------:|--------|
 | 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 1660 | 10 | base coverage |
 | ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.8 | 188 | **10 / 10** | ✅ verified |
-| ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) | 39 | **10 / 10** | ✅ native-reviewed |
-| 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) | 113 | **10 / 10** | ✅ native-reviewed |
+| ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) v1.0.0 | 39 | **10 / 10** | ✅ native-reviewed |
+| 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 113 | **10 / 10** | ✅ native-reviewed |
 
 **Languages** (all 10 covered for every extension above):
 🇮🇹 Italiano · 🇪🇸 Español · 🇫🇷 Français · 🇩🇪 Deutsch · 🇨🇳 简体中文 ·
 🇯🇵 日本語 · 🇧🇷 Português · 🇷🇺 Русский · 🇰🇷 한국어 · 🇵🇱 Polski
 
+- The version next to each extension is the one its strings were
+  checked against. Only stable releases are covered: strings that exist
+  only in a beta of an extension ship in a separate beta pre-release of
+  Language Diffusion. See [Releases](#releases) for what each published
+  release covers.
 - **10 / 10** = every string of that extension is translated in all 10 languages.
 - **native-reviewed** = each locale was checked end-to-end by a native-language
   pass for accuracy, naturalness and cross-reference consistency.
@@ -495,8 +504,11 @@ it does not invent a new system. The flow is:
    translated labels, and the tooltip text itself gets translated by
    `localization.js`'s normal DOM-walk pass.
 
-That's the entire system. Pure frontend, no Python, no patches to
-core, no monkey-patching, no asynchronous hooks.
+That's the entire system: the dictionaries and scripts above, plus the
+startup script described under
+[`scripts/language_diffusion_setup.py`](#scriptslanguage_diffusion_setuppy),
+which adjusts the Localization setting in memory at launch. No core
+files are modified and there are no asynchronous hooks.
 
 ---
 
@@ -597,9 +609,12 @@ extension's own marker class.
 The flag decorator + auto-reload trigger. Self-contained IIFE
 (no exports). Architecture:
 
-1. `LABEL_TO_CODE` — maps every label the dropdown might display (raw
-   locale codes like `it_IT` plus autoglottonyms like `Italiano`) to a
-   short flag key (`it`, `es`, ...).
+1. `LABEL_TO_CODE` — maps every label the dropdown displays on
+   Gradio 4 (autoglottonyms like `Italiano` plus the translated forms
+   of `English`) to a short flag key (`it`, `es`, ...). Raw locale
+   codes are deliberately left out: Gradio shows them briefly while
+   mounting the dropdown, and mapping them would make that transition
+   look like a user pick (reload loop).
    `RAW_CODE_TO_FLAG` maps the raw codes (`None`, `it_IT`, ...) and
    is used only on Gradio 3 (AUTOMATIC1111 1.10), whose dropdown
    input has no `role` attribute and shows the raw codes.
@@ -678,7 +693,7 @@ keys and translated string values:
 {
     "Generate": "Genera",
     "Sampling method": "Metodo di Sampling",
-    "Number of frames per second.": "Numero di fotogrammi al secondo.",
+    "Batch count": "Numero di Batch",
     "...": "..."
 }
 ```
@@ -784,56 +799,91 @@ push large refinements.
 
 ## Adding a brand-new language
 
-Want to add Polish, Portuguese, Korean, Arabic? Here's the full path:
+Want to add Dutch, Turkish, Arabic? Here's the full path (the example
+below uses Dutch, `nl_NL`):
 
 1. **Create the JSON file.** Copy any existing locale file as a
    starting point — `it_IT.json` is a good base because it has the
    complete English-keys structure.
    ```bash
-   cp localizations/it_IT.json localizations/pl_PL.json
+   cp localizations/it_IT.json localizations/nl_NL.json
    ```
    Replace the values with your translations. Keys must stay
    unchanged.
 
-2. **Add the flag to the JS.**
+2. **Add the dropdown label to the Python setup script.**
+
+   Open `scripts/language_diffusion_setup.py` and add the locale code
+   with its autoglottonym (the language's name in that language) to
+   `LOCALE_DISPLAY_NAMES`:
+   ```python
+   "nl_NL": "Nederlands",
+   ```
+   Without it the dropdown shows the raw code `nl_NL` as the label.
+
+3. **Add the flag to the JS.**
 
    Open `javascript/forge_language_flags.js` and:
 
-   - Add an entry to `LABEL_TO_CODE` mapping your locale code (and
-     optionally its autoglottonym) to a flag key:
+   - Add the autoglottonym to `LABEL_TO_CODE`, mapped to a flag key,
+     plus your language's word for "English" if you want the flag on
+     the English entry too. Do **not** add the raw code here: the
+     dropdown shows it briefly while mounting, and the code-to-label
+     transition would be read as a user pick (reload loop).
      ```javascript
-     "pl_PL": "pl",
-     "Polski": "pl",
+     "Nederlands": "nl",
+     "Engels": "uk",
      ```
 
    - Add the raw code to `RAW_CODE_TO_FLAG` (used on AUTOMATIC1111,
      whose Gradio 3 picker shows raw codes):
      ```javascript
-     "pl_PL": "pl",
+     "nl_NL": "nl",
      ```
 
    - Add the inline SVG to `FLAG_SVG`. Keep it compact — see the
      existing entries as a template. A 3:2 viewBox is the standard
      proportion for most national flags.
      ```javascript
-     pl:
+     nl:
          "data:image/svg+xml;utf8," +
          encodeURIComponent(
-             '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 5">' +
-                 '<rect width="8" height="2.5" fill="#fff"/>' +
-                 '<rect y="2.5" width="8" height="2.5" fill="#dc143c"/>' +
+             '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 6">' +
+                 '<rect width="9" height="2" fill="#ae1c28"/>' +
+                 '<rect y="2" width="9" height="2" fill="#fff"/>' +
+                 '<rect y="4" width="9" height="2" fill="#21468b"/>' +
                  "</svg>",
          ),
      ```
 
-3. **Reload Forge** (full restart, not just Reload UI — the new JSON
+4. **Reload Forge** (full restart, not just Reload UI — the new JSON
    has to be picked up by `list_localizations()` which runs at
    process start).
 
-4. Your locale appears in the dropdown, with its flag.
+5. Your locale appears in the dropdown, with its flag.
 
-5. (Optional) Open a PR adding the new locale to this extension so
+6. (Optional) Open a PR adding the new locale to this extension so
    other users benefit.
+
+---
+
+## Releases
+
+Published releases, newest first. Full notes are on the
+[GitHub releases page](https://github.com/xXIlRizzoXx/sd-webui-language-diffusion/releases).
+
+| Version | Date | Type | Contents |
+|---|---|---|---|
+| v1.1.2 | 2026-07-10 | stable | ADetailer Ultimate aligned to v26.3.0+plus.6 (detection-preview split, run-on-image tool, preview help paragraphs) |
+| v1.1.2-beta.2 | 2026-07-10 | beta | ADetailer Ultimate preview help paragraphs |
+| v1.1.2-beta.1 | 2026-07-09 | beta | ADetailer Ultimate detection-preview split and run-on-image tool |
+| v1.1.1 | 2026-07-03 | stable | ADetailer Ultimate per-pass text encoder |
+| v1.1.0 | 2026-06-27 | stable | Metadata Removal and Image Browser translated |
+| v1.0.0 | 2026-05-22 | stable | First public release |
+
+The figures and extension versions elsewhere in this README describe
+the files in this copy of the repository, which may be newer than the
+latest release.
 
 ---
 
@@ -933,8 +983,15 @@ To remove the extension:
 
 Forge automatically falls back to English (`None` in the Localization
 dropdown) the next time the UI is loaded if no other localization
-extension is installed. Your saved settings, models, generations,
-and prompts are untouched — the extension is purely a UI layer.
+extension is installed. Your models, generations and prompts are
+untouched.
+
+One setting stays behind: on its first launch the extension added
+`localization` to the **Quicksettings list** and saved it in
+`config.json`, so after removal the top bar still shows a plain
+**Localization** dropdown. If you don't want it, open
+**Settings → User Interface → Quicksettings list**, remove
+`localization`, then **Apply settings** and **Reload UI**.
 
 ---
 

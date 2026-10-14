@@ -139,6 +139,71 @@ class ReadmeBehaviourTests(unittest.TestCase):
         self.assertTrue("### AUTOMATIC1111 notes" in self.readme)
         self.assertFalse("`titles` as a top-level `const`" in self.flat)
 
+    def test_new_language_recipe_matches_the_code(self):
+        # forge_language_flags.js must not map raw codes in LABEL_TO_CODE
+        # (mount transition code -> label = reload loop), and the label
+        # itself comes from LOCALE_DISPLAY_NAMES in the setup script.
+        section = _section(self.readme, "## Adding a brand-new language")
+        self.assertIn("LOCALE_DISPLAY_NAMES", section)
+        self.assertIn("RAW_CODE_TO_FLAG", section)
+        label_step = section[section.index("`LABEL_TO_CODE`"):section.index("`RAW_CODE_TO_FLAG`")]
+        self.assertEqual(re.findall(r'"[a-z]{2}_[A-Z]{2}"\s*:', label_step), [])
+        shipped = {os.path.splitext(os.path.basename(p))[0] for p in LOCALE_FILES}
+        targets = re.findall(r"cp localizations/\S+ localizations/([a-z]{2}_[A-Z]{2})\.json", section)
+        self.assertTrue(targets)
+        for code in targets:
+            with self.subTest(code=code):
+                self.assertNotIn(code, shipped)
+                self.assertIn('"%s":' % code, section)
+        reference = _flat(_section(self.readme, "### `javascript/forge_language_flags.js`"))
+        self.assertFalse("raw locale codes like" in reference)
+
+    def test_python_part_and_leftover_pin_are_documented(self):
+        # The setup script adjusts the host's Localization setting at startup
+        # and saves the quicksettings pin into config.json, which outlives
+        # the extension folder.
+        for claim in ("monkey-patch", "no Python", "fully uninstalls"):
+            with self.subTest(claim=claim):
+                self.assertFalse(claim in self.flat, claim)
+        uninstall = _flat(_section(self.readme, "## Uninstall"))
+        self.assertIn("config.json", uninstall)
+        self.assertIn("Quicksettings list", uninstall)
+
+    def test_translated_extensions_state_their_version(self):
+        section = _section(self.readme, "### Translated extensions")
+        rows = [line for line in section.splitlines()
+                if line.startswith("| ") and "core UI" not in line and "Extension" not in line]
+        self.assertEqual(len(rows), 3)
+        for row in rows:
+            with self.subTest(row=row[:60]):
+                self.assertRegex(row.split("|")[1], r"\bv\d+\.\d+\.\d+|\bcommit [0-9a-f]{7}\b")
+
+    def test_releases_table_lists_the_published_versions(self):
+        section = _section(self.readme, "## Releases")
+        versions = re.findall(r"^\| \*{0,2}(v\d+\.\d+\.\d+(?:-beta\.\d+)?)", section, re.MULTILINE)
+        for version in ("v1.0.0", "v1.1.0", "v1.1.1", "v1.1.2"):
+            with self.subTest(version=version):
+                self.assertIn(version, versions)
+        self.assertTrue("[Releases](#releases)" in self.readme)
+
+
+class DocsExampleKeysTests(unittest.TestCase):
+    def test_example_entries_are_real_it_IT_keys(self):
+        # Contributors grep for these examples: they must exist verbatim.
+        with open(os.path.join(REPO, "localizations", "it_IT.json"), encoding="utf-8") as f:
+            it_keys = set(json.load(f))
+        for doc in (README, os.path.join(REPO, "CONTRIBUTING.md")):
+            text = _read(doc)
+            blocks = re.findall(r"```(?:json|diff)\n(.*?)```", text, re.DOTALL)
+            examples = re.findall(r'^\s*[-+]?\s*"([^"]+)": "[^"]+",?$', "\n".join(blocks), re.MULTILINE)
+            examples += re.findall(r'the key `"([^"]+)"`', _flat(text))
+            self.assertTrue(examples)
+            for key in examples:
+                if key == "..." or "←" in key:
+                    continue
+                with self.subTest(doc=os.path.basename(doc), key=key):
+                    self.assertTrue(key in it_keys, key)
+
 
 if __name__ == "__main__":
     unittest.main()
