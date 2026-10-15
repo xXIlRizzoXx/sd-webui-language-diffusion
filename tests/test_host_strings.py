@@ -10,6 +10,7 @@ against its real files, so a typo in a list cannot pass unnoticed.
 
 import ast
 import glob
+import html
 import json
 import os
 import re
@@ -249,11 +250,12 @@ A1111_CHOICES = ["Enable for SDXL", "Combined", "Keep", "Prepend", "Append", "Zo
 UNTRANSLATED_CHOICES = ["none", "extra", "extensions"]
 UNTRANSLATED_CHOICES_SAME = {("fr_FR", "extensions")}
 
-# Choices that stay English in every locale (technical names, letters,
-# training-only identifiers, Forge's torch.compile presets whose info quotes
-# "Automatic"), so a choice group may leave them without a key.
-CHOICES_KEPT_ENGLISH = {"B", "C", "CLIP", "DeepBooru", "value", "norm", "Automatic", "guard_filter_fn", "dynamic",
-                        "max-autotune", "max-autotune-no-cudagraphs", "reduce-overhead"}
+# Choices that stay English in every locale (technical names, letters, the
+# Tab key, "Automatic", which several settings infos quote in English, and
+# Forge's torch.compile presets), so a choice group may leave them without a
+# key.
+CHOICES_KEPT_ENGLISH = {"B", "C", "CLIP", "DeepBooru", "Automatic", "guard_filter_fn", "dynamic",
+                        "max-autotune", "max-autotune-no-cudagraphs", "reduce-overhead", "Zero Terminal SNR", "Tab"}
 
 # Texts of the html/ templates (footer, Extra Networks pane) and of the
 # Quicksettings "[info]" link, shown by both hosts. "Sort:" is the trimmed
@@ -335,7 +337,48 @@ ADETAILER_XYZ_AXIS_LABELS = [
 # or words spelled the same in some languages.
 SAME_AS_ENGLISH = {"Latent Upscale", "📖 Guide", "Horizontal", "Vertical", "Linear", "Modules", "Name", "Notes", "Training",
                    "(in MB)", "(in ms)", "(EXPERIMENTAL)", "Rectangle", "Oval", "Styles", "Steps",
-                   "Version", "Date", "Action", "Branch", "Commit", "Local", "Remote", "Zoom", "Original"}
+                   "Version", "Date", "Action", "Branch", "Commit", "Local", "Remote", "Zoom", "Original",
+                   "wiki", "Compact", "Preprocessor", "Variation", "Region", "Error", "Frames", "Upscale", "Model:",
+                   "Hash:", "total"}
+
+# The rest of the core UI of both hosts, from a full inventory of their
+# sources: labels, choices, info texts, Gradio texts, popups and messages
+# that no list above covers. "both" is shown by both hosts, "forge" and
+# "a1111" by one host only.
+with open(os.path.join(TESTS, "core_ui_strings.json"), encoding="utf-8") as _f:
+    _CORE_UI = json.load(_f)
+CORE_UI_BOTH = _CORE_UI["both"]
+CORE_UI_FORGE = _CORE_UI["forge"]
+CORE_UI_A1111 = _CORE_UI["a1111"]
+
+# Tooltips (title attributes) nested in HTML that the hosts insert as one
+# block (Forge canvas, Extra Networks cards, image viewer, profiler,
+# Extensions table). localization.js does not walk into these titles yet,
+# so the keys are ready for a later title patch. "both" exists in both
+# hosts, "forge" only in Forge Neo.
+NESTED_TITLE_KEYS_BOTH = _CORE_UI["nested_titles"]["both"]
+NESTED_TITLE_KEYS_FORGE = _CORE_UI["nested_titles"]["forge"]
+NESTED_TITLE_KEYS = NESTED_TITLE_KEYS_BOTH + NESTED_TITLE_KEYS_FORGE
+
+# Core UI keys that the host builds at runtime from parts, so the source
+# check looks for each part instead of the whole text.
+RUNTIME_BUILT_PARTS = {
+    "V1 - original v1": ['f"{self.name} - {self.label}"', 'name = "V1"', 'label = "original v1"'],
+    "sdp - scaled dot product": ['f"{self.name} - {self.label}"', 'name = "sdp"', 'label = "scaled dot product"'],
+    "sdp-no-mem - scaled dot product without memory efficient attention": [
+        'f"{self.name} - {self.label}"', 'name = "sdp-no-mem"',
+        'label = "scaled dot product without memory efficient attention"'],
+    "Failed: Interpolation method (Add difference) requires a tertiary model.": [
+        'f"Failed: Interpolation method ({interp_method}) requires a tertiary model."', '"Add difference"'],
+    "Skews whether partially masked image regions should be more likely to preserve the original content or favor"
+    " inpainted content.\nThis may need to be adjusted depending on the Schedule bias, CFG Scale, prompt and"
+    " Denoising strength.": [
+        "Skews whether partially masked image regions should be more likely to preserve the original content or"
+        " favor inpainted content.",
+        "This may need to be adjusted depending on the {ui_labels.mask_blend_power}, CFG Scale, prompt and"
+        " Denoising strength.",
+        '"Schedule bias"'],
+}
 
 
 def _is_forge(root):
@@ -538,6 +581,20 @@ def _choice_groups(root):
                     if len(group) > 1:
                         groups.add(group)
     return groups
+
+
+def _core_ui_blob(root):
+    """Every .py / .js / .html file of the host UI plus the Gradio front-end
+    bundles, as written and with HTML entities and indentation undone."""
+    parts = []
+    for sub in ("modules", "modules_forge", "scripts", "extensions-builtin", "javascript", "html"):
+        for dirpath, dirnames, filenames in os.walk(os.path.join(root, sub)):
+            dirnames[:] = [d for d in dirnames if d not in (".git", "__pycache__", "tests")]
+            parts += [_read(os.path.join(dirpath, n)) for n in filenames if n.endswith((".py", ".js", ".html"))]
+    parts += [_read(p) for p in glob.glob(os.path.join(root, GRADIO_ASSETS, "*.js"))]
+    blob = "\n".join(parts)
+    # Markdown help paragraphs are indented inside triple-quoted strings.
+    return blob, html.unescape(blob), re.sub(r"\n[ \t]+", "\n", blob)
 
 
 class HostStringKeyTests(unittest.TestCase):
@@ -762,6 +819,45 @@ class HostStringKeyTests(unittest.TestCase):
             for label in sorted(labels):
                 with self.subTest(locale=code, label=label):
                     self.assertIn(label, data)
+
+    def test_core_ui_strings_are_keys(self):
+        keys = CORE_UI_BOTH + CORE_UI_FORGE + CORE_UI_A1111
+        self.assertGreater(len(keys), 190)
+        for group in (CORE_UI_BOTH, CORE_UI_FORGE, CORE_UI_A1111):
+            self.assertEqual(len(group), len(set(group)))
+        self.assertEqual(set(CORE_UI_BOTH) & (set(CORE_UI_FORGE) | set(CORE_UI_A1111)), set())
+        self.assertEqual(set(CORE_UI_FORGE) & set(CORE_UI_A1111), set())
+        self.assertTranslated(keys)
+
+    def test_nested_title_keys_are_keys(self):
+        # Not live yet (see NESTED_TITLE_KEYS), but already in every locale.
+        self.assertEqual(len(NESTED_TITLE_KEYS), len(set(NESTED_TITLE_KEYS)))
+        self.assertTranslated(NESTED_TITLE_KEYS)
+        for code, data in sorted(self.locales.items()):
+            for key in NESTED_TITLE_KEYS:
+                with self.subTest(locale=code, key=key):
+                    # Keyboard keys stay as written; the newline of the
+                    # brush tooltip stays where it is.
+                    for token in re.findall(r"\[(?:Ctrl \+ )?[A-Z][a-z]*\]", key):
+                        self.assertIn(token, data[key])
+                    self.assertEqual(data[key].count("\n"), key.count("\n"))
+
+    @unittest.skipUnless(HOST_ROOT and os.path.isdir(os.path.join(HOST_ROOT, "modules")),
+                         "LD_HOST_ROOT not set: host source check skipped")
+    def test_core_ui_strings_exist_in_the_host_sources(self):
+        if _is_forge(HOST_ROOT):
+            expected = CORE_UI_BOTH + CORE_UI_FORGE + NESTED_TITLE_KEYS
+        else:
+            expected = CORE_UI_BOTH + CORE_UI_A1111 + NESTED_TITLE_KEYS_BOTH
+        blobs = _core_ui_blob(HOST_ROOT)
+        for text in expected:
+            with self.subTest(text=text):
+                parts = [p for p in RUNTIME_BUILT_PARTS.get(text, []) if not any(p in b for b in blobs)]
+                if text in RUNTIME_BUILT_PARTS and not any(text in b for b in blobs):
+                    self.assertEqual(parts, [], "parts not found in host sources")
+                    continue
+                found = any(c in b for b in blobs for c in (text, json.dumps(text)[1:-1]))
+                self.assertTrue(found, "not found in host sources")
 
     @unittest.skipUnless(HOST_ROOT and os.path.isdir(os.path.join(HOST_ROOT, "modules")),
                          "LD_HOST_ROOT not set: host source check skipped")

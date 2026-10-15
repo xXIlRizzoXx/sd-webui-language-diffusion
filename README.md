@@ -85,7 +85,7 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
 
 - **Ten complete locale dictionaries** (Italian, Spanish, French, German,
   Simplified Chinese, Japanese, Brazilian Portuguese, Russian, Korean,
-  Polish), each translating 2257 UI strings end to end — labels,
+  Polish), each translating 2490 UI strings end to end — labels,
   dropdown choices, settings descriptions, tooltips, error messages,
   sub-tab names, modal text, for both the Forge Neo and the
   AUTOMATIC1111 1.10 core UI. Includes 226 keys covering the panel and
@@ -136,12 +136,18 @@ entry in the Quicksettings list — see [Uninstall](#uninstall).
 | 한국어 | `localizations/ko_KR.json` | 🇰🇷 | full seed translation |
 | Polski | `localizations/pl_PL.json` | 🇵🇱 | full seed translation |
 
-Each non-English JSON is approximately 191–274 KB and contains every
+Each non-English JSON is approximately 209–301 KB and contains every
 English UI string that Forge's localization system can match against,
 mapped to its translation in that locale — the Forge Neo and
-AUTOMATIC1111 core UI (1881 keys), ADetailer Ultimate (226 keys) and
+AUTOMATIC1111 core UI (2114 keys), ADetailer Ultimate (226 keys) and
 Metadata Removal + Image Browser (150 keys); extension keys are used only
-if that extension is installed and are harmless otherwise.
+if that extension is installed and are harmless otherwise. The core UI
+keys cover both hosts end to end, Gradio's own texts and the built-in
+extensions included. Only some hover tooltips that the hosts draw inside
+larger HTML blocks (the Forge canvas toolbar, the buttons on Extra
+Networks cards, the image viewer, the VRAM usage popup, the Extensions
+table checkboxes) still show in English: their keys are already in the
+dictionaries, but the page script does not reach them yet.
 
 ---
 
@@ -378,7 +384,7 @@ extension stays English if Language Diffusion isn't installed.
 
 | Extension | Strings | Languages | Status |
 |-----------|:-------:|:---------:|--------|
-| 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 1881 | 10 | base coverage |
+| 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 2114 | 10 | base coverage |
 | ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.8 | 226 | **10 / 10** | ✅ verified |
 | ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) v1.0.0 | 39 | **10 / 10** | ✅ verified |
 | 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 115 | **10 / 10** | ✅ verified |
@@ -576,16 +582,16 @@ sd-webui-language-diffusion/
 │   ├── forge_language_flags.js            ← flag decorator for the dropdown
 │   └── hints_i18n_patch.js                ← tooltip alias bridge
 └── localizations/
-    ├── it_IT.json    ← Italiano                  ~212 KB
-    ├── es_ES.json    ← Español                   ~215 KB
-    ├── fr_FR.json    ← Français                  ~218 KB
-    ├── de_DE.json    ← Deutsch                   ~212 KB
-    ├── zh_CN.json    ← Simplified Chinese        ~191 KB
-    ├── ja_JP.json    ← 日本語                     ~222 KB
-    ├── pt_BR.json    ← Português (Brasil)        ~211 KB
-    ├── ru_RU.json    ← Русский                   ~274 KB
-    ├── ko_KR.json    ← 한국어                     ~211 KB
-    └── pl_PL.json    ← Polski                    ~207 KB
+    ├── it_IT.json    ← Italiano                  ~232 KB
+    ├── es_ES.json    ← Español                   ~235 KB
+    ├── fr_FR.json    ← Français                  ~239 KB
+    ├── de_DE.json    ← Deutsch                   ~232 KB
+    ├── zh_CN.json    ← Simplified Chinese        ~209 KB
+    ├── ja_JP.json    ← 日本語                     ~244 KB
+    ├── pt_BR.json    ← Português (Brasil)        ~232 KB
+    ├── ru_RU.json    ← Русский                   ~301 KB
+    ├── ko_KR.json    ← 한국어                     ~231 KB
+    └── pl_PL.json    ← Polski                    ~227 KB
 ```
 
 ### `install.py`
