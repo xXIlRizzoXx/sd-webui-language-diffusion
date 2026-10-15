@@ -463,6 +463,22 @@ class ReadmeBehaviourTests(unittest.TestCase):
                 with self.subTest(file=name, needle=needle):
                     self.assertIn(needle, text)
 
+    def test_recipes_give_a_windows_test_command(self):
+        # The usual platform of both WebUIs: PowerShell syntax and the
+        # venv\Scripts Python, with generic paths.
+        recipe = _flat(_section(self.readme, "## Adding a brand-new language"))
+        contributing = _flat(_section(_read(os.path.join(REPO, "CONTRIBUTING.md")), "## Tier D"))
+        for name, text in (("README.md", recipe), ("CONTRIBUTING.md", contributing)):
+            for needle in ("$env:LD_HOST_ROOT", r"\venv\Scripts\python.exe -m unittest discover -s tests"):
+                with self.subTest(file=name, needle=needle):
+                    self.assertIn(needle, text)
+
+    def test_preset_preview_note_is_plain(self):
+        # No internal rule name and no claim of an upstream report.
+        section = _flat(_section(self.readme, "### Translated extensions"))
+        self.assertNotIn("one-plain-text-node", section)
+        self.assertNotIn("reported upstream", section)
+
     def test_review_status_matches_the_banner(self):
         # No locale has had a native-speaker review yet (see the banner).
         if "not yet polished by native speakers" in self.flat:

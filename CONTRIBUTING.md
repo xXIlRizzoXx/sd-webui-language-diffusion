@@ -144,6 +144,10 @@ Korean dialects, etc.):
    ```bash
    LD_HOST_ROOT=/path/to/webui /path/to/webui/venv/bin/python -m unittest discover -s tests -v
    ```
+   On Windows (PowerShell):
+   ```powershell
+   $env:LD_HOST_ROOT="C:\path\to\webui"; C:\path\to\webui\venv\Scripts\python.exe -m unittest discover -s tests -v
+   ```
    A bare `python -m unittest` finds no tests. Read the reason of
    every skipped test: one skipped for a missing `LD_HOST_ROOT` or
    Node.js did not check anything.

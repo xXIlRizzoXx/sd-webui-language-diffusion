@@ -85,7 +85,7 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
 
 - **Ten complete locale dictionaries** (Italian, Spanish, French, German,
   Simplified Chinese, Japanese, Brazilian Portuguese, Russian, Korean,
-  Polish), each translating 2255 UI strings end to end — labels,
+  Polish), each translating 2257 UI strings end to end — labels,
   dropdown choices, settings descriptions, tooltips, error messages,
   sub-tab names, modal text, for both the Forge Neo and the
   AUTOMATIC1111 1.10 core UI. Includes 226 keys covering the panel and
@@ -139,7 +139,7 @@ entry in the Quicksettings list — see [Uninstall](#uninstall).
 Each non-English JSON is approximately 191–274 KB and contains every
 English UI string that Forge's localization system can match against,
 mapped to its translation in that locale — the Forge Neo and
-AUTOMATIC1111 core UI (1879 keys), ADetailer Ultimate (226 keys) and
+AUTOMATIC1111 core UI (1881 keys), ADetailer Ultimate (226 keys) and
 Metadata Removal + Image Browser (150 keys); extension keys are used only
 if that extension is installed and are harmless otherwise.
 
@@ -373,7 +373,7 @@ extension stays English if Language Diffusion isn't installed.
 
 | Extension | Strings | Languages | Status |
 |-----------|:-------:|:---------:|--------|
-| 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 1879 | 10 | base coverage |
+| 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 1881 | 10 | base coverage |
 | ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.8 | 226 | **10 / 10** | ✅ verified |
 | ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) v1.0.0 | 39 | **10 / 10** | ✅ verified |
 | 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 115 | **10 / 10** | ✅ verified |
@@ -403,9 +403,8 @@ extension stays English if Language Diffusion isn't installed.
   ADetailer's own code and stay English too, as does the preset preview
   summary shown under *Saved presets* (Preview, Detector, Classes,
   Prompt, Negative ...): ADetailer builds it as Markdown, with bold
-  labels mixed with the preset's own values, and under the
-  one-plain-text-node rule such text is not translated with fragment
-  keys (reported upstream).
+  labels mixed with the preset's own values, so it is left in English
+  rather than translated piece by piece (fragment keys).
 
 ### Not translated (kept in English on purpose)
 
@@ -979,6 +978,12 @@ below uses Dutch, `nl_NL`):
 
    ```bash
    LD_HOST_ROOT=/path/to/webui /path/to/webui/venv/bin/python -m unittest discover -s tests -v
+   ```
+
+   On Windows (PowerShell):
+
+   ```powershell
+   $env:LD_HOST_ROOT="C:\path\to\webui"; C:\path\to\webui\venv\Scripts\python.exe -m unittest discover -s tests -v
    ```
 
    A bare `python -m unittest` finds no tests. Read the reason of

@@ -218,15 +218,18 @@ BOTH_HOSTS_CORE = ["Generate forever", "Cancel generate forever", "Model hash", 
                    "Process images in a directory on the same machine where the server is running.",
                    "Use an empty output directory to save pictures normally instead of writing to the output directory.",
                    "Add inpaint batch mask directory to enable inpaint batch processing.",
+                   "Disabled when launched with --hide-ui-dir-config.",
                    "Download system info", "(or open as text in a new page)", "Valid", "Invalid", "Waiting...",
-                   # Settings > Defaults "View changes" table (ui_loadsave.py) and
-                   # the Extensions Backup/Restore config view (ui_extensions.py).
-                   "Old value", "New value", "No changes", "WebUI State", "Extension State", "Filepath:",
+                   # Settings > Defaults "View changes" table and "Apply" result
+                   # (ui_loadsave.py) and the Extensions Backup/Restore config
+                   # view (ui_extensions.py).
+                   "Old value", "New value", "No changes", "No changes.", "WebUI State", "Extension State", "Filepath:",
                    "Created at:", "This file is corrupted"]
 
 # Gradio's own upload area texts (svelte-i18n "en" strings of the Gradio 3.41
-# and 4.40 front-ends, which ship no locale for most of these languages):
-# "Drop File Here - or - Click to Upload" on gr.File / gr.Files.
+# and 4.40 front-ends): "Drop File Here - or - Click to Upload" on gr.File /
+# gr.Files. Gradio picks its own upload texts from the browser language (no
+# Italian bundle); on an English browser they stay English, so LD keys them.
 GRADIO_UPLOAD_TEXTS = ["Drop Image Here", "Drop File Here", "Click to Upload"]
 GRADIO_ASSETS = os.path.join("venv", "Lib", "site-packages", "gradio", "templates", "frontend", "assets")
 
@@ -666,6 +669,26 @@ class HostStringKeyTests(unittest.TestCase):
         for text in GRADIO_UPLOAD_TEXTS:
             with self.subTest(text=text):
                 self.assertIn('"%s"' % text, blob)
+
+    def test_gradio_upload_comment_names_the_browser_language(self):
+        # Gradio has its own upload texts for most of these languages and picks
+        # them from the browser language, so the comment must not claim that
+        # LD's keys cover every user.
+        head = _read(os.path.abspath(__file__)).split("GRADIO_UPLOAD_TEXTS = [", 1)[0]
+        comment = head.rsplit("\n\n", 1)[1]
+        self.assertNotIn("ship no locale", comment)
+        self.assertIn("browser language", comment)
+
+    @unittest.skipUnless(HOST_ROOT and glob.glob(os.path.join(HOST_ROOT, GRADIO_ASSETS)),
+                         "LD_HOST_ROOT not set: host Gradio upload locales not checked")
+    def test_host_gradio_has_upload_texts_for_other_languages(self):
+        # The fact behind the GRADIO_UPLOAD_TEXTS comment: Gradio ships its own
+        # upload texts for several languages (German among them).
+        bundles = [p for p in glob.glob(os.path.join(HOST_ROOT, GRADIO_ASSETS, "*.js"))
+                   if os.path.basename(p).lower().startswith("index-")]
+        drops = set(re.findall(r'drop_file:"([^"]*)"', "\n".join(_read(p) for p in bundles)))
+        self.assertIn("Datei hier ablegen", drops)
+        self.assertGreater(len(drops), 5)
 
     def test_emphasis_names_are_keys(self):
         self.assertTranslated(EMPHASIS_NAMES)
