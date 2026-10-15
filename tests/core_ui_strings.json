@@ -76,6 +76,11 @@
         "Compact",
         "Control Type",
         "Control Weight",
+        "ControlNet Unit 1",
+        "ControlNet Unit 2",
+        "ControlNet Unit 3",
+        "ControlNet Unit 4",
+        "ControlNet Unit 5",
         "ControlNet is more important",
         "Diffusion Engine",
         "Drop Image(s) Here",
@@ -140,6 +145,7 @@
         "Use same choices",
         "Variation",
         "XDoG Threshold",
+        "[Region]",
         "densepose (pruple bg & purple torso)",
         "invert (from white bg & black line)",
         "lineart_standard (from white bg & black line)"
@@ -243,6 +249,10 @@
             "adjust with [A] + [Scroll Wheel]\nfunction as eraser if 0",
             "adjust with [S] + [Scroll Wheel]",
             "adjust with [W] + [Scroll Wheel]"
+        ],
+        "a1111": [
+            "Variational autoencoder",
+            "red/green/blue"
         ]
     }
 }

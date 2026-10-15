@@ -338,7 +338,7 @@ ADETAILER_XYZ_AXIS_LABELS = [
 SAME_AS_ENGLISH = {"Latent Upscale", "📖 Guide", "Horizontal", "Vertical", "Linear", "Modules", "Name", "Notes", "Training",
                    "(in MB)", "(in ms)", "(EXPERIMENTAL)", "Rectangle", "Oval", "Styles", "Steps",
                    "Version", "Date", "Action", "Branch", "Commit", "Local", "Remote", "Zoom", "Original",
-                   "wiki", "Compact", "Preprocessor", "Variation", "Region", "Error", "Frames", "Upscale", "Model:",
+                   "wiki", "Compact", "Preprocessor", "Variation", "Region", "[Region]", "Error", "Frames", "Upscale", "Model:",
                    "Hash:", "total"}
 
 # The rest of the core UI of both hosts, from a full inventory of their
@@ -355,10 +355,12 @@ CORE_UI_A1111 = _CORE_UI["a1111"]
 # block (Forge canvas, Extra Networks cards, image viewer, profiler,
 # Extensions table). localization.js does not walk into these titles; the
 # extension's hints_i18n_patch.js translates them (tests/test_titles_js.py).
-# "both" exists in both hosts, "forge" only in Forge Neo.
+# "both" exists in both hosts, "forge" only in Forge Neo, "a1111" only in
+# AUTOMATIC1111.
 NESTED_TITLE_KEYS_BOTH = _CORE_UI["nested_titles"]["both"]
 NESTED_TITLE_KEYS_FORGE = _CORE_UI["nested_titles"]["forge"]
-NESTED_TITLE_KEYS = NESTED_TITLE_KEYS_BOTH + NESTED_TITLE_KEYS_FORGE
+NESTED_TITLE_KEYS_A1111 = _CORE_UI["nested_titles"]["a1111"]
+NESTED_TITLE_KEYS = NESTED_TITLE_KEYS_BOTH + NESTED_TITLE_KEYS_FORGE + NESTED_TITLE_KEYS_A1111
 
 # Core UI keys that the host builds at runtime from parts, so the source
 # check looks for each part instead of the whole text.
@@ -378,6 +380,11 @@ RUNTIME_BUILT_PARTS = {
         "This may need to be adjusted depending on the {ui_labels.mask_blend_power}, CFG Scale, prompt and"
         " Denoising strength.",
         '"Schedule bias"'],
+    # ControlNet unit tabs: one per unit, up to the slider maximum (5).
+    **{"ControlNet Unit %d" % n: ['gr.Tab(label=f"ControlNet Unit {i + 1}"', '"Number of ControlNet Units"',
+                                  '{"minimum": 1, "maximum": 5, "step": 1}'] for n in range(1, 6)},
+    # active_units.js appends "[<Control Type value>]" to the unit tab.
+    "[Region]": ["span.innerHTML = `[${controlType}]`", '+ ["Region"]'],
 }
 
 
@@ -846,9 +853,9 @@ class HostStringKeyTests(unittest.TestCase):
                          "LD_HOST_ROOT not set: host source check skipped")
     def test_core_ui_strings_exist_in_the_host_sources(self):
         if _is_forge(HOST_ROOT):
-            expected = CORE_UI_BOTH + CORE_UI_FORGE + NESTED_TITLE_KEYS
+            expected = CORE_UI_BOTH + CORE_UI_FORGE + NESTED_TITLE_KEYS_BOTH + NESTED_TITLE_KEYS_FORGE
         else:
-            expected = CORE_UI_BOTH + CORE_UI_A1111 + NESTED_TITLE_KEYS_BOTH
+            expected = CORE_UI_BOTH + CORE_UI_A1111 + NESTED_TITLE_KEYS_BOTH + NESTED_TITLE_KEYS_A1111
         blobs = _core_ui_blob(HOST_ROOT)
         for text in expected:
             with self.subTest(text=text):

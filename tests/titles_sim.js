@@ -267,6 +267,11 @@ if (flavour === "forge") {
         ]),
         new El("DIV", undefined, [new El("SPAN", undefined, [titled("vae", "Variational AutoEncoder", "ABBR")])]),
     );
+} else {
+    blocks.push(new El("DIV", undefined, [new El("SPAN", undefined, [
+        titled("vaeA1111", "Variational autoencoder", "ABBR"),
+        titled("rgbA1111", "red/green/blue", "ABBR"),
+    ])]));
 }
 Object.assign(t, viewer);
 

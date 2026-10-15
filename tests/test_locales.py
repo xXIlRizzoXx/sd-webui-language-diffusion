@@ -279,6 +279,38 @@ class LocaleFileTests(unittest.TestCase):
                 english = data["English"]
                 self.assertRegex(js, r'"%s"\s*:\s*"uk"' % re.escape(english))
 
+    def test_no_value_is_another_key_with_a_different_translation(self):
+        # localization.js translates a node each time it is processed, so a
+        # value that is itself a key flips to that key's translation on the
+        # next pass, and the title patch skips such a title altogether.
+        for code, (_, data) in self.locales.items():
+            for key, value in data.items():
+                if value != key and value in data and data[value] != value:
+                    with self.subTest(locale=code, key=key):
+                        self.fail("%r -> %r -> %r" % (key, value, data[value]))
+
+    def test_controlnet_region_suffix_uses_the_region_choice(self):
+        # Forge ControlNet active_units.js appends "[<Control Type value>]" to
+        # the unit tab; the value is the English choice, so the bracketed
+        # form needs its own key, worded like the translated radio choice.
+        for code, (_, data) in self.locales.items():
+            with self.subTest(locale=code):
+                self.assertIn("[Region]", data)
+                self.assertEqual(data["[Region]"], "[%s]" % data["Region"])
+
+    def test_controlnet_unit_tabs_are_translated(self):
+        # Forge builds f"ControlNet Unit {i + 1}" for each unit; the "Number of
+        # ControlNet Units" slider goes up to 5.
+        for code, (_, data) in self.locales.items():
+            for n in range(1, 6):
+                key = "ControlNet Unit %d" % n
+                with self.subTest(locale=code, key=key):
+                    self.assertIn(key, data)
+                    self.assertNotEqual(data[key], key)
+                    self.assertIn("ControlNet", data[key])
+                    self.assertIn(str(n), data[key])
+                    self.assertEqual(data[key], data["ControlNet Unit 1"].replace("1", str(n)))
+
     def test_every_adetailer_tab_has_its_enable_and_paste_keys(self):
         # ADetailer builds these labels with ordinal(n) for every tab up to
         # its "Max tabs" slider maximum (15); adetailer_ordinal_i18n.js only

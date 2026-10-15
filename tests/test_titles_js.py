@@ -14,7 +14,7 @@ import unittest
 
 from _host import HOST_ROOT
 from test_flags_js import NODE
-from test_host_strings import NESTED_TITLE_KEYS_BOTH, NESTED_TITLE_KEYS_FORGE
+from test_host_strings import NESTED_TITLE_KEYS_A1111, NESTED_TITLE_KEYS_BOTH, NESTED_TITLE_KEYS_FORGE
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PATCH_JS = os.path.join(REPO, "javascript", "hints_i18n_patch.js")
@@ -41,6 +41,8 @@ FORGE = {
     "picker": "Color Picker [E]", "alpha": "adjust with [A] + [Scroll Wheel]\nfunction as eraser if 0",
     "brush": "adjust with [W] + [Scroll Wheel]", "vae": "Variational AutoEncoder",
 }
+# Settings > VAE explanation: AUTOMATIC1111 spells the abbr titles in lower case.
+A1111 = {"vaeA1111": "Variational autoencoder", "rgbA1111": "red/green/blue"}
 
 
 def host_script(flavour):
@@ -77,10 +79,11 @@ class NestedTitleScriptTests(unittest.TestCase):
         # "Sort descending" is the toggled title of the sort button.
         self.assertEqual(set(BOTH.values()) | {"Sort descending"}, set(NESTED_TITLE_KEYS_BOTH))
         self.assertLessEqual(set(FORGE.values()), set(NESTED_TITLE_KEYS_FORGE))
+        self.assertEqual(set(A1111.values()), set(NESTED_TITLE_KEYS_A1111))
 
     def test_nested_titles_are_translated_in_every_locale(self):
         for flavour in FLAVOURS:
-            expected = dict(BOTH, **FORGE) if flavour == "forge" else BOTH
+            expected = dict(BOTH, **FORGE) if flavour == "forge" else dict(BOTH, **A1111)
             for code in locale_codes():
                 with self.subTest(flavour=flavour, locale=code):
                     loc = load_locale(code)
