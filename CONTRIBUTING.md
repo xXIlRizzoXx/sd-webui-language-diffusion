@@ -150,9 +150,9 @@ English even inside non-English values:
 
 > CFG · VAE · LoRA · LyCORIS · UNet · CLIP · SDXL · SD1 · SD2 ·
 > ControlNet · IP-Adapter · Hires · Hires.fix · txt2img · img2img ·
-> inpaint · Sampler · Scheduler · Seed · Steps · sigma · eta ·
+> inpaint · Sampler · Scheduler · Seed · sigma · eta ·
 > Karras · Euler · DPM++ · DDIM · UniPC · LCM · Restart ·
-> infotext · emphasis · MaHiRo · RescaleCFG · Spectrum ·
+> infotext · MaHiRo · RescaleCFG · Spectrum ·
 > Epsilon Scaling · Flux · Wan · Lumina · Klein · Qwen-Image ·
 > Ernie-Image · Z-Image · Anima · Chroma · Mugen · Nunchaku ·
 > SVDQ · fp4mixed · fp8mixed · mxfp8 · nvfp4 · fp16 · bf16 ·
@@ -161,6 +161,10 @@ English even inside non-English values:
 
 **Rule of thumb:** if you'd say it in English on a Discord server
 or civitai comment, keep it in English here.
+
+*Emphasis* (translated in most locales) and *Steps* (translated in
+Japanese and Chinese, partly in Korean, Polish and Russian) are not on
+the list: follow how the existing keys of your locale handle them.
 
 ### Preserve markup, format specifiers, and emoji
 

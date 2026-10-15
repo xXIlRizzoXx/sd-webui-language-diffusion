@@ -294,7 +294,7 @@ class ReadmeBehaviourTests(unittest.TestCase):
         self.assertFalse("covering every UI string" in self.flat)
         for heading in ("### Translated extensions", "### Some parts of the UI are still in English"):
             section = _flat(_section(self.readme, heading))
-            for part in ("ADetailer Guide", "tab-count pill", "confirmation dialog"):
+            for part in ("ADetailer Guide", "tab-count pill", "confirmation dialog", "preset preview"):
                 with self.subTest(section=heading, part=part):
                     self.assertIn(part, section)
 
@@ -364,8 +364,51 @@ class ReadmeBehaviourTests(unittest.TestCase):
         self.assertIn("MIT License", credits)
         self.assertIn("(LICENSE)", credits)
         self.assertFalse("released for community use" in credits)
+        # MIT makes keeping the copyright and permission notice a condition.
+        self.assertFalse("not as a license condition" in credits)
+        self.assertIn("permission notice", credits)
         with open(os.path.join(REPO, "LICENSE"), encoding="utf-8") as f:
             self.assertTrue(f.readline().startswith("MIT License"))
+
+    def test_open_list_and_tooltips_are_described_as_the_hosts_do_them(self):
+        # Both Gradio versions render ul.options inside the dropdown's div.wrap
+        # (findOpenList relies on dropdown.contains). hints.js sets the title
+        # from a debounced observer and translates it via localization[titles[...]].
+        css = _flat(_read(os.path.join(REPO, "style.css")))
+        internals = _flat(_section(self.readme, "## How it works internally"))
+        flags = _flat(_section(self.readme, "### `javascript/forge_language_flags.js`"))
+        for name, text in (("README.md", flags), ("style.css", css)):
+            with self.subTest(file=name):
+                self.assertFalse("detached" in text)
+                self.assertFalse("detached" in self.flat)
+                self.assertIn("inside the dropdown", text)
+        for claim in ("At hover time", "normal DOM-walk pass"):
+            with self.subTest(claim=claim):
+                self.assertFalse(claim in internals, claim)
+        self.assertIn("About 1 s after", internals)
+        self.assertIn("`localization[titles[...]]`", internals)
+
+    def test_kept_english_lists_leave_out_translated_terms(self):
+        # Every locale translates Emphasis, and ja/zh/it/ko use their own word
+        # for Steps in most keys: the lists must not claim them as English.
+        def terms(path, heading):
+            section = _section(_read(path), heading)
+            quote = " ".join(line[1:] for line in section.splitlines() if line.startswith(">"))
+            return {term.strip() for term in quote.split("·")}
+        lists = {
+            "README.md": terms(README, "### Not translated (kept in English on purpose)"),
+            "CONTRIBUTING.md": terms(os.path.join(REPO, "CONTRIBUTING.md"),
+                                     "### Keep technical SD vocabulary in English"),
+        }
+        for name, listed in lists.items():
+            with self.subTest(file=name):
+                self.assertIn("Seed", listed)
+                self.assertNotIn("emphasis", listed)
+                self.assertNotIn("Steps", listed)
+        with open(os.path.join(REPO, "localizations", "zh_CN.json"), encoding="utf-8") as f:
+            zh = json.load(f)
+        self.assertNotIn("Steps", zh["Steps"])
+        self.assertNotIn("mphasis", zh["Emphasis"])
 
     def test_quicksettings_list_is_not_a_text_field(self):
         section = _flat(_section(self.readme, "### How to remove the pin manually"))

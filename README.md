@@ -397,7 +397,10 @@ extension stays English if Language Diffusion isn't installed.
   reference documentation by that extension's design. The tab-count pill
   in the panel header (`1x Tab`, `2x Tabs` and its tooltip) and the
   confirmation dialog of *Reset ADetailer settings* are built in
-  ADetailer's own code and stay English too.
+  ADetailer's own code and stay English too, as does the preset preview
+  summary shown under *Saved presets* (Preview, Detector, Classes,
+  Prompt, Negative ...): ADetailer builds it as Markdown around the
+  preset's own values, so it cannot be matched as plain text.
 
 ### Not translated (kept in English on purpose)
 
@@ -409,14 +412,18 @@ locale:
 
 > CFG · VAE · LoRA · LyCORIS · UNet · CLIP · SDXL · SD1 · SD2 ·
 > ControlNet · IP-Adapter · Hires · txt2img · img2img · inpaint ·
-> Sampler · Scheduler · Seed · Steps · sigma · eta · Karras ·
+> Sampler · Scheduler · Seed · sigma · eta · Karras ·
 > Euler · DPM++ · DDIM · UniPC · LCM · Restart · infotext ·
-> emphasis · MaHiRo · RescaleCFG · Spectrum · Epsilon Scaling ·
+> MaHiRo · RescaleCFG · Spectrum · Epsilon Scaling ·
 > Flux · Wan · Lumina · Klein · Qwen-Image · Ernie-Image ·
 > Z-Image · Anima · Chroma · Mugen · Nunchaku · SVDQ ·
 > fp4mixed · fp8mixed · mxfp8 · nvfp4 · fp16 · bf16 · fp32 ·
 > ckpt · safetensors · ENSD · ONNX · Spandrel · COCO · TAESD ·
 > SageAttention · FlashAttention · xformers · Triton
+
+*Emphasis* (translated in most locales) and *Steps* (translated in
+Japanese and Chinese, partly in Korean, Polish and Russian) follow
+each locale's own usage instead.
 
 ### Also untouched
 
@@ -512,13 +519,14 @@ it does not invent a new system. The flow is:
 
 5. **Tooltip fix**: Forge's `javascript/hints.js` builds a `titles`
    dictionary at startup, keyed by the **English** label of each
-   tooltip-bearing control. At hover time, it looks up
-   `titles[element.textContent]` to find the tooltip string.
+   tooltip-bearing control. About 1 s after an element is added or
+   changed (a debounced DOM observer), it looks up
+   `titles[element.textContent]` and, on a hit, sets the element's
+   `title` to the tooltip string.
 
    The problem: `localization.js` has already replaced
-   `element.textContent` with the translated label by the time the
-   user hovers, so `titles[element.textContent]` is a miss → no
-   tooltip is shown.
+   `element.textContent` with the translated label by then, so
+   `titles[element.textContent]` is a miss → no tooltip is set.
 
    This extension's `javascript/hints_i18n_patch.js` runs **after**
    `hints.js` (the WebUI loads its core `javascript/` files before any
@@ -531,9 +539,9 @@ it does not invent a new system. The flow is:
    titles["Metodo di Sampling"]   = "<english tooltip>"   (added by us)
    ```
 
-   At hover time, `titles[element.textContent]` now resolves even on
-   translated labels, and the tooltip text itself gets translated by
-   `localization.js`'s normal DOM-walk pass.
+   `titles[element.textContent]` now resolves even on translated
+   labels, and `hints.js` translates the tooltip text itself through
+   `localization[titles[...]]`.
 
 That's the entire system: the dictionaries and scripts above, plus the
 startup script described under
@@ -683,10 +691,12 @@ The flag decorator + auto-reload trigger. Self-contained IIFE
 3. `decorateOption(li)` — prepends a flag `<img>` to a single option
    `<li>` inside the open dropdown, and swaps it when Gradio reuses the
    `<li>` for another language while the list is filtered by typing.
-4. `decorateOpenList(dropdown)` — finds the floating `<ul.options>`
-   panel (Gradio mounts it as a detached node referenced via
-   `aria-controls` on the input) and runs `decorateOption` on each
-   `<li>`.
+4. `decorateOpenList(dropdown)` — finds the open `<ul.options>` panel,
+   which Gradio renders inside the dropdown (in its `div.wrap`), and
+   runs `decorateOption` on each `<li>`. The input's `aria-controls` is
+   used only when it names an element inside the picker; Gradio 4's
+   `dropdown-options` never does, so the `ul.options` lookup is the one
+   actually used.
 5. `updateInputIndicator(dropdown)` — pins a flag chip inside the
    `.wrap` row of the closed input, matching the currently-selected
    value.
@@ -1039,9 +1049,10 @@ with the WebUI fork name and version.
   cannot be statically translated.
 - ADetailer Ultimate: the **ADetailer Guide** tab (an opt-in English-only
   reference by that extension's design), the tab-count pill in the panel
-  header (`1x Tab`, `2x Tabs`) and the confirmation dialog of
-  *Reset ADetailer settings* stay English: they are not missing
-  translations.
+  header (`1x Tab`, `2x Tabs`), the confirmation dialog of
+  *Reset ADetailer settings* and the preset preview summary under
+  *Saved presets* (Markdown built around the preset's values) stay
+  English: they are not missing translations.
 - Some labels are constructed at runtime from translated fragments —
   let me know which ones,
   [open an issue](https://github.com/xXIlRizzoXx/sd-webui-language-diffusion/issues).
@@ -1160,8 +1171,9 @@ This extension stands on the shoulders of:
 
 Released under the MIT License (see [LICENSE](LICENSE)): this covers
 the code and the translation dictionaries. Feel free to study, fork,
-learn from, and improve it. Attribution and contributions back are
-appreciated as a courtesy, not as a license condition.
+learn from, and improve it. Copies and substantial portions must keep
+the MIT copyright and permission notice; contributions back are
+appreciated.
 
 ### Translation contributors
 

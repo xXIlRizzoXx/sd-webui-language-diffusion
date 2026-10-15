@@ -45,8 +45,8 @@ img.forge-flag {
     align-items: center;
 }
 
-/* When the dropdown is open, the floating <ul.options> panel is detached
- * by Gradio and appended elsewhere in the DOM. forge_language_flags.js
+/* When the dropdown is open, Gradio renders the floating <ul.options>
+ * panel inside the dropdown (in its div.wrap). forge_language_flags.js
  * tags that ul with `.forge-language-options` so we can give the panel
  * and its items some breathing room without affecting any other dropdown
  * on the page. */
