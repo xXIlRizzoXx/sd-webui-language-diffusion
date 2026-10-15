@@ -419,6 +419,54 @@ class ReadmeBehaviourTests(unittest.TestCase):
             zh = json.load(f)
         self.assertNotIn("Steps", zh["Steps"])
         self.assertNotIn("mphasis", zh["Emphasis"])
+        # A listed term that is itself a key must keep the term in every locale.
+        locales = {}
+        for path in LOCALE_FILES:
+            with open(path, encoding="utf-8") as f:
+                locales[os.path.basename(path)] = json.load(f)
+        for name, listed in lists.items():
+            for term in listed:
+                for locale, data in locales.items():
+                    if term in data:
+                        with self.subTest(file=name, term=term, locale=locale):
+                            self.assertIn(term.lower(), data[term].lower())
+
+    def test_preset_preview_reason_is_the_plain_text_rule(self):
+        # The bold labels are text nodes of their own: the summary stays English
+        # because of the one-plain-text-node rule, not because it cannot match.
+        section = _flat(_section(self.readme, "### Translated extensions"))
+        self.assertNotIn("cannot be matched as plain text", section)
+        self.assertIn("fragment keys", section)
+
+    def test_translated_tab_names_are_translated(self):
+        # Tabs kept in English must not be listed as translated. French
+        # "Extensions" is the same word, so one locale differing is enough.
+        section = _section(self.readme, "### Translated")
+        bullet = _flat(section).split("**Tab names**:", 1)[1].split("sub-tabs", 1)[0]
+        names = [n.strip() for n in bullet.split(",") if n.strip()]
+        self.assertIn("Settings", names)
+        locales = []
+        for path in LOCALE_FILES:
+            with open(path, encoding="utf-8") as f:
+                locales.append(json.load(f))
+        for name in names:
+            with self.subTest(tab=name):
+                self.assertTrue(any(data.get(name, name) != name for data in locales), name)
+
+    def test_recipes_give_the_test_command(self):
+        # A bare "python -m unittest" finds no tests, and without LD_HOST_ROOT
+        # the host checks are skipped.
+        recipe = _flat(_section(self.readme, "## Adding a brand-new language"))
+        contributing = _flat(_section(_read(os.path.join(REPO, "CONTRIBUTING.md")), "## Tier D"))
+        for name, text in (("README.md", recipe), ("CONTRIBUTING.md", contributing)):
+            for needle in ("-m unittest discover -s tests", "LD_HOST_ROOT", "skipped"):
+                with self.subTest(file=name, needle=needle):
+                    self.assertIn(needle, text)
+
+    def test_review_status_matches_the_banner(self):
+        # No locale has had a native-speaker review yet (see the banner).
+        if "not yet polished by native speakers" in self.flat:
+            self.assertNotIn("native-reviewed", self.flat)
 
     def test_quicksettings_list_is_not_a_text_field(self):
         section = _flat(_section(self.readme, "### How to remove the pin manually"))
@@ -458,6 +506,28 @@ class DocsExampleKeysTests(unittest.TestCase):
                     continue
                 with self.subTest(doc=os.path.basename(doc), key=key):
                     self.assertTrue(key in it_keys, key)
+
+    def test_edit_examples_cover_every_host_spelling(self):
+        # Forge Neo says "Sampling Method", AUTOMATIC1111 "Sampling method":
+        # an edit example must change every spelling, or one host shows no change.
+        with open(os.path.join(REPO, "localizations", "it_IT.json"), encoding="utf-8") as f:
+            it_keys = set(json.load(f))
+        text = _read(os.path.join(REPO, "CONTRIBUTING.md"))
+        diffs = "\n".join(re.findall(r"```diff\n(.*?)```", text, re.DOTALL))
+        edited = set(re.findall(r'^\+\s*"([^"]+)":', diffs, re.MULTILINE))
+        self.assertTrue(edited)
+        for key in edited:
+            spellings = {k for k in it_keys if k.lower() == key.lower()}
+            with self.subTest(key=key):
+                self.assertEqual(spellings, spellings & edited)
+        # The hints.js example uses the Forge spelling, like hints_i18n_patch.js.
+        readme = _read(README)
+        patch = _read(os.path.join(REPO, "javascript", "hints_i18n_patch.js"))
+        titles = re.findall(r'titles\["([^"]+)"\]\s+= "<english tooltip>"\s+\(original', readme)
+        self.assertTrue(titles)
+        for title in titles:
+            with self.subTest(title=title):
+                self.assertIn('titles["%s"]' % title, patch)
 
 
 if __name__ == "__main__":

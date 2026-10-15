@@ -343,8 +343,9 @@ delete `.first-run-pinned` inside the extension folder and restart Forge.
 
 ### Translated
 
-- **Tab names**: txt2img, img2img, Extras, PNG Info, Checkpoint Merger,
-  Settings, Extensions, sub-tabs (Generation, Resize, ...).
+- **Tab names**: Settings, Extensions, sub-tabs (Generation, Resize, ...).
+  txt2img, img2img, Extras, PNG Info and Checkpoint Merger keep their
+  English names in every locale.
 - **All visible labels**: input fields, sliders, dropdowns, radio
   buttons, checkboxes, accordions.
 - **Dropdown choice values**: e.g. "Just resize" / "Crop and resize" /
@@ -374,8 +375,8 @@ extension stays English if Language Diffusion isn't installed.
 |-----------|:-------:|:---------:|--------|
 | 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 1879 | 10 | base coverage |
 | ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.8 | 226 | **10 / 10** | ✅ verified |
-| ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) v1.0.0 | 39 | **10 / 10** | ✅ native-reviewed |
-| 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 115 | **10 / 10** | ✅ native-reviewed |
+| ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) v1.0.0 | 39 | **10 / 10** | ✅ verified |
+| 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 115 | **10 / 10** | ✅ verified |
 
 **Languages** (all 10 covered for every extension above):
 🇮🇹 Italiano · 🇪🇸 Español · 🇫🇷 Français · 🇩🇪 Deutsch · 🇨🇳 简体中文 ·
@@ -388,8 +389,10 @@ extension stays English if Language Diffusion isn't installed.
   release covers.
 - **10 / 10** = every translatable string of that extension is translated
   in all 10 languages (the exceptions are listed below).
-- **native-reviewed** = each locale was checked end-to-end by a native-language
-  pass for accuracy, naturalness and cross-reference consistency.
+- **verified** = every string was checked against the extension's
+  source and cross-checked for consistency across the locales. Like the
+  rest of the dictionaries, the translations are machine-assisted and
+  open to native-speaker refinement.
 - A handful of transient, count-interpolated status messages (e.g.
   `✅ 3 cleaned, 0 errors`) and a few internal/technical tokens stay in
   English by design.
@@ -399,8 +402,10 @@ extension stays English if Language Diffusion isn't installed.
   confirmation dialog of *Reset ADetailer settings* are built in
   ADetailer's own code and stay English too, as does the preset preview
   summary shown under *Saved presets* (Preview, Detector, Classes,
-  Prompt, Negative ...): ADetailer builds it as Markdown around the
-  preset's own values, so it cannot be matched as plain text.
+  Prompt, Negative ...): ADetailer builds it as Markdown, with bold
+  labels mixed with the preset's own values, and under the
+  one-plain-text-node rule such text is not translated with fragment
+  keys (reported upstream).
 
 ### Not translated (kept in English on purpose)
 
@@ -414,14 +419,15 @@ locale:
 > ControlNet · IP-Adapter · Hires · txt2img · img2img · inpaint ·
 > Sampler · Scheduler · Seed · sigma · eta · Karras ·
 > Euler · DPM++ · DDIM · UniPC · LCM · Restart · infotext ·
-> MaHiRo · RescaleCFG · Spectrum · Epsilon Scaling ·
+> MaHiRo · RescaleCFG · Spectrum ·
 > Flux · Wan · Lumina · Klein · Qwen-Image · Ernie-Image ·
 > Z-Image · Anima · Chroma · Mugen · Nunchaku · SVDQ ·
 > fp4mixed · fp8mixed · mxfp8 · nvfp4 · fp16 · bf16 · fp32 ·
 > ckpt · safetensors · ENSD · ONNX · Spandrel · COCO · TAESD ·
 > SageAttention · FlashAttention · xformers · Triton
 
-*Emphasis* (translated in most locales) and *Steps* (translated in
+*Emphasis* (translated in most locales), *Epsilon Scaling* (translated
+in every locale, around the word Epsilon) and *Steps* (translated in
 Japanese and Chinese, partly in Korean, Polish and Russian) follow
 each locale's own usage instead.
 
@@ -535,7 +541,7 @@ it does not invent a new system. The flow is:
    **alias** pointing at the same English tooltip text. So:
 
    ```
-   titles["Sampling method"]      = "<english tooltip>"   (original, kept)
+   titles["Sampling Method"]      = "<english tooltip>"   (original, kept)
    titles["Metodo di Sampling"]   = "<english tooltip>"   (added by us)
    ```
 
@@ -966,7 +972,18 @@ below uses Dutch, `nl_NL`):
    other users benefit. Before opening it, add the new code to
    `EXPECTED_LOCALES` in `tests/test_locales.py`, update the locale
    count and the locale lists in this README (the figures are checked
-   by `tests/test_docs.py`), and run the unit tests.
+   by `tests/test_docs.py`), and run the unit tests from the
+   repository folder, once per WebUI, with that WebUI's own Python and
+   `LD_HOST_ROOT` set to that WebUI's folder (Node.js on `PATH` for the
+   JavaScript tests):
+
+   ```bash
+   LD_HOST_ROOT=/path/to/webui /path/to/webui/venv/bin/python -m unittest discover -s tests -v
+   ```
+
+   A bare `python -m unittest` finds no tests. Read the reason of
+   every skipped test: one skipped for a missing `LD_HOST_ROOT` or
+   Node.js did not check anything.
 
 ---
 

@@ -56,8 +56,15 @@ name:
 3. **Change only the value, never the key.** Keys are the English
    source strings — they must stay byte-identical.
 
+Some labels are spelled differently on the two WebUIs and have one
+key each: Forge Neo shows "Sampling Method", AUTOMATIC1111 "Sampling
+method". Change both keys together, or one WebUI keeps the old text.
+
 Example diff:
 ```diff
+- "Sampling Method": "Metodo di Sampling",
++ "Sampling Method": "Metodo di campionamento",
+...
 - "Sampling method": "Metodo di Sampling",
 + "Sampling method": "Metodo di campionamento",
 ```
@@ -131,7 +138,15 @@ Korean dialects, etc.):
 5. Add the new code to `EXPECTED_LOCALES` in `tests/test_locales.py`,
    update the locale count and the locale lists in the README (the
    figures are checked by `tests/test_docs.py`), and run the unit
-   tests.
+   tests from the repository folder, once per WebUI (Forge Neo and
+   AUTOMATIC1111), with that WebUI's own Python and `LD_HOST_ROOT` set
+   to that WebUI's folder (Node.js on `PATH` for the JavaScript tests):
+   ```bash
+   LD_HOST_ROOT=/path/to/webui /path/to/webui/venv/bin/python -m unittest discover -s tests -v
+   ```
+   A bare `python -m unittest` finds no tests. Read the reason of
+   every skipped test: one skipped for a missing `LD_HOST_ROOT` or
+   Node.js did not check anything.
 6. Open a PR.
 
 ---
@@ -153,7 +168,7 @@ English even inside non-English values:
 > inpaint · Sampler · Scheduler · Seed · sigma · eta ·
 > Karras · Euler · DPM++ · DDIM · UniPC · LCM · Restart ·
 > infotext · MaHiRo · RescaleCFG · Spectrum ·
-> Epsilon Scaling · Flux · Wan · Lumina · Klein · Qwen-Image ·
+> Flux · Wan · Lumina · Klein · Qwen-Image ·
 > Ernie-Image · Z-Image · Anima · Chroma · Mugen · Nunchaku ·
 > SVDQ · fp4mixed · fp8mixed · mxfp8 · nvfp4 · fp16 · bf16 ·
 > fp32 · ckpt · safetensors · ENSD · ONNX · Spandrel · COCO ·
@@ -162,7 +177,8 @@ English even inside non-English values:
 **Rule of thumb:** if you'd say it in English on a Discord server
 or civitai comment, keep it in English here.
 
-*Emphasis* (translated in most locales) and *Steps* (translated in
+*Emphasis* (translated in most locales), *Epsilon Scaling* (translated
+in every locale, around the word Epsilon) and *Steps* (translated in
 Japanese and Chinese, partly in Korean, Polish and Russian) are not on
 the list: follow how the existing keys of your locale handle them.
 
