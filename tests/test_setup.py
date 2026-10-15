@@ -151,15 +151,88 @@ class SetupScriptTests(unittest.TestCase):
         self.assertIsNone(host.opts.data_labels["localization"].section[0])
         self.assert_language_reachable(host)
 
-    def test_comma_string_quicksettings_list_is_not_pinned(self):
+    def count_saves(self, host):
+        # Wrap Options.save on this instance to count config writes.
+        calls = []
+        real_save = host.opts.save
+
+        def save(*args, **kwargs):
+            calls.append(args)
+            return real_save(*args, **kwargs)
+
+        object.__setattr__(host.opts, "save", save)
+        return calls
+
+    def saved_quicksettings(self, host):
+        with open(host.config_file, encoding="utf8") as f:
+            return json.load(f)["quicksettings_list"]
+
+    def test_text_quicksettings_list_is_converted_to_a_list(self):
         # A hand-edited config.json can hold quicksettings_list as a string.
         # Neither host splits it (the top bar enumerates its characters), so
-        # the setting must keep its Settings section.
+        # the script stores it as a list, keeping the user's entries, and adds
+        # 'localization' only on the first run.
+        cases = (
+            # (stored text, marker before launch, expected list, pinned)
+            ("sd_model_checkpoint, localization", False, ["sd_model_checkpoint", "localization"], True),
+            ("sd_model_checkpoint", False, ["sd_model_checkpoint", "localization"], True),
+            # Marker left by an older version that accepted the text as pinned.
+            ("sd_model_checkpoint, localization", True, ["sd_model_checkpoint", "localization"], True),
+            ("sd_model_checkpoint", True, ["sd_model_checkpoint"], False),
+            ("", False, ["localization"], True),
+            ("", True, [], False),
+            ("a, ,localization ,", False, ["a", "localization"], True),
+            ("a, ,localization ,", True, ["a", "localization"], True),
+        )
+        for text, marker, expected, pinned in cases:
+            with self.subTest(text=text, marker=marker):
+                host = self.make_host()
+                if marker:
+                    with open(host.marker, "w", encoding="utf-8") as f:
+                        f.write("older version\n")
+                host.opts.data["quicksettings_list"] = text
+                self.run_setup(host)
+                self.assertEqual(host.opts.quicksettings_list, expected)
+                self.assertIsInstance(host.opts.quicksettings_list, list)
+                self.assertEqual(self.saved_quicksettings(host), expected)
+                self.assertEqual(os.path.exists(host.marker), marker or pinned)
+                section = host.opts.data_labels["localization"].section[0]
+                self.assertEqual(section, None if pinned else "ui")
+                self.assert_language_reachable(host)
+
+    def test_tuple_quicksettings_list(self):
+        # Only in memory (json.load gives lists); the hosts enumerate it fine.
         host = self.make_host()
-        host.opts.data["quicksettings_list"] = "sd_model_checkpoint, localization"
+        saves = self.count_saves(host)
+        host.opts.data["quicksettings_list"] = ("sd_model_checkpoint", "localization")
         self.run_setup(host)
-        self.assertEqual(host.opts.data_labels["localization"].section[0], "ui")
+        self.assertEqual(saves, [])
+        self.assertEqual(host.opts.quicksettings_list, ("sd_model_checkpoint", "localization"))
+        self.assertTrue(os.path.exists(host.marker))
+        self.assertIsNone(host.opts.data_labels["localization"].section[0])
         self.assert_language_reachable(host)
+
+        host = self.make_host()
+        saves = self.count_saves(host)
+        host.opts.data["quicksettings_list"] = ("sd_model_checkpoint",)
+        self.run_setup(host)
+        self.assertEqual(len(saves), 1)
+        self.assertEqual(host.opts.quicksettings_list, ["sd_model_checkpoint", "localization"])
+        self.assertEqual(self.saved_quicksettings(host), ["sd_model_checkpoint", "localization"])
+        self.assertTrue(os.path.exists(host.marker))
+        self.assertIsNone(host.opts.data_labels["localization"].section[0])
+
+    def test_unknown_quicksettings_shapes_are_left_alone(self):
+        for value in (None, 7):
+            with self.subTest(value=value):
+                host = self.make_host()
+                saves = self.count_saves(host)
+                host.opts.data["quicksettings_list"] = value
+                self.run_setup(host)
+                self.assertEqual(saves, [])
+                self.assertIs(host.opts.data["quicksettings_list"], value)
+                self.assertFalse(os.path.exists(host.marker))
+                self.assertEqual(host.opts.data_labels["localization"].section[0], "ui")
 
     def test_frozen_quicksettings_list_does_not_abort_startup(self):
         # --freeze-specific-settings / --freeze-settings / --freeze-settings-in-sections
@@ -182,6 +255,23 @@ class SetupScriptTests(unittest.TestCase):
                 self.assertIn("[Language Diffusion] loaded", out)
                 # Not pinned (or a frozen 'ui' section, see the test below):
                 # the setting stays on the Settings page.
+                self.assertEqual(host.opts.data_labels["localization"].section[0], "ui")
+                self.assert_language_reachable(host)
+                self.assertEqual(host.rescan_calls, 1)
+                self.assertIsNotNone(host.opts.data_labels["localization"].onchange)
+        # A text value needs a rewrite, which the freeze refuses: still no
+        # marker, value unchanged, and the startup continues.
+        for flags in frozen:
+            with self.subTest(text=True, **flags):
+                host = self.make_host()
+                host.opts.data["quicksettings_list"] = "sd_model_checkpoint, localization"
+                cmd_opts = host.options.cmd_opts
+                for name, value in flags.items():
+                    setattr(cmd_opts, name, value)
+                _, out = self.run_setup(host)
+                self.assertEqual(host.opts.quicksettings_list, "sd_model_checkpoint, localization")
+                self.assertFalse(os.path.exists(host.marker))
+                self.assertIn("[Language Diffusion] loaded", out)
                 self.assertEqual(host.opts.data_labels["localization"].section[0], "ui")
                 self.assert_language_reachable(host)
                 self.assertEqual(host.rescan_calls, 1)

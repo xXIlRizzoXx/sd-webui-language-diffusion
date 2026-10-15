@@ -312,6 +312,11 @@ This means:
 If you want to **force the auto-pin to run again** without uninstalling,
 delete `.first-run-pinned` inside the extension folder and restart Forge.
 
+A quicksettings value stored as text in a hand-edited `config.json`
+(for example `sd_model_checkpoint, sd_vae`) is converted to a list on
+every launch, because the WebUI only shows a list in the top bar. Your
+entries are kept.
+
 ### How to remove the pin manually
 
 1. Go to **Settings → User Interface**.

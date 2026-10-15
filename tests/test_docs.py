@@ -484,6 +484,16 @@ class ReadmeBehaviourTests(unittest.TestCase):
         if "not yet polished by native speakers" in self.flat:
             self.assertNotIn("native-reviewed", self.flat)
 
+    def test_text_quicksettings_value_is_documented_as_converted(self):
+        # The setup script normalises a text quicksettings_list in one place:
+        # no stale "accept either form" comment, and the docs say so.
+        setup = _read(os.path.join(REPO, "scripts", "language_diffusion_setup.py"))
+        self.assertNotIn("accept either form", setup)
+        docstring = _flat(setup.split('"""')[1])
+        self.assertIn("is converted to a list on every launch", docstring)
+        section = _flat(_section(self.readme, "### How the auto-pin works"))
+        self.assertIn("is converted to a list on every launch", section)
+
     def test_quicksettings_list_is_not_a_text_field(self):
         section = _flat(_section(self.readme, "### How to remove the pin manually"))
         self.assertFalse("comma-separated" in section)

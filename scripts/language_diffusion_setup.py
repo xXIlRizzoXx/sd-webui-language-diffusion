@@ -37,6 +37,9 @@ housekeeping in items 4 and 5:
        Quicksettings List: stays removed (marker prevents re-pinning).
      - User uninstalls and reinstalls: marker is gone with the folder,
        so pin gets re-added on next launch.
+   A quicksettings value stored as text in a hand-edited config.json
+   is converted to a list on every launch (the hosts only render a
+   list); the user's entries are kept.
 
 4. **Locale rescan and head rebuild.** Re-runs list_localizations()
    and registers an opts.onchange("localization") callback that calls
@@ -211,6 +214,22 @@ def relocate_localization_setting() -> None:
         info.component_args = patched_args
 
 
+def _quicksettings_items(value):
+    """quicksettings_list as the list the hosts can render, or None for
+    an unknown shape. A comma string (hand-edited config.json) is split:
+    both hosts enumerate the raw value, so a string renders nothing."""
+    if isinstance(value, (list, tuple)):
+        return list(value)
+    if isinstance(value, str):
+        return [s.strip() for s in value.split(",") if s.strip()]
+    return None  # None, numbers, dicts: leave the config alone
+
+
+def _has_pin(value) -> bool:
+    """'localization' is in a value shape that the hosts actually render."""
+    return isinstance(value, (list, tuple)) and "localization" in value
+
+
 def pin_to_quicksettings_once() -> None:
     """On first install only, append 'localization' to Forge's
     `quicksettings_list` so the language picker shows up in the top
@@ -223,28 +242,27 @@ def pin_to_quicksettings_once() -> None:
     drop a marker file inside the extension folder so subsequent
     launches do not re-pin (letting the user remove the entry from
     the list later if they prefer).
-    """
-    if os.path.exists(_FIRST_RUN_MARKER):
-        return
 
+    A value stored as text (a hand-edited config.json) is converted to
+    a list on every launch, keeping the user's entries: the hosts only
+    render a list. Lists and tuples are left alone once the marker
+    exists.
+    """
     try:
         current = shared.opts.quicksettings_list
     except Exception:
         # Setting not registered on this WebUI fork.
         return
 
-    # `quicksettings_list` is a list since Forge uses DropdownMulti for
-    # it. Some older A1111-derived forks stored it as a comma-separated
-    # string — be defensive and accept either form.
-    if isinstance(current, list):
-        items = list(current)  # copy to avoid mutating in place
-    elif isinstance(current, str):
-        items = [s.strip() for s in current.split(",") if s.strip()]
-    else:
+    items = _quicksettings_items(current)
+    if items is None:
         return  # Unknown shape; bail out rather than corrupt the config.
 
-    if "localization" not in items:
+    first_run = not os.path.exists(_FIRST_RUN_MARKER)
+    if first_run and "localization" not in items:
         items.append("localization")
+
+    if isinstance(current, str) or items != list(current):
         # Persist immediately so the change survives the launch even
         # if the user never clicks "Apply settings" again.
         try:
@@ -257,8 +275,10 @@ def pin_to_quicksettings_once() -> None:
             # so we retry next launch.
             return
 
-    # Mark first-run setup as complete (reached when localization is in
-    # the list, whether we just added it or it was already there).
+    # Mark first-run setup as complete only when the stored value is a
+    # pin the hosts render (whether we just added it or it was there).
+    if not (first_run and _has_pin(shared.opts.quicksettings_list)):
+        return
     try:
         with open(_FIRST_RUN_MARKER, "w", encoding="utf-8") as f:
             f.write(
@@ -278,13 +298,12 @@ def _localization_is_pinned() -> bool:
     """True when 'localization' is in quicksettings_list and the host
     renders the quicksettings row (not --freeze-settings, which moves
     every quicksetting back to the Settings page). Only a list or tuple
-    counts: both hosts iterate the value as is, so a comma string
-    (hand-edited config.json) pins nothing."""
+    counts: both hosts iterate the value as is."""
     try:
         current = shared.opts.quicksettings_list
     except Exception:
         return False
-    if not isinstance(current, (list, tuple)) or "localization" not in current:
+    if not _has_pin(current):
         return False
     try:
         from modules.shared_cmd_options import cmd_opts
