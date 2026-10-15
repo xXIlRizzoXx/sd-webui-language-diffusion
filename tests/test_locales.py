@@ -156,6 +156,21 @@ class LocaleFileTests(unittest.TestCase):
             ('Process the "Mask blur" in fp32 instead of uint8 precision', "Mask blur"),
             ('Automatically set the "Scale by" factor based on the name of the selected Upscaler', "Scale by"),
             ("Automatically set the Scale by factor based on the name of the selected Upscaler.", "Scale by"),
+            # Choice legends next to their (translated) radio.
+            ("(when generating captions using postprocessing; Ignore = use generated; Keep = use original; Prepend/Append = combine both)", "Ignore"),
+            ("(when generating captions using postprocessing; Ignore = use generated; Keep = use original; Prepend/Append = combine both)", "Keep"),
+            ("(when generating captions using postprocessing; Ignore = use generated; Keep = use original; Prepend/Append = combine both)", "Prepend"),
+            ("(when generating captions using postprocessing; Ignore = use generated; Keep = use original; Prepend/Append = combine both)", "Append"),
+            ("None: do nothing, Merge: merge masks, Merge and Invert: merge all masks and invert", "None"),
+            ("None: do nothing, Merge: merge masks, Merge and Invert: merge all masks and invert", "Merge"),
+            ("None: do nothing, Merge: merge masks, Merge and Invert: merge all masks and invert", "Merge and Invert"),
+            # Image Browser settings about its "Generation Info" panel.
+            ("Initially display Generation Info as formatted", "Generation Info"),
+            ("Display order for Generation Info as formatted", "Generation Info"),
+            ("Show Additional Generation Info", "Generation Info"),
+            ("Additional Generation Info", "Generation Info"),
+            ("When using the [✨] button, lock the Batch Count and Batch Size to 1 regardless of the UI values", "Batch Count"),
+            ("When using the [✨] button, lock the Batch Count and Batch Size to 1 regardless of the UI values", "Batch Size"),
         ]
         for code, (_, data) in self.locales.items():
             for case in cases:
@@ -165,6 +180,37 @@ class LocaleFileTests(unittest.TestCase):
                     continue
                 with self.subTest(locale=code, key=key[:40], label=label):
                     self.assertNotRegex(data[key], r"(?<![A-Za-z])%s(?![A-Za-z])" % re.escape(name))
+
+    def test_choice_legends_use_the_translated_choice_names(self):
+        # The legend sits right next to the radio, so it must name the choices
+        # the radio shows.
+        cases = [
+            ("(when generating captions using postprocessing; Ignore = use generated; Keep = use original; Prepend/Append = combine both)",
+             ("Ignore", "Keep", "Prepend", "Append")),
+            ("None: do nothing, Merge: merge masks, Merge and Invert: merge all masks and invert",
+             ("None", "Merge", "Merge and Invert")),
+        ]
+        for code, (_, data) in self.locales.items():
+            for key, choices in cases:
+                for choice in choices:
+                    with self.subTest(locale=code, key=key[:40], choice=choice):
+                        self.assertIn(data[choice], data[key])
+
+    def test_values_keep_the_spaces_the_layout_needs(self):
+        # localization.js trims the text node and writes the bare value back,
+        # so a space the layout needs ("Time taken: <span>", "<b>A</b> and
+        # <b>B</b>", "images <a>[wiki]</a>") must be part of the value.
+        trailing = ["Time taken:",
+                    "Train an embedding or Hypernetwork; you must specify a directory with a set of 1:1 ratio images"]
+        for code, (_, data) in self.locales.items():
+            for key in trailing:
+                with self.subTest(locale=code, key=key[:40]):
+                    self.assertTrue(data[key].endswith(" ") and not data[key].endswith("  "), repr(data[key]))
+                    self.assertFalse(data[key].startswith(" "))
+            with self.subTest(locale=code, key="and"):
+                value = data["and"]
+                self.assertTrue(value.startswith(" ") and value.endswith(" "), repr(value))
+                self.assertEqual(value, " %s " % value.strip())
 
     def test_generate_forever_hints_name_the_translated_menu_entry(self):
         # The Generate tooltip and the settings hint point at the right-click

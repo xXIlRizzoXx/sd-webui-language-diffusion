@@ -9,6 +9,7 @@ against its real files, so a typo in a list cannot pass unnoticed.
 """
 
 import ast
+import glob
 import json
 import os
 import re
@@ -205,7 +206,30 @@ BOTH_HOSTS_CORE = ["Generate forever", "Cancel generate forever", "Model hash", 
                    # Settings and Extensions radio / dropdown choices whose
                    # siblings are translated.
                    "Ignore", "Apply if any", "Discard", "Path", "Date Created", "Date Modified", "Alias from file",
-                   "Disable", "Local", "Remote"]
+                   "Disable", "Local", "Remote",
+                   # img2img Batch "From directory" help (ui.py, one node per
+                   # <br> line), Settings > Sysinfo links and check result
+                   # (ui_settings.py), the progress bar before the task starts
+                   # (progress.py).
+                   "Process images in a directory on the same machine where the server is running.",
+                   "Use an empty output directory to save pictures normally instead of writing to the output directory.",
+                   "Add inpaint batch mask directory to enable inpaint batch processing.",
+                   "Download system info", "(or open as text in a new page)", "Valid", "Invalid", "Waiting...",
+                   # Settings > Defaults "View changes" table (ui_loadsave.py) and
+                   # the Extensions Backup/Restore config view (ui_extensions.py).
+                   "Old value", "New value", "No changes", "WebUI State", "Extension State", "Filepath:",
+                   "Created at:", "This file is corrupted"]
+
+# Gradio's own upload area texts (svelte-i18n "en" strings of the Gradio 3.41
+# and 4.40 front-ends, which ship no locale for most of these languages):
+# "Drop File Here - or - Click to Upload" on gr.File / gr.Files.
+GRADIO_UPLOAD_TEXTS = ["Drop Image Here", "Drop File Here", "Click to Upload"]
+GRADIO_ASSETS = os.path.join("venv", "Lib", "site-packages", "gradio", "templates", "frontend", "assets")
+
+# Emphasis Mode radio choices and legend (both hosts build them from the
+# name of each Emphasis class).
+EMPHASIS_NAMES = ["None", "Ignore", "Original", "No norm"]
+EMPHASIS_SOURCES = (os.path.join("backend", "text_processing", "emphasis.py"), os.path.join("modules", "sd_emphasis.py"))
 
 # AUTOMATIC1111 only: choices of radios whose siblings are translated
 # (fp8_storage, live_preview_content, postprocessing caption action, canvas
@@ -300,7 +324,7 @@ ADETAILER_XYZ_AXIS_LABELS = [
 # or words spelled the same in some languages.
 SAME_AS_ENGLISH = {"Latent Upscale", "📖 Guide", "Horizontal", "Vertical", "Linear", "Modules", "Name", "Notes", "Training",
                    "(in MB)", "(in ms)", "(EXPERIMENTAL)", "Rectangle", "Oval", "Styles", "Steps",
-                   "Version", "Date", "Action", "Branch", "Commit", "Local", "Remote", "Zoom"}
+                   "Version", "Date", "Action", "Branch", "Commit", "Local", "Remote", "Zoom", "Original"}
 
 
 def _is_forge(root):
@@ -621,6 +645,32 @@ class HostStringKeyTests(unittest.TestCase):
 
     def test_a1111_choices_are_keys(self):
         self.assertTranslated(A1111_CHOICES)
+
+    def test_gradio_upload_texts_are_keys(self):
+        self.assertTranslated(GRADIO_UPLOAD_TEXTS)
+
+    @unittest.skipUnless(HOST_ROOT and glob.glob(os.path.join(HOST_ROOT, GRADIO_ASSETS)),
+                         "LD_HOST_ROOT not set: host Gradio upload texts not checked")
+    def test_host_gradio_upload_texts_exist(self):
+        bundles = [p for p in glob.glob(os.path.join(HOST_ROOT, GRADIO_ASSETS, "*.js"))
+                   if os.path.basename(p).lower().startswith("index-")]
+        blob = "\n".join(_read(p) for p in bundles)
+        for text in GRADIO_UPLOAD_TEXTS:
+            with self.subTest(text=text):
+                self.assertIn('"%s"' % text, blob)
+
+    def test_emphasis_names_are_keys(self):
+        self.assertTranslated(EMPHASIS_NAMES)
+
+    @unittest.skipUnless(HOST_ROOT and any(os.path.isfile(os.path.join(HOST_ROOT, p)) for p in EMPHASIS_SOURCES),
+                         "LD_HOST_ROOT not set: host emphasis names not checked")
+    def test_host_emphasis_names_are_listed(self):
+        # The choices are computed ([x.name for x in sd_emphasis.options]), so
+        # test_host_choice_groups_are_not_half_keyed cannot see them.
+        path = next(os.path.join(HOST_ROOT, p) for p in EMPHASIS_SOURCES if os.path.isfile(os.path.join(HOST_ROOT, p)))
+        names = set(re.findall(r'^\s+name\s*=\s*"([^"]+)"', _read(path), re.M))
+        self.assertIn("Original", names)
+        self.assertLessEqual(names, set(EMPHASIS_NAMES))
 
     def test_choices_with_translated_siblings_are_translated(self):
         for code, data in sorted(self.locales.items()):
