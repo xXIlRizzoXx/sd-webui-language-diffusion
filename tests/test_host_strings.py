@@ -353,9 +353,9 @@ CORE_UI_A1111 = _CORE_UI["a1111"]
 
 # Tooltips (title attributes) nested in HTML that the hosts insert as one
 # block (Forge canvas, Extra Networks cards, image viewer, profiler,
-# Extensions table). localization.js does not walk into these titles yet,
-# so the keys are ready for a later title patch. "both" exists in both
-# hosts, "forge" only in Forge Neo.
+# Extensions table). localization.js does not walk into these titles; the
+# extension's hints_i18n_patch.js translates them (tests/test_titles_js.py).
+# "both" exists in both hosts, "forge" only in Forge Neo.
 NESTED_TITLE_KEYS_BOTH = _CORE_UI["nested_titles"]["both"]
 NESTED_TITLE_KEYS_FORGE = _CORE_UI["nested_titles"]["forge"]
 NESTED_TITLE_KEYS = NESTED_TITLE_KEYS_BOTH + NESTED_TITLE_KEYS_FORGE
@@ -830,7 +830,7 @@ class HostStringKeyTests(unittest.TestCase):
         self.assertTranslated(keys)
 
     def test_nested_title_keys_are_keys(self):
-        # Not live yet (see NESTED_TITLE_KEYS), but already in every locale.
+        # Translated by hints_i18n_patch.js (see NESTED_TITLE_KEYS).
         self.assertEqual(len(NESTED_TITLE_KEYS), len(set(NESTED_TITLE_KEYS)))
         self.assertTranslated(NESTED_TITLE_KEYS)
         for code, data in sorted(self.locales.items()):

@@ -143,11 +143,10 @@ AUTOMATIC1111 core UI (2114 keys), ADetailer Ultimate (226 keys) and
 Metadata Removal + Image Browser (150 keys); extension keys are used only
 if that extension is installed and are harmless otherwise. The core UI
 keys cover both hosts end to end, Gradio's own texts and the built-in
-extensions included. Only some hover tooltips that the hosts draw inside
+extensions included, down to the hover tooltips that the hosts draw inside
 larger HTML blocks (the Forge canvas toolbar, the buttons on Extra
 Networks cards, the image viewer, the VRAM usage popup, the Extensions
-table checkboxes) still show in English: their keys are already in the
-dictionaries, but the page script does not reach them yet.
+table checkboxes), which the extension's own script translates.
 
 ---
 
@@ -367,7 +366,8 @@ entries are kept.
   / extras, Refresh, etc.
 - **Tooltips**: the small hover hints next to most controls. These are
   re-bound by the extension after Forge replaces the visible label, so
-  hover still works in your chosen language.
+  hover still works in your chosen language, including the tooltips of
+  the canvas toolbar, Extra Networks buttons and image viewer.
 - **Error and status messages** rendered in the UI (where the source is
   a static string, not a Python format-string).
 
@@ -559,6 +559,20 @@ it does not invent a new system. The flow is:
    labels, and `hints.js` translates the tooltip text itself through
    `localization[titles[...]]`.
 
+6. **Nested tooltips**: `localization.js` translates the `title` only of
+   the node a DOM change adds, then walks the text nodes under it. HTML
+   that the hosts insert as one block (the Forge canvas toolbar, the
+   Extra Networks buttons, the image viewer, the VRAM usage line, the
+   Extensions table) kept the tooltips of its inner elements in English.
+   `hints_i18n_patch.js` adds an `onUiUpdate` callback (the WebUI's own
+   hook) that translates the `title` of every element **below** each
+   added node, when it is exactly a key of `window.localization`; the
+   added node itself stays `localization.js`'s job. One pass at page load
+   also covers the image viewer, which sits outside the Gradio app. The
+   Extra Networks sort button swaps its tooltip later on the same element
+   (`Sort ascending` / `Sort descending`): a `MutationObserver` on the
+   `title` attribute only translates such changes the same way.
+
 That's the entire system: the dictionaries and scripts above, plus the
 startup script described under
 [`scripts/language_diffusion_setup.py`](#scriptslanguage_diffusion_setuppy),
@@ -580,7 +594,7 @@ sd-webui-language-diffusion/
 ├── javascript/
 │   ├── adetailer_ordinal_i18n.js          ← ADetailer tabs 2..N, A1111 dropdown values
 │   ├── forge_language_flags.js            ← flag decorator for the dropdown
-│   └── hints_i18n_patch.js                ← tooltip alias bridge
+│   └── hints_i18n_patch.js                ← tooltip alias bridge, nested tooltips
 └── localizations/
     ├── it_IT.json    ← Italiano                  ~232 KB
     ├── es_ES.json    ← Español                   ~235 KB
@@ -789,6 +803,24 @@ The script is idempotent and re-entrant. If Forge ever repopulates
 `window.localization` without a full page reload (e.g. via a future
 hot-swap feature), running `attempt()` again just overwrites the
 aliases with the same values — no double-injection, no leaks.
+
+The same file also translates tooltips nested in inserted HTML (step 6
+of [How it works internally](#how-it-works-internally)):
+
+1. An `onUiUpdate` callback looks at every element **below** each node
+   the WebUI reports as added (`querySelectorAll("[title]")`); a page
+   load pass does the same for the whole document, image viewer included.
+2. A `title` is replaced only when its current value is exactly a key of
+   `window.localization`, the translation differs and is not itself
+   another key, and the value is not the one the script last wrote on that
+   element. A second pass, or the change caused by its own write, finds
+   nothing to do: no double translation, no loop.
+3. A `MutationObserver` on `gradioApp()`, limited to the `title`
+   attribute, handles tooltips the page changes later on the same element
+   (the Extra Networks sort direction button).
+
+`aria-label` is left alone, as `localization.js` does. It adds no Gradio
+event listener and does nothing when no language is selected.
 
 ### `localizations/<lang>.json`
 
