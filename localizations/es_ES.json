@@ -396,7 +396,7 @@
     "High res only": "Solo alta resolución",
     "Highlighted Text": "Texto resaltado",
     "How much an image region can change before the original pixels are not blended in anymore.": "Cuánto puede cambiar una región de la imagen antes de que los píxeles originales dejen de mezclarse.",
-    "How sharp the transition should be between blended and not blended.": "Qué tan nítida debe ser la transición entre lo mezclado y lo no mezclado.",
+    "How sharp the transition should be between blended and not blended.": "Cuán nítida debe ser la transición entre lo mezclado y lo no mezclado.",
     "How strongly partially masked content should be preserved.": "Con qué intensidad se debe preservar el contenido parcialmente enmascarado.",
     "How strongly the original mask should bias the difference threshold.": "Con qué intensidad la máscara original debe sesgar el umbral de diferencia.",
     "Ignore: keep prompt and styles dropdown as it is.": "Ignorar: deja el prompt y el desplegable de estilos como están.",
