@@ -1,5 +1,5 @@
 """
-sd-webui-language-diffusion — UI setup: top-bar picker only, no Settings entry.
+sd-webui-language-diffusion — UI setup: top-bar picker, hidden from Settings while pinned.
 
 This script does three UI things at Forge startup, plus the
 housekeeping in items 4 and 5:
@@ -46,10 +46,11 @@ housekeeping in items 4 and 5:
 
 The three UI actions are pure reorganisation. The setting key,
 dropdown options, persistence and PNG infotext format are unchanged
-(the picker script reloads the page itself after a pick). Disabling
-the extension shows the setting on the Settings page again, but the
-quicksettings pin is saved in config.json and stays until the user
-removes it.
+(the picker script reloads the page itself after a pick). If the
+extension is disabled or removed, a pinned 'localization' stays in the
+top bar as the plain 'Localization' dropdown, because the pin is saved
+in config.json. The setting returns to the Settings page only after the
+user removes it from the Quicksettings list.
 """
 
 import os
@@ -108,13 +109,14 @@ def _section_is_frozen(section_id) -> bool:
 
 
 def relocate_localization_setting() -> None:
-    """Hide the localization setting from the Settings page sidebar
-    (so it lives exclusively in the top-bar quicksettings dropdown)
-    and rename its 'None' option to 'English' for clarity.
+    """Remember the setting's original Settings section (hidden later
+    by hide_setting_when_pinned() while pinned) and rename its 'None'
+    option to 'English' for clarity.
 
-    Two changes are applied to the existing `OptionInfo`:
+    Two changes concern the existing `OptionInfo`:
 
-    1. `section` → `(None, "Language Diffusion")`
+    1. `section` → `(None, "Language Diffusion")`, set by
+       hide_setting_when_pinned() only while 'localization' is pinned
        — Forge's `modules/ui_settings.py` checks `item.section[0]`:
          section_must_be_skipped = item.section[0] is None
        and skips both the sidebar entry and the right-pane rendering
@@ -273,13 +275,13 @@ def pin_to_quicksettings_once() -> None:
 def _localization_is_pinned() -> bool:
     """True when 'localization' is in quicksettings_list and the host
     renders the quicksettings row (not --freeze-settings, which moves
-    every quicksetting back to the Settings page)."""
+    every quicksetting back to the Settings page). Only a list or tuple
+    counts: both hosts iterate the value as is, so a comma string
+    (hand-edited config.json) pins nothing."""
     try:
         current = shared.opts.quicksettings_list
     except Exception:
         return False
-    if isinstance(current, str):
-        current = [s.strip() for s in current.split(",")]
     if not isinstance(current, (list, tuple)) or "localization" not in current:
         return False
     try:

@@ -587,9 +587,9 @@ some startup housekeeping (items 4 and 5):
    to `(None, "Language Diffusion")`. Forge's
    `modules/ui_settings.py` checks
    `item.section[0] is None` and skips both the sidebar entry and
-   the right-pane component when that flag is True. So the
-   Localization dropdown disappears from Settings entirely — the
-   top-bar quicksettings is the only place to control the language.
+   the right-pane component when that flag is True. So, while
+   pinned, the dropdown is not on the Settings page and the top bar
+   is the only place to control the language.
    Applied after step 3 and only while `localization` is in the
    quicksettings list: when the pin is missing (removed by the user,
    frozen, or lost with a reset `config.json`) the setting keeps its

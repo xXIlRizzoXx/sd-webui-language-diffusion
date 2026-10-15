@@ -118,8 +118,11 @@ class SetupScriptTests(unittest.TestCase):
         # Mirror of the host's ui_settings.create_ui: a setting is rendered in
         # the top bar when pinned (and settings are not frozen), otherwise on
         # the Settings page unless its section[0] is None.
+        # The host iterates the value as is ({x: i for i, x in enumerate(...)}),
+        # so a string counts by characters and never pins "localization".
         info = host.opts.data_labels["localization"]
-        pinned = "localization" in host.opts.quicksettings_list and not host.options.cmd_opts.freeze_settings
+        names = {x: i for i, x in enumerate(host.opts.quicksettings_list)}
+        pinned = "localization" in names and not host.options.cmd_opts.freeze_settings
         self.assertTrue(pinned or info.section[0] is not None, "no language picker anywhere")
 
     def test_config_reset_after_first_run_keeps_a_language_picker(self):
@@ -148,12 +151,15 @@ class SetupScriptTests(unittest.TestCase):
         self.assertIsNone(host.opts.data_labels["localization"].section[0])
         self.assert_language_reachable(host)
 
-    def test_comma_string_quicksettings_list_counts_as_pinned(self):
-        # Older A1111-derived forks store quicksettings_list as a string.
+    def test_comma_string_quicksettings_list_is_not_pinned(self):
+        # A hand-edited config.json can hold quicksettings_list as a string.
+        # Neither host splits it (the top bar enumerates its characters), so
+        # the setting must keep its Settings section.
         host = self.make_host()
         host.opts.data["quicksettings_list"] = "sd_model_checkpoint, localization"
         self.run_setup(host)
-        self.assertIsNone(host.opts.data_labels["localization"].section[0])
+        self.assertEqual(host.opts.data_labels["localization"].section[0], "ui")
+        self.assert_language_reachable(host)
 
     def test_frozen_quicksettings_list_does_not_abort_startup(self):
         # --freeze-specific-settings / --freeze-settings / --freeze-settings-in-sections

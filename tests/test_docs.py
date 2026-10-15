@@ -339,6 +339,20 @@ class ReadmeBehaviourTests(unittest.TestCase):
         trouble = _flat(_section(self.readme, "### The new languages don't appear in the Language dropdown"))
         self.assertIn("[Language Diffusion] loaded", trouble)
 
+    def test_setup_script_says_hidden_only_while_pinned(self):
+        # hide_setting_when_pinned() hides the setting only while it is pinned,
+        # and a pin saved in config.json keeps it in the top bar after the
+        # extension is disabled (the host checks the pin before the section).
+        script = _flat(_read(os.path.join(REPO, "scripts", "language_diffusion_setup.py")))
+        for claim in ("no Settings entry", "lives exclusively in the top-bar",
+                      "shows the setting on the Settings page again"):
+            with self.subTest(claim=claim):
+                self.assertFalse(claim in script, claim)
+        self.assertIn("plain 'Localization' dropdown", script)
+        section = _flat(_section(self.readme, "### `scripts/language_diffusion_setup.py`"))
+        self.assertFalse("disappears from Settings entirely" in section)
+        self.assertIn("while pinned", section)
+
     def test_release_dates_are_the_published_dates(self):
         section = _section(self.readme, "## Releases")
         rows = dict(re.findall(r"^\| (v[\w.\-]+) \| (\d{4}-\d\d-\d\d) \|", section, re.MULTILINE))
