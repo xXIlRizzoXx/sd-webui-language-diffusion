@@ -329,6 +329,8 @@
     "Bake in VAE": "VAE を埋め込み",
     "Bake in VAE: refresh": "VAE を埋め込み: 更新",
     "Base model": "ベースモデル",
+    "Unknown": "不明",
+    "Built in": "内蔵",
     "Batch": "Batch",
     "Batch Cond/Uncond": "Cond/Uncond をバッチ処理",
     "Batch Count": "Batch 数",

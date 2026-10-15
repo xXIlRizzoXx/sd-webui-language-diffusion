@@ -329,6 +329,8 @@
     "Bake in VAE": "Встроить VAE",
     "Bake in VAE: refresh": "Встроить VAE: обновить",
     "Base model": "Базовая модель",
+    "Unknown": "Неизвестно",
+    "Built in": "Встроенный",
     "Batch": "Batch",
     "Batch Cond/Uncond": "Cond/Uncond в одном батче",
     "Batch Count": "Количество батчей",

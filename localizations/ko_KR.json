@@ -329,6 +329,8 @@
     "Bake in VAE": "VAE 내장",
     "Bake in VAE: refresh": "VAE 내장: 새로 고침",
     "Base model": "베이스 모델",
+    "Unknown": "알 수 없음",
+    "Built in": "내장",
     "Batch": "Batch",
     "Batch Cond/Uncond": "Cond/Uncond 배치 처리",
     "Batch Count": "배치 개수",

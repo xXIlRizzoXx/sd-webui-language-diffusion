@@ -207,6 +207,10 @@ BOTH_HOSTS_CORE = ["Generate forever", "Cancel generate forever", "Model hash", 
                    # siblings are translated.
                    "Ignore", "Apply if any", "Discard", "Path", "Date Created", "Date Modified", "Alias from file",
                    "Disable", "Local", "Remote",
+                   # Model metadata editors: the Forge "Base model" radio and
+                   # LoRA "Preset" dropdown, the A1111 Lora "Stable Diffusion
+                   # version" dropdown.
+                   "Unknown",
                    # img2img Batch "From directory" help (ui.py, one node per
                    # <br> line), Settings > Sysinfo links and check result
                    # (ui_settings.py), the progress bar before the task starts
@@ -258,6 +262,10 @@ A1111_HTML = ["Startup profile"]
 # Forge Neo only: modelHelp.js link title and the ControlNet preview close
 # link title.
 FORGE_TITLES = ["Where to get the modules?", "Close Preview"]
+
+# Forge Neo only: the first choice of the checkpoint metadata editor's
+# "Preferred VAE / Text encoder(s)" dropdown.
+FORGE_CHOICES = ["Built in"]
 
 # Forge Neo only: the Refiner "Switch at" slider info (one or the other,
 # depending on the refiner_use_steps setting).
@@ -697,6 +705,9 @@ class HostStringKeyTests(unittest.TestCase):
     def test_html_template_texts_are_keys(self):
         self.assertTranslated(BOTH_HOSTS_HTML + FORGE_HTML + A1111_HTML + FORGE_TITLES)
 
+    def test_forge_choices_are_keys(self):
+        self.assertTranslated(FORGE_CHOICES)
+
     def test_forge_refiner_info_strings_are_keys(self):
         self.assertTranslated(FORGE_REFINER_INFO)
 
@@ -736,7 +747,7 @@ class HostStringKeyTests(unittest.TestCase):
         # appear verbatim (a hint without its parentheses) in its sources.
         if _is_forge(HOST_ROOT):
             expected = (FORGE_RESIZE_MODE + FORGE_MERGER + FORGE_SINCE_MAY + FORGE_REFINER_INFO + BOTH_HOSTS_CORE
-                        + BOTH_HOSTS_HTML + FORGE_HTML + FORGE_TITLES)
+                        + BOTH_HOSTS_HTML + FORGE_HTML + FORGE_TITLES + FORGE_CHOICES)
         else:
             expected = A1111_STRINGS + BOTH_HOSTS_CORE + A1111_CHOICES + HYPERTILE_XYZ_AXIS_LABELS + BOTH_HOSTS_HTML + A1111_HTML
         blob = "\n".join(_read(p) for p in _host_sources(HOST_ROOT, ("modules", "scripts", "extensions-builtin", "javascript")))

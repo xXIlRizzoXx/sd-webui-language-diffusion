@@ -329,6 +329,8 @@
     "Bake in VAE": "Intégrer le VAE",
     "Bake in VAE: refresh": "Intégrer le VAE : actualiser",
     "Base model": "Modèle de base",
+    "Unknown": "Inconnu",
+    "Built in": "Intégré",
     "Batch": "Batch",
     "Batch Cond/Uncond": "Cond/Uncond en batch",
     "Batch Count": "Nombre de batchs",

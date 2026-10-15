@@ -329,6 +329,8 @@
     "Bake in VAE": "嵌入 VAE",
     "Bake in VAE: refresh": "嵌入 VAE:刷新",
     "Base model": "基础模型",
+    "Unknown": "未知",
+    "Built in": "内置",
     "Batch": "Batch",
     "Batch Cond/Uncond": "批量 Cond/Uncond",
     "Batch Count": "Batch 数量",
