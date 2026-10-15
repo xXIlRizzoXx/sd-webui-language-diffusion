@@ -197,7 +197,43 @@ FORGE_SINCE_MAY = [
 # Core strings shown by both hosts: the Generate / Interrupt right-click menu
 # (contextMenus.js) and the img2img Batch "Parameters to take from png info"
 # checkboxes.
-BOTH_HOSTS_CORE = ["Generate forever", "Cancel generate forever", "Model hash", "CFG scale"]
+BOTH_HOSTS_CORE = ["Generate forever", "Cancel generate forever", "Model hash", "CFG scale",
+                   # Result panel (call_queue.py f-string), Interrupt toast (gr.Info)
+                   # and the plain Extensions table headers (ui_extensions.py).
+                   "Time taken:", "Generation will stop after finishing this image, click again to stop immediately.",
+                   "Branch", "Version", "Date", "Update", "Action", "Commit",
+                   # Settings and Extensions radio / dropdown choices whose
+                   # siblings are translated.
+                   "Ignore", "Apply if any", "Discard", "Path", "Date Created", "Date Modified", "Alias from file",
+                   "Disable", "Local", "Remote"]
+
+# AUTOMATIC1111 only: choices of radios whose siblings are translated
+# (fp8_storage, live_preview_content, postprocessing caption action, canvas
+# hotkeys "Disable function that you don't use").
+A1111_CHOICES = ["Enable for SDXL", "Combined", "Keep", "Prepend", "Append", "Zoom", "Hotkey enlarge brush",
+                 "Hotkey shrink brush", "Moving canvas", "Fullscreen", "Reset Zoom", "Overlap"]
+
+# Choice keys that existed with an English value although their siblings
+# ("all", "both") are translated. "extensions" is also the French word.
+UNTRANSLATED_CHOICES = ["none", "extra", "extensions"]
+UNTRANSLATED_CHOICES_SAME = {("fr_FR", "extensions")}
+
+# Choices that stay English in every locale (technical names, letters,
+# training-only identifiers, Forge's torch.compile presets whose info quotes
+# "Automatic"), so a choice group may leave them without a key.
+CHOICES_KEPT_ENGLISH = {"B", "C", "CLIP", "DeepBooru", "value", "norm", "Automatic", "guard_filter_fn", "dynamic",
+                        "max-autotune", "max-autotune-no-cudagraphs", "reduce-overhead"}
+
+# Texts of the html/ templates (footer, Extra Networks pane) and of the
+# Quicksettings "[info]" link, shown by both hosts. "Sort:" is the trimmed
+# "<small>Sort: </small>".
+BOTH_HOSTS_HTML = ["Sort:", "Nothing here. Add some content to the following directories:", "info"]
+FORGE_HTML = ["Startup Profile"]
+A1111_HTML = ["Startup profile"]
+
+# Forge Neo only: modelHelp.js link title and the ControlNet preview close
+# link title.
+FORGE_TITLES = ["Where to get the modules?", "Close Preview"]
 
 # Forge Neo only: the Refiner "Switch at" slider info (one or the other,
 # depending on the refiner_use_steps setting).
@@ -205,8 +241,8 @@ FORGE_REFINER_INFO = ["(in sigmas)", "(in steps)"]
 
 # Image Browser "Sort by" choices (scripts/image_browser.py). The other
 # choices are technical words kept in English in every locale.
-IMAGE_BROWSER_SORT_KEPT_ENGLISH = {"aesthetic_score", "cfg scale", "steps", "seed", "sampler"}
-IMAGE_BROWSER_SORT = ["path name", "date", "random", "size", "model", "model hash", "ranking"]
+IMAGE_BROWSER_SORT_KEPT_ENGLISH = {"aesthetic_score", "cfg scale", "seed", "sampler"}
+IMAGE_BROWSER_SORT = ["path name", "date", "random", "steps", "size", "model", "model hash", "ranking"]
 IMAGE_BROWSER_SCRIPT = os.path.join("extensions", "stable-diffusion-webui-images-browser", "scripts", "image_browser.py")
 
 # Older spellings that AUTOMATIC1111 1.10.1 still shows: they must stay.
@@ -240,10 +276,31 @@ XYZ_AXIS_LABELS = [
     "Cond. Image Mask Weight", "UniPC Order", "Token merging ratio high-res",
 ]
 
+# Axis types added by AUTOMATIC1111's builtin Hypertile extension
+# (extensions-builtin/hypertile, on_before_ui).
+HYPERTILE_XYZ_AXIS_LABELS = [
+    "[Hypertile] Unet First pass Enabled", "[Hypertile] Unet Second pass Enabled", "[Hypertile] Unet Max Depth",
+    "[Hypertile] Unet Max Tile Size", "[Hypertile] Unet Swap Size", "[Hypertile] VAE Enabled",
+    "[Hypertile] VAE Max Depth", "[Hypertile] VAE Max Tile Size", "[Hypertile] VAE Swap Size",
+]
+
+# Axis types added by ADetailer Ultimate plus.8 (make_axis_on_xyz_grid).
+# Not checked against the installed copy: a plus.9 beta checkout adds
+# beta-only axes that must stay without a key.
+ADETAILER_XYZ_AXIS_LABELS = [
+    "[ADetailer] ADetailer model 1st", "[ADetailer] ADetailer prompt 1st", "[ADetailer] ADetailer negative prompt 1st",
+    "[ADetailer] Prompt S/R (AD 1st)", "[ADetailer] Prompt S/R (AD 1st and main prompt)",
+    "[ADetailer] Mask erosion / dilation 1st", "[ADetailer] Inpaint denoising strength 1st", "[ADetailer] CFG scale 1st",
+    "[ADetailer] Inpaint only masked 1st", "[ADetailer] Inpaint only masked padding 1st",
+    "[ADetailer] ADetailer sampler 1st", "[ADetailer] ADetailer scheduler 1st", "[ADetailer] noise multiplier 1st",
+    "[ADetailer] ControlNet model 1st",
+]
+
 # Keys whose translation may equal the English text: technical vocabulary,
 # or words spelled the same in some languages.
 SAME_AS_ENGLISH = {"Latent Upscale", "📖 Guide", "Horizontal", "Vertical", "Linear", "Modules", "Name", "Notes", "Training",
-                   "(in MB)", "(in ms)", "(EXPERIMENTAL)", "Rectangle", "Oval", "Styles", "Steps"}
+                   "(in MB)", "(in ms)", "(EXPERIMENTAL)", "Rectangle", "Oval", "Styles", "Steps",
+                   "Version", "Date", "Action", "Branch", "Commit", "Local", "Remote", "Zoom"}
 
 
 def _is_forge(root):
@@ -401,15 +458,51 @@ def _settings_categories(root):
     return found
 
 
-def _xyz_axis_labels(root):
-    """Labels of the X/Y/Z plot axis types (the X/Y/Z type dropdown choices)."""
-    tree = ast.parse(_read(os.path.join(root, "scripts", "xyz_grid.py")))
+def _axis_option_labels(path):
+    tree = ast.parse(_read(path))
     found = set()
     for node in ast.walk(tree):
         if (isinstance(node, ast.Call) and _name(node.func) in ("AxisOption", "AxisOptionImg2Img", "AxisOptionTxt2Img")
                 and node.args and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str)):
             found.add(node.args[0].value)
     return found
+
+
+def _xyz_axis_labels(root):
+    """Labels of the X/Y/Z plot axis types (the X/Y/Z type dropdown choices):
+    scripts/xyz_grid.py plus the axes builtin extensions append to it."""
+    found = _axis_option_labels(os.path.join(root, "scripts", "xyz_grid.py"))
+    for path in _host_sources(root, ("extensions-builtin",)):
+        if path.endswith(".py") and "AxisOption" in _read(path):
+            try:
+                found |= _axis_option_labels(path)
+            except SyntaxError:
+                continue
+    return found
+
+
+def _choice_groups(root):
+    """Literal choices lists of the host (choices=[...] or {"choices": (...)})."""
+    groups = set()
+    for path in _host_sources(root, ("modules", "modules_forge", "scripts", "extensions-builtin")):
+        if not path.endswith(".py"):
+            continue
+        try:
+            tree = ast.parse(_read(path))
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            values = []
+            if isinstance(node, ast.keyword) and node.arg == "choices":
+                values = [node.value]
+            elif isinstance(node, ast.Dict):
+                values = [v for k, v in zip(node.keys, node.values) if isinstance(k, ast.Constant) and k.value == "choices"]
+            for value in values:
+                if isinstance(value, (ast.List, ast.Tuple)):
+                    group = tuple(e.value for e in value.elts if isinstance(e, ast.Constant) and isinstance(e.value, str))
+                    if len(group) > 1:
+                        groups.add(group)
+    return groups
 
 
 class HostStringKeyTests(unittest.TestCase):
@@ -501,8 +594,14 @@ class HostStringKeyTests(unittest.TestCase):
         self.assertTranslated(tooltips)
 
     def test_xyz_axis_labels_are_keys(self):
-        self.assertEqual(len(XYZ_AXIS_LABELS), len(set(XYZ_AXIS_LABELS)))
-        self.assertTranslated(XYZ_AXIS_LABELS)
+        labels = XYZ_AXIS_LABELS + HYPERTILE_XYZ_AXIS_LABELS + ADETAILER_XYZ_AXIS_LABELS
+        self.assertEqual(len(labels), len(set(labels)))
+        self.assertTranslated(labels)
+        for code, data in sorted(self.locales.items()):
+            for label in ADETAILER_XYZ_AXIS_LABELS:
+                with self.subTest(locale=code, label=label):
+                    # ADetailer tells its axes apart by this prefix.
+                    self.assertTrue(data[label].startswith("[ADetailer] "), data[label])
 
     @unittest.skipUnless(HOST_ROOT and os.path.isfile(os.path.join(HOST_ROOT, "scripts", "xyz_grid.py")),
                          "LD_HOST_ROOT not set: host X/Y/Z axis labels not checked")
@@ -517,7 +616,36 @@ class HostStringKeyTests(unittest.TestCase):
                     self.assertIn(label, data)
 
     def test_both_hosts_menu_and_batch_strings_are_keys(self):
+        self.assertEqual(len(BOTH_HOSTS_CORE), len(set(BOTH_HOSTS_CORE)))
         self.assertTranslated(BOTH_HOSTS_CORE)
+
+    def test_a1111_choices_are_keys(self):
+        self.assertTranslated(A1111_CHOICES)
+
+    def test_choices_with_translated_siblings_are_translated(self):
+        for code, data in sorted(self.locales.items()):
+            for key in UNTRANSLATED_CHOICES:
+                with self.subTest(locale=code, key=key):
+                    self.assertIn(key, data)
+                    if (code, key) not in UNTRANSLATED_CHOICES_SAME:
+                        self.assertNotEqual(data[key], key)
+
+    @unittest.skipUnless(HOST_ROOT and os.path.isdir(os.path.join(HOST_ROOT, "modules")),
+                         "LD_HOST_ROOT not set: host choice groups not checked")
+    def test_host_choice_groups_are_not_half_keyed(self):
+        # A radio / dropdown whose choices are partly keys shows a mix of
+        # translated and English entries.
+        groups = _choice_groups(HOST_ROOT)
+        self.assertGreater(len(groups), 20)
+        data = self.locales["it_IT"]
+        for group in sorted(groups):
+            if not any(c in data and data[c] != c for c in group):
+                continue
+            with self.subTest(group=group):
+                self.assertEqual([c for c in group if c not in data and c not in CHOICES_KEPT_ENGLISH], [])
+
+    def test_html_template_texts_are_keys(self):
+        self.assertTranslated(BOTH_HOSTS_HTML + FORGE_HTML + A1111_HTML + FORGE_TITLES)
 
     def test_forge_refiner_info_strings_are_keys(self):
         self.assertTranslated(FORGE_REFINER_INFO)
@@ -557,10 +685,14 @@ class HostStringKeyTests(unittest.TestCase):
         # Guards the lists above against typos: each string of this host must
         # appear verbatim (a hint without its parentheses) in its sources.
         if _is_forge(HOST_ROOT):
-            expected = FORGE_RESIZE_MODE + FORGE_MERGER + FORGE_SINCE_MAY + FORGE_REFINER_INFO + BOTH_HOSTS_CORE
+            expected = (FORGE_RESIZE_MODE + FORGE_MERGER + FORGE_SINCE_MAY + FORGE_REFINER_INFO + BOTH_HOSTS_CORE
+                        + BOTH_HOSTS_HTML + FORGE_HTML + FORGE_TITLES)
         else:
-            expected = A1111_STRINGS + BOTH_HOSTS_CORE
+            expected = A1111_STRINGS + BOTH_HOSTS_CORE + A1111_CHOICES + HYPERTILE_XYZ_AXIS_LABELS + BOTH_HOSTS_HTML + A1111_HTML
         blob = "\n".join(_read(p) for p in _host_sources(HOST_ROOT, ("modules", "scripts", "extensions-builtin", "javascript")))
+        html = os.path.join(HOST_ROOT, "html")
+        if os.path.isdir(html):
+            blob += "\n".join(_read(os.path.join(html, n)) for n in sorted(os.listdir(html)) if n.endswith(".html"))
         hints = _settings_hints(HOST_ROOT)
         for text in expected + RELOAD_HINTS:
             with self.subTest(text=text):

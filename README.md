@@ -85,10 +85,10 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
 
 - **Ten complete locale dictionaries** (Italian, Spanish, French, German,
   Simplified Chinese, Japanese, Brazilian Portuguese, Russian, Korean,
-  Polish), each translating 2173 UI strings end to end — labels,
+  Polish), each translating 2234 UI strings end to end — labels,
   dropdown choices, settings descriptions, tooltips, error messages,
   sub-tab names, modal text, for both the Forge Neo and the
-  AUTOMATIC1111 1.10 core UI. Includes 212 keys covering the panel and
+  AUTOMATIC1111 1.10 core UI. Includes 226 keys covering the panel and
   settings of the [ADetailer Ultimate](https://github.com/xXIlRizzoXx/adetailer-ultimate)
   extension (when installed) so the ADetailer panel translates in place
   with the rest of the UI (a few parts stay English by that extension's
@@ -136,11 +136,11 @@ entry in the Quicksettings list — see [Uninstall](#uninstall).
 | 한국어 | `localizations/ko_KR.json` | 🇰🇷 | full seed translation |
 | Polski | `localizations/pl_PL.json` | 🇵🇱 | full seed translation |
 
-Each non-English JSON is approximately 186–268 KB and contains every
+Each non-English JSON is approximately 190–273 KB and contains every
 English UI string that Forge's localization system can match against,
 mapped to its translation in that locale — the Forge Neo and
-AUTOMATIC1111 core UI (1812 keys), ADetailer Ultimate (212 keys) and
-Metadata Removal + Image Browser (149 keys); extension keys are used only
+AUTOMATIC1111 core UI (1858 keys), ADetailer Ultimate (226 keys) and
+Metadata Removal + Image Browser (150 keys); extension keys are used only
 if that extension is installed and are harmless otherwise.
 
 ---
@@ -372,10 +372,10 @@ extension stays English if Language Diffusion isn't installed.
 
 | Extension | Strings | Languages | Status |
 |-----------|:-------:|:---------:|--------|
-| 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 1812 | 10 | base coverage |
-| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.8 | 212 | **10 / 10** | ✅ verified |
+| 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 1858 | 10 | base coverage |
+| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.8 | 226 | **10 / 10** | ✅ verified |
 | ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) v1.0.0 | 39 | **10 / 10** | ✅ native-reviewed |
-| 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 114 | **10 / 10** | ✅ native-reviewed |
+| 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 115 | **10 / 10** | ✅ native-reviewed |
 
 **Languages** (all 10 covered for every extension above):
 🇮🇹 Italiano · 🇪🇸 Español · 🇫🇷 Français · 🇩🇪 Deutsch · 🇨🇳 简体中文 ·
@@ -558,16 +558,16 @@ sd-webui-language-diffusion/
 │   ├── forge_language_flags.js            ← flag decorator for the dropdown
 │   └── hints_i18n_patch.js                ← tooltip alias bridge
 └── localizations/
-    ├── it_IT.json    ← Italiano                  ~207 KB
-    ├── es_ES.json    ← Español                   ~210 KB
-    ├── fr_FR.json    ← Français                  ~213 KB
-    ├── de_DE.json    ← Deutsch                   ~207 KB
-    ├── zh_CN.json    ← Simplified Chinese        ~187 KB
-    ├── ja_JP.json    ← 日本語                     ~217 KB
-    ├── pt_BR.json    ← Português (Brasil)        ~206 KB
-    ├── ru_RU.json    ← Русский                   ~268 KB
-    ├── ko_KR.json    ← 한국어                     ~206 KB
-    └── pl_PL.json    ← Polski                    ~202 KB
+    ├── it_IT.json    ← Italiano                  ~211 KB
+    ├── es_ES.json    ← Español                   ~213 KB
+    ├── fr_FR.json    ← Français                  ~217 KB
+    ├── de_DE.json    ← Deutsch                   ~210 KB
+    ├── zh_CN.json    ← Simplified Chinese        ~190 KB
+    ├── ja_JP.json    ← 日本語                     ~221 KB
+    ├── pt_BR.json    ← Português (Brasil)        ~210 KB
+    ├── ru_RU.json    ← Русский                   ~273 KB
+    ├── ko_KR.json    ← 한국어                     ~210 KB
+    └── pl_PL.json    ← Polski                    ~206 KB
 ```
 
 ### `install.py`

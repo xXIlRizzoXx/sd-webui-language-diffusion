@@ -142,13 +142,29 @@ class LocaleFileTests(unittest.TestCase):
             ("Reset ADetailer settings — restores every option on this page (max tabs, save paths, bbox sort, manual mode, remember-last, etc.) to the value declared in the extension's source. Per-tab widget values saved in user_state.json are kept. To reset them, use Reset in the ADetailer panel; with Remember last-used settings enabled, the defaults are saved on the next Generate click.", "Generate"),
             ("(setting entries that appear at the top of page rather than in settings tab)", "Settings"),
             ("settings that appear at the top of the page <b>instead of</b> in the Settings tab", "Settings"),
+            # (key, label, name as the English text writes it): the tab label is
+            # "Generation", the hint calls it "Generate".
+            ("(puts prompt and negative prompt inside the Generate tab, leaving more vertical space for the image on the right)", "Generation", "Generate"),
+            ('Resize image to this width; use "Upscale by" if 0', "Upscale by"),
+            ('Resize image to this height; use "Upscale by" if 0', "Upscale by"),
+            ("For hires fix, use width/height sliders to set final resolution rather than first pass (disables Upscale by, Resize width/height to).", "Upscale by"),
+            ("For hires fix, use width/height sliders to set final resolution rather than first pass (disables Upscale by, Resize width/height to).", "Resize width to", "Resize width"),
+            ("Adjusts the size of the image by multiplying the original width and height by the selected value. Ignored if either Resize width to or Resize height to are non-zero.", "Resize width to"),
+            ("Adjusts the size of the image by multiplying the original width and height by the selected value. Ignored if either Resize width to or Resize height to are non-zero.", "Resize height to"),
+            ('(when using the "Only masked" option)', "Only masked"),
+            ('when using the "Only masked" option', "Only masked"),
+            ('Process the "Mask blur" in fp32 instead of uint8 precision', "Mask blur"),
+            ('Automatically set the "Scale by" factor based on the name of the selected Upscaler', "Scale by"),
+            ("Automatically set the Scale by factor based on the name of the selected Upscaler.", "Scale by"),
         ]
         for code, (_, data) in self.locales.items():
-            for key, label in cases:
+            for case in cases:
+                key, label = case[:2]
+                name = case[2] if len(case) > 2 else label
                 if data[label] == label:
                     continue
-                with self.subTest(locale=code, key=key[:40]):
-                    self.assertNotRegex(data[key], r"(?<![A-Za-z])%s(?![A-Za-z])" % re.escape(label))
+                with self.subTest(locale=code, key=key[:40], label=label):
+                    self.assertNotRegex(data[key], r"(?<![A-Za-z])%s(?![A-Za-z])" % re.escape(name))
 
     def test_generate_forever_hints_name_the_translated_menu_entry(self):
         # The Generate tooltip and the settings hint point at the right-click
