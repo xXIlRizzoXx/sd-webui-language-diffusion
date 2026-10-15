@@ -404,6 +404,19 @@
             input.addEventListener("input", refreshOpen);
             input.addEventListener("keydown", refreshOpen);
 
+            // A click or Enter on an option of the open list is a pick
+            // (Gradio picks on mousedown, which bubbles up from the li).
+            let optionPicked = false;
+            dropdown.addEventListener("mousedown", (e) => {
+                const target = e && e.target;
+                const li = target && target.closest ? target.closest("li") : null;
+                const list = findOpenList(dropdown);
+                if (li && list && list.contains(li)) optionPicked = true;
+            });
+            input.addEventListener("keydown", (e) => {
+                if (e && e.key === "Enter" && findOpenList(dropdown)) optionPicked = true;
+            });
+
             // Forge's quicksettings change-handlers save the new
             // value to config.json via run_settings_single() but do
             // NOT trigger a UI reload — for `localization` that
@@ -428,7 +441,10 @@
             //      language in use: an empty input, or on Gradio 4 a
             //      raw code shown while mounting. When the language in
             //      use is itself transient, the next value replaces it
-            //      without a reload.
+            //      without a reload, unless the box was empty and an
+            //      option was picked: Gradio 4 blanks the box when the
+            //      saved locale is not among the choices (e.g. a removed
+            //      language pack), and that first pick is saved too.
             //   3. Focus — while the input has the focus the text is
             //      what the user types to filter the list. Both Gradio
             //      versions blur the input after a pick (click or
@@ -478,7 +494,8 @@
                     if (name && input.title !== name) input.title = name;
                 }
                 if (v === committed || isTransient(v) || hasFocus()) return;
-                if (!userInteracted || isTransient(committed) || onSettingsPage) {
+                const pickedFromEmpty = optionPicked && !(committed && committed.trim());
+                if (!userInteracted || (isTransient(committed) && !pickedFromEmpty) || onSettingsPage) {
                     committed = v;
                     return;
                 }

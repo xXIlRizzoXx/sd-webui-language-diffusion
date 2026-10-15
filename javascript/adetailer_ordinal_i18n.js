@@ -19,9 +19,19 @@
  * MutationObserver on the placeholder attribute translates those inside
  * the ADetailer panels when the new text is exactly a key.
  *
- * DOM only: it uses the WebUI's onUiUpdate/onUiLoaded hooks and a DOM
- * MutationObserver, and adds no Gradio event listener. No-op when no
- * language is selected.
+ * On AUTOMATIC1111 (Gradio 3.41) the value shown in a closed dropdown
+ * ("(none)", "None", "Use same checkpoint", ...) is the input's value,
+ * which neither the WebUI nor ADetailer translates there (ADetailer
+ * re-translates only Gradio 4 inputs, role="listbox"). Inside the ADetailer
+ * panels, an unfocused Gradio 3 dropdown input whose value is exactly a key
+ * shows the translation: at load, when a panel mounts, and one frame after
+ * Gradio's "change" or "blur" DOM event, since Gradio writes the English
+ * value back after a pick. Gradio 3 reads the input back only on "input"
+ * events, so its own value is unchanged.
+ *
+ * DOM only: it uses the WebUI's onUiUpdate/onUiLoaded hooks, a DOM
+ * MutationObserver and a DOM event listener, and adds no Gradio event
+ * listener. No-op when no language is selected.
  */
 (function () {
     "use strict";
@@ -102,6 +112,44 @@
         if (!dict() || !node) return;
         var start = node.nodeType === 3 ? node.parentElement : node;
         visit(node, inPanel(start));
+        translateValues(node);
+    }
+
+    // Gradio 3 dropdown input: no role (Gradio 4 has role="listbox") and
+    // no type (a textbox has one).
+    var G3_INPUT = "input.border-none:not([role]):not([type])";
+
+    function translateValues(root) {
+        var loc = dict();
+        if (!loc || !root || (root.nodeType !== 1 && root.nodeType !== 9 && root.nodeType !== 11)) return;
+        if (typeof root.querySelectorAll !== "function") return;
+        var inputs = Array.prototype.slice.call(root.querySelectorAll(G3_INPUT));
+        if (root.nodeType === 1 && root.matches && root.matches(G3_INPUT)) inputs.push(root);
+        var has = Object.prototype.hasOwnProperty;
+        inputs.forEach(function (inp) {
+            var value = inp.value;
+            if (!value || !has.call(loc, value)) return;
+            if (inp === document.activeElement || !inPanel(inp)) return;
+            var tl = loc[value];
+            // A translation that is itself a key would change again next pass.
+            if (typeof tl !== "string" || !tl || tl === value || has.call(loc, tl)) return;
+            inp.value = tl;
+        });
+    }
+
+    var valuesQueued = false;
+    function retranslateValues() {
+        valuesQueued = false;
+        translateValues(gradioApp());
+    }
+    if (typeof document !== "undefined" && document.addEventListener && typeof gradioApp === "function") {
+        document.addEventListener("gradio", function (e) {
+            var ev = e && e.detail && e.detail.event;
+            if ((ev !== "change" && ev !== "blur") || valuesQueued || !dict()) return;
+            valuesQueued = true;
+            if (typeof requestAnimationFrame === "function") requestAnimationFrame(retranslateValues);
+            else setTimeout(retranslateValues, 16);
+        }, true);
     }
 
     if (typeof onUiUpdate === "function") {

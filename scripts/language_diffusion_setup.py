@@ -23,7 +23,9 @@ housekeeping in items 4 and 5:
    auto-translated by the bundled locale JSONs (Inglese / Inglés /
    Anglais / Englisch / 英语 / 英語), while the underlying persisted
    value remains "None" for compatibility with Forge's existing
-   "no JSON loaded → English source strings" semantics.
+   "no JSON loaded → English source strings" semantics. Gradio 4+
+   only: on Gradio 3 (AUTOMATIC1111 1.10) the raw codes are kept and
+   the picker script shows the names.
 
 3. **Auto-pin to quicksettings (first install only).** Appends
    `localization` to `shared.opts.quicksettings_list` so the

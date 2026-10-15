@@ -353,6 +353,16 @@ class ReadmeBehaviourTests(unittest.TestCase):
         self.assertFalse("disappears from Settings entirely" in section)
         self.assertIn("while pinned", section)
 
+    def test_setup_script_says_label_choices_are_gradio_4_only(self):
+        # On Gradio 3 (AUTOMATIC1111 1.10) relocate_localization_setting()
+        # returns before wrapping component_args: the raw codes stay and the
+        # picker script shows the names. The module header must say so too.
+        script = _read(os.path.join(REPO, "scripts", "language_diffusion_setup.py"))
+        header = script.split('"""')[1]
+        item = _flat(header.split("2. **")[1].split("3. **")[0])
+        self.assertIn("Gradio 4+ only", item)
+        self.assertIn("Gradio 3 (AUTOMATIC1111 1.10)", item)
+
     def test_release_dates_are_the_published_dates(self):
         section = _section(self.readme, "## Releases")
         rows = dict(re.findall(r"^\| (v[\w.\-]+) \| (\d{4}-\d\d-\d\d) \|", section, re.MULTILINE))
@@ -389,8 +399,8 @@ class ReadmeBehaviourTests(unittest.TestCase):
         self.assertIn("`localization[titles[...]]`", internals)
 
     def test_kept_english_lists_leave_out_translated_terms(self):
-        # Every locale translates Emphasis, and ja/zh/it/ko use their own word
-        # for Steps in most keys: the lists must not claim them as English.
+        # Most locales translate Emphasis, and ja/zh translate Steps: the
+        # lists must not claim them as English.
         def terms(path, heading):
             section = _section(_read(path), heading)
             quote = " ".join(line[1:] for line in section.splitlines() if line.startswith(">"))

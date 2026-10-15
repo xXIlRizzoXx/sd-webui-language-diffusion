@@ -58,8 +58,8 @@ El.prototype.setAttribute = function (n, v) {
 El.prototype.addEventListener = function (t, f) {
     (this.listeners[t] = this.listeners[t] || []).push(f);
 };
-El.prototype.fire = function (t) {
-    (this.listeners[t] || []).forEach((f) => f({}));
+El.prototype.fire = function (t, ev) {
+    (this.listeners[t] || []).forEach((f) => f(ev || {}));
 };
 El.prototype.appendChild = function (c) {
     c.parentElement = this;
@@ -118,6 +118,7 @@ El.prototype.closest = function (sel) {
     let e = this;
     while (e) {
         if (sel === ".wrap" && e.classList.has("wrap")) return e;
+        if (sel === "li" && e.tagName === "LI") return e;
         if (sel === "#tab_settings, #settings" && ["tab_settings", "settings"].includes(e.attrs.id)) return e;
         e = e.parentElement;
     }
@@ -129,7 +130,7 @@ const block = new El("div", { id: "setting_localization" });
 const wrap = block.appendChild(new El("div", { class: "wrap" }));
 let input;
 // Value the input shows when the script binds.
-const initial = { "thirdparty-from": "zh_TW", "mount-click": "", tooltip: gradio === "gradio3" ? "None" : "Inglese" }[scenario];
+const initial = { "thirdparty-from": "zh_TW", "mount-click": "", "missing-locale": "", "missing-locale-enter": "", tooltip: gradio === "gradio3" ? "None" : "Inglese" }[scenario];
 const firstValue = initial === undefined ? "it_IT" : initial;
 const choiceNodes = [];
 // A fresh option list as Svelte builds it whenever the list opens.
@@ -250,12 +251,18 @@ function hint(el) {
 // The user clicks the picker and the input takes the focus; a pick (click
 // or Enter on an option) blurs it on both Gradio versions.
 function focus() {
+    block.fire("mousedown", { target: input });
     block.fire("click");
     sandbox.document.activeElement = input;
     input.fire("focus");
 }
 function blur() {
     sandbox.document.activeElement = null;
+}
+// Click on an option of the open list: Gradio 4.40 picks on mousedown
+// (it bubbles from the li to the dropdown block) and then blurs the input.
+function pickOption(index) {
+    block.fire("mousedown", { target: ul.children[index] });
 }
 function type(text) {
     input.value = text;
@@ -277,7 +284,21 @@ function rebuildList() {
     ul = block.appendChild(makeList("None"));
 }
 
-if (scenario === "keyboard-reopen") {
+if (scenario === "missing-locale" || scenario === "missing-locale-enter") {
+    // The saved locale is not among the choices (a removed language pack):
+    // Gradio 4.40 blanks the box. The first pick is saved by the host.
+    tick();
+    tick();
+    report("mounted");
+    focus();
+    tick();
+    if (scenario === "missing-locale") pickOption(1);
+    else input.fire("keydown", { key: "Enter" });
+    input.value = show("it_IT", "Italiano");
+    blur();
+    for (let i = 0; i < 5; i++) tick();
+    report("picked");
+} else if (scenario === "keyboard-reopen") {
     // Escape closes the open list, ArrowDown opens a new one: only
     // keydown events, no click, focus or input.
     mount();

@@ -562,7 +562,7 @@ sd-webui-language-diffusion/
 ├── scripts/
 │   └── language_diffusion_setup.py        ← hides the setting, pins the top-bar picker
 ├── javascript/
-│   ├── adetailer_ordinal_i18n.js          ← ADetailer tabs 2..N labels
+│   ├── adetailer_ordinal_i18n.js          ← ADetailer tabs 2..N, A1111 dropdown values
 │   ├── forge_language_flags.js            ← flag decorator for the dropdown
 │   └── hints_i18n_patch.js                ← tooltip alias bridge
 └── localizations/
@@ -709,7 +709,10 @@ The flag decorator + auto-reload trigger. Self-contained IIFE
    `triggerReload()` 700 ms after the user picks another language: a
    new value that is still there once the input has lost the focus
    (text typed to filter the list does not count; Gradio blurs the
-   input after a pick). This is the
+   input after a pick). When the saved language is not in the list
+   (e.g. the locale of a language pack that was removed), Gradio 4
+   shows an empty box; a click or Enter on an option still counts as a
+   pick there. This is the
    missing link in Forge's quicksettings flow: `run_settings_single()`
    persists the new value to `config.json` but does not reload the
    page, so without this hook the user has to manually click "Reload
@@ -741,8 +744,14 @@ It also translates placeholders that ADetailer sets later with
 `gr.update()` (the YOLO-World classes box), which the WebUI never sees:
 a DOM `MutationObserver` on the `placeholder` attribute, inside the
 ADetailer panels, writes the translation when the new text is a key.
-It uses the WebUI's `onUiUpdate`/`onUiLoaded` hooks, adds no Gradio event
-listener, and does nothing when no language is selected.
+On AUTOMATIC1111 (Gradio 3) it also translates the value shown in a
+closed ADetailer dropdown (`(none)`, `None`, `Use same checkpoint`, ...)
+when it is exactly a key and the box is not being typed into: at load,
+when a panel mounts, and one frame after Gradio's `change` or `blur` DOM
+event. On Forge Neo ADetailer does this itself.
+It uses the WebUI's `onUiUpdate`/`onUiLoaded` hooks and DOM listeners,
+adds no Gradio event listener, and does nothing when no language is
+selected.
 
 ### `javascript/hints_i18n_patch.js`
 

@@ -205,6 +205,17 @@ class LanguagePickerScriptTests(unittest.TestCase):
                 self.assertEqual(steps["mounted"]["reloads"], 0)
                 self.assertEqual(steps["picked"]["reloads"], 1)
 
+    def test_first_pick_reloads_when_the_saved_locale_is_not_listed(self):
+        # The saved locale is not among the choices (a removed language pack):
+        # Gradio 4.40 shows an empty box. A click or Enter on an option is a
+        # pick that the host saves, so it reloads like any other pick.
+        for gradio in ("gradio3", "gradio4"):
+            for scenario in ("missing-locale", "missing-locale-enter"):
+                with self.subTest(gradio=gradio, scenario=scenario):
+                    steps = self.simulate(gradio, scenario)
+                    self.assertEqual(steps["mounted"]["reloads"], 0)
+                    self.assertEqual(steps["picked"]["reloads"], 1)
+
     def test_reused_option_gets_the_flag_of_its_new_language(self):
         # Filtering reuses the first option element for another language.
         for gradio in ("gradio3", "gradio4"):

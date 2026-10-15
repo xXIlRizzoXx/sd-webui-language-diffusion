@@ -95,6 +95,43 @@ class AdetailerOrdinalScriptTests(unittest.TestCase):
         before.pop("update")
         before.pop("loaded")
         self.assertEqual(dict(steps["loaded"], step="before"), before)
+        # Closed dropdown values (AUTOMATIC1111) stay as Gradio wrote them.
+        self.assertEqual(steps["valuesAgain"]["preset"], "(none)")
+        self.assertEqual(steps["valuesAgain"]["late"], "None")
+
+    def test_closed_dropdown_values_are_translated_on_gradio_3(self):
+        # AUTOMATIC1111 1.10 (Gradio 3.41): the dropdown input has no role, so
+        # ADetailer's own re-translation (role="listbox", Gradio 4) skips it
+        # and the selected value stayed English in the closed box.
+        for code in sorted(f[:-5] for f in os.listdir(LOCALE_DIR) if f.endswith(".json")):
+            with self.subTest(locale=code):
+                with open(os.path.join(LOCALE_DIR, code + ".json"), encoding="utf-8") as f:
+                    loc = json.load(f)
+                steps = self.simulate(code)
+                done = steps["valuesLoaded"]
+                self.assertEqual(done["preset"], loc["(none)"])
+                self.assertEqual(done["detector"], loc["None"])
+                self.assertEqual(done["checkpoint"], loc["Use same checkpoint"])
+                self.assertEqual(done["sampler"], loc["Use same sampler"])
+                # Not a key, being typed into, Gradio 4 (ADetailer's job), a
+                # textbox, or outside the ADetailer panels: left alone.
+                self.assertEqual(done["notKey"], "face_yolov8n.pt")
+                self.assertEqual(done["focused"], "Use same VAE")
+                self.assertEqual(done["gradio4"], "(none)")
+                self.assertEqual(done["textbox"], "None")
+                self.assertEqual(done["outside"], "None")
+                # After a pick: only "change"/"blur" queue one pass, a frame later.
+                self.assertEqual(steps["valuesSelect"]["frames"], 0)
+                self.assertEqual(steps["valuesSelect"]["preset"], "(none)")
+                self.assertEqual(steps["valuesQueued"]["frames"], 1)
+                self.assertEqual(steps["valuesChanged"]["preset"], loc["(none)"])
+                self.assertEqual(steps["valuesChanged"]["checkpoint"], loc["Use same checkpoint"])
+                self.assertEqual(steps["valuesBlurred"]["focused"], loc["Use same VAE"])
+                again = steps["valuesAgain"]
+                self.assertEqual(again["late"], loc["None"])
+                # A second pass changes nothing.
+                self.assertEqual(dict(again, step="valuesBlurred", late=None),
+                                 dict(steps["valuesBlurred"], late=None))
 
 
 if __name__ == "__main__":
