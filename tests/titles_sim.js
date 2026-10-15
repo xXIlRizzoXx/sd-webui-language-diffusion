@@ -235,7 +235,8 @@ const pane = new El("DIV", undefined, [
 ]);
 const vram = new El("P", undefined, [
     titled("active", "Active: peak amount of video memory used during generation (excluding cached data)", "ABBR"),
-    titled("reserved", "Reserved: total amount of video memory allocated by the Torch library", "ABBR"),
+    // The host string ends with a space (modules/call_queue.py), the key does not.
+    titled("reserved", "Reserved: total amount of video memory allocated by the Torch library ", "ABBR"),
     titled("system", "System: peak amount of video memory allocated by all running programs, out of total capacity", "ABBR"),
 ]);
 const extensions = new El("TABLE", undefined, [

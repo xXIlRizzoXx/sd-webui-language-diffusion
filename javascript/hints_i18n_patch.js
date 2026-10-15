@@ -119,9 +119,12 @@
     function translateTitle(el, loc) {
         if (!el || el.nodeType !== 1 || typeof el.getAttribute !== "function") return;
         var value = el.getAttribute("title");
-        if (!value || value === el._ldTitle || !has.call(loc, value)) return;
-        var tl = loc[value];
-        if (typeof tl !== "string" || !tl || tl === value) return;
+        if (!value || value === el._ldTitle) return;
+        // Keys never have outer whitespace; some host titles do.
+        var key = value.trim();
+        if (!key || !has.call(loc, key)) return;
+        var tl = loc[key];
+        if (typeof tl !== "string" || !tl || tl === key) return;
         // A translation that is itself another key would change again.
         if (has.call(loc, tl) && loc[tl] !== tl) return;
         el._ldTitle = tl;
