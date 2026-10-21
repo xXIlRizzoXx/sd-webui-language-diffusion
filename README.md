@@ -19,6 +19,8 @@
 
 <img src="docs/img/01-picker.jpg" alt="The language picker: in the top bar, with native names and flags; pick a language and the page reloads in it" width="100%" />
 
+<img src="docs/img/07-a1111.jpg" alt="AUTOMATIC1111: the same picker, flags and translations in AUTOMATIC1111 1.10, on Gradio 3" width="100%" />
+
 <img src="docs/img/02-everything.jpg" alt="The whole interface: every label, hint, tooltip and button of txt2img, img2img, Extras, PNG Info and the built-in extensions" width="100%" />
 
 <img src="docs/img/03-settings.jpg" alt="Settings: every section, label, choice and hint translated" width="100%" />
@@ -29,7 +31,7 @@
 
 <img src="docs/img/06-inpaint.jpg" alt="img2img and inpaint: modes, canvas, ControlNet units and Extra networks translated" width="100%" />
 
-<sub>Screenshots taken on Forge Neo. Technical Stable Diffusion terms (checkpoint, VAE, sampler, LoRA, CFG …) stay in English on purpose, as most users search for them that way.</sub>
+<sub>Screenshots taken on Forge Neo and AUTOMATIC1111 1.10. Technical Stable Diffusion terms (checkpoint, VAE, sampler, LoRA, CFG …) stay in English on purpose, as most users search for them that way.</sub>
 
 ---
 
