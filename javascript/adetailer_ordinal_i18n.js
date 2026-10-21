@@ -38,10 +38,18 @@
 
     var re_ordinal = /^(?:([\s\S]*?) )?(\d+)(st|nd|rd|th)(\n[\s\S]*)?$/;
     var re_panel = /adetailer_ad_main_accordion/;
+    var PANEL = '[id*="adetailer_ad_main_accordion"]';
+    var has = Object.prototype.hasOwnProperty;
 
+    // window.localization, or null when no language is selected. Called for
+    // every node the UI adds: it must not copy the keys (thousands of them).
     function dict() {
         var d = window.localization;
-        return d && Object.keys(d).length > 0 ? d : null;
+        if (!d) return null;
+        for (var k in d) {
+            if (has.call(d, k)) return d;
+        }
+        return null;
     }
 
     function ordinalName(n) {
@@ -108,11 +116,23 @@
         for (var i = 0; i < children.length; i++) visit(children[i], panel);
     }
 
+    // The ADetailer panels inside node (node itself when it is in one). Only
+    // they are walked: the hosts report every node of the UI as it mounts,
+    // and walking each whole subtree froze the page for a minute.
+    function panels(node) {
+        var start = node.nodeType === 3 ? node.parentElement : node;
+        if (inPanel(start)) return [node];
+        if (node.nodeType !== 1 && node.nodeType !== 9 && node.nodeType !== 11) return [];
+        if (typeof node.querySelectorAll !== "function") return [];
+        return Array.prototype.slice.call(node.querySelectorAll(PANEL));
+    }
+
     function process(node) {
         if (!dict() || !node) return;
-        var start = node.nodeType === 3 ? node.parentElement : node;
-        visit(node, inPanel(start));
-        translateValues(node);
+        panels(node).forEach(function (p) {
+            visit(p, true);
+            translateValues(p);
+        });
     }
 
     // Gradio 3 dropdown input: no role (Gradio 4 has role="listbox") and
@@ -125,7 +145,6 @@
         if (typeof root.querySelectorAll !== "function") return;
         var inputs = Array.prototype.slice.call(root.querySelectorAll(G3_INPUT));
         if (root.nodeType === 1 && root.matches && root.matches(G3_INPUT)) inputs.push(root);
-        var has = Object.prototype.hasOwnProperty;
         inputs.forEach(function (inp) {
             var value = inp.value;
             if (!value || !has.call(loc, value)) return;
@@ -140,7 +159,7 @@
     var valuesQueued = false;
     function retranslateValues() {
         valuesQueued = false;
-        translateValues(gradioApp());
+        panels(gradioApp()).forEach(translateValues);
     }
     if (typeof document !== "undefined" && document.addEventListener && typeof gradioApp === "function") {
         document.addEventListener("gradio", function (e) {
@@ -173,7 +192,7 @@
             var el = r.target;
             if (r.attributeName !== "placeholder" || !el || !el.placeholder) return;
             if (el.placeholder === el._ldPlaceholder || !inPanel(el)) return;
-            var tl = Object.prototype.hasOwnProperty.call(loc, el.placeholder) ? loc[el.placeholder] : translate(el.placeholder);
+            var tl = has.call(loc, el.placeholder) ? loc[el.placeholder] : translate(el.placeholder);
             if (typeof tl !== "string" || !tl || tl === el.placeholder) return;
             el._ldPlaceholder = tl;
             el.placeholder = tl;

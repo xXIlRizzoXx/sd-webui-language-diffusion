@@ -45,20 +45,28 @@ const input = (value, attrs) => {
 El.prototype.hasAttribute = function (name) {
     return !!this.attrs && name in this.attrs;
 };
-// Only the selector the script uses for Gradio 3 dropdown inputs.
+// Only the selectors the script uses: Gradio 3 dropdown inputs and the
+// ADetailer panels.
 const G3_INPUT = "input.border-none:not([role]):not([type])";
+const PANEL_SEL = '[id*="adetailer_ad_main_accordion"]';
 const isG3Input = (el) =>
     el.nodeName === "INPUT" && el.attrs.class === "border-none" && !el.hasAttribute("role") && !el.hasAttribute("type");
+const matcher = (sel) => {
+    if (sel === G3_INPUT) return isG3Input;
+    if (sel === PANEL_SEL) return (el) => el.id.includes("adetailer_ad_main_accordion");
+    throw new Error("unsupported selector " + sel);
+};
+// The engine's own walk, which the script's DOM walk is counted apart from.
+const kids = (e) => e._kids || e.childNodes || [];
 El.prototype.matches = function (sel) {
-    if (sel !== G3_INPUT) throw new Error("unsupported selector " + sel);
-    return isG3Input(this);
+    return matcher(sel)(this);
 };
 El.prototype.querySelectorAll = function (sel) {
-    if (sel !== G3_INPUT) throw new Error("unsupported selector " + sel);
+    const test = matcher(sel);
     const out = [];
     const walk = (e) =>
-        (e.childNodes || []).forEach((c) => {
-            if (c.nodeType === 1 && isG3Input(c)) out.push(c);
+        kids(e).forEach((c) => {
+            if (c.nodeType === 1 && test(c)) out.push(c);
             walk(c);
         });
     walk(this);
@@ -218,3 +226,37 @@ loadedCallbacks.forEach((cb) => cb());
 gradioEvent("change");
 frames.splice(0).forEach((cb) => cb());
 values("valuesAgain", { late: late.childNodes[0].value });
+
+// The hosts report every node of the UI as it mounts. Outside the ADetailer
+// panels the script must not walk those subtrees itself: count how often it
+// reads childNodes of such nodes.
+let walks = 0;
+class CountingEl {
+    constructor(children) {
+        this.nodeType = 1;
+        this.nodeName = "DIV";
+        this.id = "";
+        this.parentElement = null;
+        this._kids = [];
+        (children || []).forEach((c) => {
+            c.parentElement = this;
+            this._kids.push(c);
+        });
+    }
+    get childNodes() {
+        walks++;
+        return this._kids;
+    }
+}
+CountingEl.prototype.matches = El.prototype.matches;
+CountingEl.prototype.querySelectorAll = El.prototype.querySelectorAll;
+CountingEl.prototype.hasAttribute = () => false;
+const leaves = [];
+for (let i = 0; i < 300; i++) leaves.push(new CountingEl([new CountingEl([span("ADetailer detector 2nd")])]));
+const big = new CountingEl(leaves);
+big.parentElement = root;
+const mountRecords = [big];
+const collect = (e) => e._kids.forEach((c) => { if (c instanceof CountingEl) { mountRecords.push(c); collect(c); } });
+collect(big);
+updateCallbacks.forEach((cb) => cb(mountRecords.map((n) => ({ type: "childList", addedNodes: [n] }))));
+console.log(JSON.stringify({ step: "mountOutside", records: mountRecords.length, walks, outside: leaves[0]._kids[0]._kids[0].childNodes[0].textContent }));

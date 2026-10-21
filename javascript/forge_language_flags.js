@@ -549,6 +549,11 @@
         }, 100);
     }
 
+    // Both hosts call onUiLoaded once the UI is built. The UI can mount far
+    // later than the short poll above allows (AUTOMATIC1111 can take a minute
+    // with a large dictionary), so bind there too; binding twice is a no-op.
+    if (typeof onUiLoaded === "function") onUiLoaded(tryBind);
+
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", arm, { once: true });
     } else {

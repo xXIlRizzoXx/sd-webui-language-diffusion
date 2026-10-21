@@ -258,6 +258,16 @@ class LanguagePickerScriptTests(unittest.TestCase):
                 self.assertEqual(steps["idle"]["images"], 3)
                 self.assertEqual(steps["idle-writes"]["writes"], 0)
 
+    def test_picker_mounted_after_the_poll_gave_up_is_bound_on_ui_loaded(self):
+        # AUTOMATIC1111 with a large dictionary can build the UI a minute
+        # after load, long after the script's short poll stops.
+        for gradio in ("gradio3", "gradio4"):
+            with self.subTest(gradio=gradio):
+                steps = self.simulate(gradio, "late-mount")
+                self.assertIsNone(steps["mounted-late"]["indicator"])
+                self.assert_decorated(gradio, steps["ui-loaded"])
+                self.assertIsNotNone(steps["ui-loaded"]["indicator"])
+
     def test_lists_of_other_dropdowns_get_no_flags(self):
         # Gradio 4 gives every dropdown aria-controls="dropdown-options":
         # an element with that id elsewhere is not the picker's list.

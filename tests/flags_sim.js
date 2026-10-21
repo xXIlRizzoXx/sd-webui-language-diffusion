@@ -177,18 +177,25 @@ const refreshButton = new El("button", { id: "refresh_localization" });
 let intervals = [];
 let timeouts = [];
 let reloads = 0;
+const uiLoaded = [];
+// "late-mount": the UI is built only after the script's short poll gave up.
+let mounted = scenario !== "late-mount";
 const sandbox = {
+    onUiLoaded: (f) => uiLoaded.push(f),
     document: {
         readyState: "complete",
         getElementById: (id) =>
-            id === "setting_localization" ? block : id === "dropdown-options" && scenario === "foreign-list" ? foreignById : null,
-        querySelectorAll: () => [block, refreshButton],
+            !mounted ? null : id === "setting_localization" ? block : id === "dropdown-options" && scenario === "foreign-list" ? foreignById : null,
+        querySelectorAll: () => (mounted ? [block, refreshButton] : []),
         createElement: (t) => new El(t),
         activeElement: null,
     },
     location: { reload: () => reloads++ },
     setInterval: (f) => (intervals.push(f), intervals.length),
-    clearInterval: () => {},
+    // Only late-mount needs a real clear: the gave-up poll must stay stopped.
+    clearInterval: (h) => {
+        if (scenario === "late-mount") intervals[h - 1] = () => {};
+    },
     setTimeout: (f) => timeouts.push(f),
     requestAnimationFrame: (f) => timeouts.push(f),
     restart_reload: () => reloads++,
@@ -325,6 +332,18 @@ if (scenario === "missing-locale" || scenario === "missing-locale-enter") {
     for (let i = 0; i < 5; i++) tick();
     report("idle");
     console.log(JSON.stringify({ step: "idle-writes", writes: textWrites - before }));
+} else if (scenario === "late-mount") {
+    // The UI is built long after the script's ~8 s poll gave up; the host
+    // then calls its onUiLoaded callbacks.
+    for (let i = 0; i < 100; i++) tick();
+    mounted = true;
+    for (let i = 0; i < 5; i++) tick();
+    report("mounted-late");
+    uiLoaded.forEach((f) => f());
+    mount();
+    focus();
+    tick();
+    report("ui-loaded");
 } else if (scenario === "foreign-list") {
     // Lists of other dropdowns never get the picker's class or flags.
     const foreign = () => [foreignList, foreignById].map((l) => ({ cls: l.classList.has("forge-language-options"), images: imgCount(l) }));

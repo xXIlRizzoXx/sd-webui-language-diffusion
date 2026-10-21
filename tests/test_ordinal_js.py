@@ -99,6 +99,16 @@ class AdetailerOrdinalScriptTests(unittest.TestCase):
         self.assertEqual(steps["valuesAgain"]["preset"], "(none)")
         self.assertEqual(steps["valuesAgain"]["late"], "None")
 
+    def test_nodes_mounted_outside_the_panels_are_not_walked(self):
+        # The hosts report every node of the UI while it mounts. Walking each
+        # reported subtree outside the ADetailer panels froze AUTOMATIC1111
+        # for about a minute with a language selected.
+        steps = self.simulate("it_IT")
+        mounted = steps["mountOutside"]
+        self.assertEqual(mounted["records"], 601)
+        self.assertEqual(mounted["walks"], 0)
+        self.assertEqual(mounted["outside"], "ADetailer detector 2nd")
+
     def test_closed_dropdown_values_are_translated_on_gradio_3(self):
         # AUTOMATIC1111 1.10 (Gradio 3.41): the dropdown input has no role, so
         # ADetailer's own re-translation (role="listbox", Gradio 4) skips it
