@@ -1,16 +1,35 @@
-<h1 align="center">Language Diffusion</h1>
+<div align="center">
+  <img src="docs/img/cover.jpg" alt="Language Diffusion: the whole Stable Diffusion WebUI in your language, for Forge Neo and AUTOMATIC1111, with a flag language picker in the top bar" width="100%" />
 
-<p align="center">
-<sup>Multilingual UI extension for <a href="https://github.com/Haoming02/sd-webui-forge-classic">Stable Diffusion WebUI Forge — Neo</a></sup>
-</p>
+  <br /><br />
 
-<p align="center">
-🇮🇹  🇪🇸  🇫🇷  🇩🇪  🇨🇳  🇯🇵  🇧🇷  🇷🇺  🇰🇷  🇵🇱
-</p>
+  [![Forge Neo](https://img.shields.io/badge/Forge-Neo-7c3aed.svg)](https://github.com/Haoming02/sd-webui-forge-classic)
+  [![AUTOMATIC1111](https://img.shields.io/badge/AUTOMATIC1111-1.10-7c3aed.svg)](https://github.com/AUTOMATIC1111/stable-diffusion-webui)
+  [![Languages](https://img.shields.io/badge/languages-10-a855f7.svg)](#what-you-get)
+  [![License: MIT](https://img.shields.io/badge/license-MIT-a855f7.svg)](LICENSE)
 
-<p align="center">
-<sup>by <a href="https://github.com/xXIlRizzoXx">xXIlRizzoXx</a></sup>
-</p>
+  🇮🇹  🇪🇸  🇫🇷  🇩🇪  🇨🇳  🇯🇵  🇧🇷  🇷🇺  🇰🇷  🇵🇱
+
+  <sub>by <a href="https://github.com/xXIlRizzoXx">xXIlRizzoXx</a> · multilingual UI extension for Stable Diffusion WebUI Forge — Neo and AUTOMATIC1111</sub>
+</div>
+
+---
+
+## ✨ What it does
+
+<img src="docs/img/01-picker.jpg" alt="The language picker: in the top bar, with native names and flags; pick a language and the page reloads in it" width="100%" />
+
+<img src="docs/img/02-everything.jpg" alt="The whole interface: every label, hint, tooltip and button of txt2img, img2img, Extras, PNG Info and the built-in extensions" width="100%" />
+
+<img src="docs/img/03-settings.jpg" alt="Settings: every section, label, choice and hint translated" width="100%" />
+
+<img src="docs/img/04-adetailer.jpg" alt="Extensions: ADetailer Ultimate, Metadata Removal and Image Browser translated, every ADetailer tab included" width="100%" />
+
+<img src="docs/img/05-languages.jpg" alt="Ten languages: the same screen in German, Japanese, Russian and Simplified Chinese" width="100%" />
+
+<img src="docs/img/06-inpaint.jpg" alt="img2img and inpaint: modes, canvas, ControlNet units and Extra networks translated" width="100%" />
+
+<sub>Screenshots taken on Forge Neo. Technical Stable Diffusion terms (checkpoint, VAE, sampler, LoRA, CFG …) stay in English on purpose, as most users search for them that way.</sub>
 
 ---
 
