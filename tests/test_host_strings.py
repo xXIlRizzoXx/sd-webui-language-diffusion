@@ -328,8 +328,6 @@ HYPERTILE_XYZ_AXIS_LABELS = [
 ]
 
 # Axis types added by ADetailer Ultimate plus.8 (make_axis_on_xyz_grid).
-# Not checked against the installed copy: a plus.9 beta checkout adds
-# beta-only axes that must stay without a key.
 ADETAILER_XYZ_AXIS_LABELS = [
     "[ADetailer] ADetailer model 1st", "[ADetailer] ADetailer prompt 1st", "[ADetailer] ADetailer negative prompt 1st",
     "[ADetailer] Prompt S/R (AD 1st)", "[ADetailer] Prompt S/R (AD 1st and main prompt)",
@@ -338,6 +336,50 @@ ADETAILER_XYZ_AXIS_LABELS = [
     "[ADetailer] ADetailer sampler 1st", "[ADetailer] ADetailer scheduler 1st", "[ADetailer] noise multiplier 1st",
     "[ADetailer] ControlNet model 1st",
 ]
+
+# ADetailer Ultimate v26.2.0+plus.9.beta.1 (beta only, this branch ships as a
+# -beta pre-release). A settings option with its hint as drawn "(hint)", the
+# "[ADetailer] Enable" axis and the per-tab axes: ADetailer adds them for
+# every tab up to "Max tabs" (at most 15), "[ADetailer] {name} {ordinal}",
+# the 1st tab only for the fields it had no axis for in plus.8.
+ADETAILER_PLUS9_BETA_SETTINGS = [
+    "Save inpaint masks",
+    "(Saves the black and white mask each region is inpainted with, after every mask setting. "
+    "Files use suffix '-ad-mask-N-K' (tab N, K-th region inpainted))",
+]
+ADETAILER_PLUS9_PER_TAB_AXES = [
+    "ADetailer model", "ADetailer prompt", "ADetailer negative prompt", "Detection confidence threshold",
+    "Mask erosion / dilation", "Inpaint mask blur", "Inpaint denoising strength", "Inpaint only masked padding",
+    "CFG scale", "Steps",
+]
+ADETAILER_PLUS9_FIRST_TAB_AXES = ["Detection confidence threshold", "Inpaint mask blur", "Steps"]
+ADETAILER_MAX_TABS = 15
+
+
+def _ordinal(n):
+    # ADetailer's ordinal(): 1st, 2nd, 3rd, 4th ... 11th, 12th, 13th.
+    suffix = "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return "%d%s" % (n, suffix)
+
+
+ADETAILER_PLUS9_BETA_XYZ_AXIS_LABELS = ["[ADetailer] Enable"] + [
+    "[ADetailer] %s %s" % (name, _ordinal(tab))
+    for tab in range(1, ADETAILER_MAX_TABS + 1)
+    for name in ADETAILER_PLUS9_PER_TAB_AXES
+    if tab > 1 or name in ADETAILER_PLUS9_FIRST_TAB_AXES
+]
+
+# The installed ADetailer of the host, checked when it is a plus.9 checkout.
+ADETAILER_DIR = os.path.join(HOST_ROOT, "extensions", "adetailer") if HOST_ROOT else ""
+
+
+def _adetailer_version(root):
+    path = os.path.join(root, "adetailer", "__version__.py") if root else ""
+    if not path or not os.path.isfile(path):
+        return ""
+    with open(path, encoding="utf-8") as f:
+        found = re.search(r"__version__\s*=\s*[\"']([^\"']+)", f.read())
+    return found.group(1) if found else ""
 
 # Keys whose translation may equal the English text: technical vocabulary,
 # or words spelled the same in some languages.
@@ -640,6 +682,47 @@ class HostStringKeyTests(unittest.TestCase):
 
     def test_adetailer_plus8_strings_are_keys(self):
         self.assertTranslated(ADETAILER_PLUS8)
+
+    def test_adetailer_plus9_beta_strings_are_keys(self):
+        labels = ADETAILER_PLUS9_BETA_XYZ_AXIS_LABELS
+        self.assertEqual(len(ADETAILER_PLUS9_BETA_SETTINGS) + len(labels), 146)
+        self.assertEqual(len(labels), len(set(labels)))
+        self.assertFalse(set(labels) & set(ADETAILER_XYZ_AXIS_LABELS))
+        self.assertIn("[ADetailer] Steps 15th", labels)
+        self.assertIn("[ADetailer] CFG scale 11th", labels)
+        self.assertTranslated(ADETAILER_PLUS9_BETA_SETTINGS + labels)
+        for code, data in sorted(self.locales.items()):
+            for label in labels:
+                with self.subTest(locale=code, label=label):
+                    # ADetailer tells its axes apart by this prefix.
+                    self.assertTrue(data[label].startswith("[ADetailer] "), data[label])
+
+    @unittest.skipUnless("plus.9" in _adetailer_version(ADETAILER_DIR),
+                         "no ADetailer Ultimate plus.9 checkout in the host: beta strings not checked against it")
+    def test_installed_adetailer_plus9_beta_strings_are_listed(self):
+        source = _read(os.path.join(ADETAILER_DIR, "scripts", "!adetailer.py"))
+        tree = ast.parse(source)
+        constants = {n.value for n in ast.walk(tree) if isinstance(n, ast.Constant) and isinstance(n.value, str)}
+        # The settings label and its .info() hint, drawn as "(hint)".
+        self.assertIn(ADETAILER_PLUS9_BETA_SETTINGS[0], constants)
+        self.assertIn(ADETAILER_PLUS9_BETA_SETTINGS[1][1:-1], constants)
+        # make_axis_on_xyz_grid: literal AxisOption labels plus the per_tab table.
+        literal = {n.args[0].value for n in ast.walk(tree)
+                   if isinstance(n, ast.Call) and _name(n.func) == "AxisOption"
+                   and n.args and isinstance(n.args[0], ast.Constant) and isinstance(n.args[0].value, str)}
+        per_tab, first_tab = [], set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+                if node.targets[0].id == "per_tab":
+                    per_tab = [(e.elts[0].value, e.elts[2].value) for e in node.value.elts]
+                elif node.targets[0].id == "first_tab":
+                    first_tab = {e.value for e in node.value.elts}
+        self.assertEqual([name for name, _ in per_tab], ADETAILER_PLUS9_PER_TAB_AXES)
+        self.assertEqual(sorted(name for name, field in per_tab if field in first_tab),
+                         sorted(ADETAILER_PLUS9_FIRST_TAB_AXES))
+        self.assertIn('min(max(int(opts.data.get("ad_max_models", 4)), 1), %d)' % ADETAILER_MAX_TABS, source)
+        self.assertEqual(literal - set(ADETAILER_XYZ_AXIS_LABELS), {"[ADetailer] Enable"})
+        self.assertLessEqual(set(ADETAILER_XYZ_AXIS_LABELS), literal)
 
     def test_forge_resize_mode_strings_are_keys(self):
         self.assertTranslated(FORGE_RESIZE_MODE)
