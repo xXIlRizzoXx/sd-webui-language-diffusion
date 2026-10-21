@@ -495,7 +495,11 @@
                 }
                 if (v === committed || isTransient(v) || hasFocus()) return;
                 const pickedFromEmpty = optionPicked && !(committed && committed.trim());
-                if (!userInteracted || (isTransient(committed) && !pickedFromEmpty) || onSettingsPage) {
+                // A change with no option picked is the host's own update:
+                // Forge Neo writes the saved settings into the components a
+                // few seconds after the page appears, and a touch on the
+                // picker before that must not turn the swap into a reload.
+                if (!userInteracted || !optionPicked || (isTransient(committed) && !pickedFromEmpty) || onSettingsPage) {
                     committed = v;
                     return;
                 }

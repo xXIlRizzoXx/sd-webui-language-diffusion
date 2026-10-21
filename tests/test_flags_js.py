@@ -268,6 +268,15 @@ class LanguagePickerScriptTests(unittest.TestCase):
                 self.assert_decorated(gradio, steps["ui-loaded"])
                 self.assertIsNotNone(steps["ui-loaded"]["indicator"])
 
+    def test_host_update_after_a_touch_without_a_pick_does_not_reload(self):
+        # Forge Neo fills the saved settings in a few seconds after the page
+        # appears; a click on the picker before that is not a pick.
+        for gradio in ("gradio3", "gradio4"):
+            with self.subTest(gradio=gradio):
+                steps = self.simulate(gradio, "host-swap")
+                self.assertEqual(steps["host-update"]["reloads"], 0)
+                self.assertEqual(steps["picked"]["reloads"], 1)
+
     def test_lists_of_other_dropdowns_get_no_flags(self):
         # Gradio 4 gives every dropdown aria-controls="dropdown-options":
         # an element with that id elsewhere is not the picker's list.

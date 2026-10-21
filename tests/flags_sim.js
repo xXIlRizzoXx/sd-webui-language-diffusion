@@ -368,7 +368,8 @@ if (scenario === "missing-locale" || scenario === "missing-locale-enter") {
     tick();
     tick();
     report("typing");
-    input.value = show("de_DE", "Deutsch"); // Enter / click on the option
+    input.fire("keydown", { key: "Enter" });
+    input.value = show("de_DE", "Deutsch"); // Enter on the remaining option
     blur();
     tick();
     tick();
@@ -387,6 +388,7 @@ if (scenario === "missing-locale" || scenario === "missing-locale-enter") {
     report("left");
     focus(); // a later real pick still reloads
     tick();
+    pickOption(2);
     input.value = show("de_DE", "Deutsch");
     blur();
     tick();
@@ -398,6 +400,7 @@ if (scenario === "missing-locale" || scenario === "missing-locale-enter") {
     focus();
     tick();
     report("opened");
+    pickOption(scenario === "thirdparty-to" ? ul.children.length - 1 : 1);
     input.value = scenario === "thirdparty-to" ? "zh_TW" : show("it_IT", "Italiano");
     blur();
     tick();
@@ -416,6 +419,7 @@ if (scenario === "missing-locale" || scenario === "missing-locale-enter") {
     tick();
     report("mounted");
     focus();
+    pickOption(2);
     input.value = show("de_DE", "Deutsch");
     blur();
     tick();
@@ -457,10 +461,30 @@ if (scenario === "missing-locale" || scenario === "missing-locale-enter") {
     mount();
     focus();
     tick();
+    pickOption(2);
     input.value = show("de_DE", "Deutsch");
     blur();
     tick();
     tick();
+    report("picked");
+} else if (scenario === "host-swap") {
+    // Forge Neo writes the saved settings into the components a few seconds
+    // after the page appears. A touch on the picker before that, with no
+    // option picked, must not turn that swap into a reload.
+    mount();
+    focus();
+    tick();
+    blur();
+    tick();
+    input.value = show("de_DE", "Deutsch"); // the host's own update
+    for (let i = 0; i < 5; i++) tick();
+    report("host-update");
+    focus(); // a real pick afterwards still reloads
+    tick();
+    pickOption(1);
+    input.value = show("it_IT", "Italiano");
+    blur();
+    for (let i = 0; i < 5; i++) tick();
     report("picked");
 } else if (scenario === "tooltip") {
     // English in use; hints.js runs ~1 s after the list or the input changed.
@@ -500,6 +524,7 @@ if (scenario === "missing-locale" || scenario === "missing-locale-enter") {
     input.fire("input");
     tick();
     report("unfiltered");
+    pickOption(1);
     input.value = "it_IT"; // user picks Italiano
     tick();
     tick();
@@ -517,7 +542,8 @@ if (scenario === "missing-locale" || scenario === "missing-locale-enter") {
     input.value = "Italiano"; // back to the language in use: not a pick
     tick();
     report("after-raw");
-    input.value = "Deutsch"; // another language after interaction: pick
+    pickOption(2);
+    input.value = "Deutsch"; // another language picked from the list
     tick();
     tick();
     report("picked");
