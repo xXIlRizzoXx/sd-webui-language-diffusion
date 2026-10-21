@@ -194,6 +194,12 @@ FORGE_SINCE_MAY = [
     "Download the Pose as .json",
     "Download",
     "Download Preview",
+    # October 2026 update: the X/Y/Z "VAE (state_dict only)" axis and the
+    # Settings > UI Alternatives cost system option with its info.
+    'VAE ("state_dict" only)',
+    "Enable the cost system for X/Y/Z Plot",
+    "(swap expensive axis (e.g. Checkpoint) the least number of times ; may generate images out of the order"
+    " specified in the UI)",
 ]
 
 # Core strings shown by both hosts: the Generate / Interrupt right-click menu
@@ -339,7 +345,9 @@ SAME_AS_ENGLISH = {"Latent Upscale", "📖 Guide", "Horizontal", "Vertical", "Li
                    "(in MB)", "(in ms)", "(EXPERIMENTAL)", "Rectangle", "Oval", "Styles", "Steps",
                    "Version", "Date", "Action", "Branch", "Commit", "Local", "Remote", "Zoom", "Original",
                    "wiki", "Compact", "Preprocessor", "Variation", "Region", "[Region]", "Error", "Frames", "Upscale", "Model:",
-                   "Hash:", "total"}
+                   "Hash:", "total",
+                   # Copy image to: button, the lowercase twin of the "Inpaint sketch" tab.
+                   "inpaint sketch"}
 
 # The rest of the core UI of both hosts, from a full inventory of their
 # sources: labels, choices, info texts, Gradio texts, popups and messages

@@ -11,6 +11,7 @@
         "Cancelled.",
         "Carriage Return",
         "Clear",
+        "Connection errored out.",
         "Current",
         "Dataset size:",
         "Date trained:",
@@ -60,10 +61,13 @@
         "Uploading...",
         "When searched",
         "behind HEAD",
+        "error",
         "new commits",
         "no image selected",
         "there was an error getting metadata",
-        "unknown (remote error)"
+        "unknown",
+        "unknown (remote error)",
+        "warning"
     ],
     "forge": [
         "Accordion",
@@ -196,6 +200,7 @@
         "both passes",
         "built-in",
         "first pass",
+        "inpaint sketch",
         "key",
         "latest",
         "norm",
