@@ -42,14 +42,24 @@
     var has = Object.prototype.hasOwnProperty;
 
     // window.localization, or null when no language is selected. Called for
-    // every node the UI adds: it must not copy the keys (thousands of them).
+    // every node the UI adds. Even a for-in that stops at the first key lists
+    // all of them on an object this large, so the answer is kept per object.
+    var seenDict = null;
+    var seenFull = false;
     function dict() {
         var d = window.localization;
         if (!d) return null;
-        for (var k in d) {
-            if (has.call(d, k)) return d;
+        if (d !== seenDict) {
+            seenDict = d;
+            seenFull = false;
+            for (var k in d) {
+                if (has.call(d, k)) {
+                    seenFull = true;
+                    break;
+                }
+            }
         }
-        return null;
+        return seenFull ? d : null;
     }
 
     function ordinalName(n) {

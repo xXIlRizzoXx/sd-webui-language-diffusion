@@ -107,6 +107,8 @@ class AdetailerOrdinalScriptTests(unittest.TestCase):
         mounted = steps["mountOutside"]
         self.assertEqual(mounted["records"], 601)
         self.assertEqual(mounted["walks"], 0)
+        # Listing thousands of keys for every reported node is what froze it.
+        self.assertEqual(mounted["keyListings"], 0)
         self.assertEqual(mounted["outside"], "ADetailer detector 2nd")
 
     def test_closed_dropdown_values_are_translated_on_gradio_3(self):

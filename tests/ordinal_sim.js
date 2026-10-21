@@ -6,7 +6,16 @@ const fs = require("fs");
 const vm = require("vm");
 
 const [patchPath, localePath] = process.argv.slice(2);
-const dict = localePath === "none" ? {} : JSON.parse(fs.readFileSync(localePath, "utf8"));
+const plain = localePath === "none" ? {} : JSON.parse(fs.readFileSync(localePath, "utf8"));
+// Counts how often the script lists the dictionary's keys (a for-in or
+// Object.keys does): thousands of keys, so never once per node.
+let keyListings = 0;
+const dict = new Proxy(plain, {
+    ownKeys(target) {
+        keyListings++;
+        return Reflect.ownKeys(target);
+    },
+});
 
 class Text {
     constructor(text) {
@@ -258,5 +267,6 @@ big.parentElement = root;
 const mountRecords = [big];
 const collect = (e) => e._kids.forEach((c) => { if (c instanceof CountingEl) { mountRecords.push(c); collect(c); } });
 collect(big);
+const listingsBefore = keyListings;
 updateCallbacks.forEach((cb) => cb(mountRecords.map((n) => ({ type: "childList", addedNodes: [n] }))));
-console.log(JSON.stringify({ step: "mountOutside", records: mountRecords.length, walks, outside: leaves[0]._kids[0]._kids[0].childNodes[0].textContent }));
+console.log(JSON.stringify({ step: "mountOutside", records: mountRecords.length, walks, keyListings: keyListings - listingsBefore, outside: leaves[0]._kids[0]._kids[0].childNodes[0].textContent }));
