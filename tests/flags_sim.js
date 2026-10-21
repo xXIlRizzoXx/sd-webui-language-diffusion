@@ -486,6 +486,33 @@ if (scenario === "missing-locale" || scenario === "missing-locale-enter") {
     blur();
     for (let i = 0; i < 5; i++) tick();
     report("picked");
+} else if (scenario === "same-pick") {
+    // A pick of the language already shown changes nothing; the list then
+    // closes. A later host update must not be taken for that pick.
+    mount();
+    focus();
+    tick();
+    pickOption(1); // the language in use
+    ul.remove();
+    blur();
+    for (let i = 0; i < 3; i++) tick();
+    input.value = show("de_DE", "Deutsch"); // the host's own update
+    for (let i = 0; i < 5; i++) tick();
+    report("host-update");
+} else if (scenario === "escape-enter") {
+    // Arrow to another language, Escape closes the list, Enter still picks
+    // the highlighted option on both Gradio versions.
+    mount();
+    focus();
+    tick();
+    input.fire("keydown");
+    ul.remove();
+    for (let i = 0; i < 3; i++) tick();
+    input.fire("keydown", { key: "Enter" });
+    input.value = show("de_DE", "Deutsch");
+    blur();
+    for (let i = 0; i < 5; i++) tick();
+    report("picked");
 } else if (scenario === "tooltip") {
     // English in use; hints.js runs ~1 s after the list or the input changed.
     mount();

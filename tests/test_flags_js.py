@@ -277,6 +277,18 @@ class LanguagePickerScriptTests(unittest.TestCase):
                 self.assertEqual(steps["host-update"]["reloads"], 0)
                 self.assertEqual(steps["picked"]["reloads"], 1)
 
+    def test_pick_of_the_shown_language_is_forgotten_once_the_list_closes(self):
+        for gradio in ("gradio3", "gradio4"):
+            with self.subTest(gradio=gradio):
+                self.assertEqual(self.simulate(gradio, "same-pick")["host-update"]["reloads"], 0)
+
+    def test_enter_after_escape_still_reloads(self):
+        # After Escape both Gradio versions pick the highlighted option on
+        # Enter although the list is closed.
+        for gradio in ("gradio3", "gradio4"):
+            with self.subTest(gradio=gradio):
+                self.assertEqual(self.simulate(gradio, "escape-enter")["picked"]["reloads"], 1)
+
     def test_lists_of_other_dropdowns_get_no_flags(self):
         # Gradio 4 gives every dropdown aria-controls="dropdown-options":
         # an element with that id elsewhere is not the picker's list.

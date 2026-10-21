@@ -404,8 +404,10 @@
             input.addEventListener("input", refreshOpen);
             input.addEventListener("keydown", refreshOpen);
 
-            // A click or Enter on an option of the open list is a pick
+            // A click on an option of the open list or Enter is a pick
             // (Gradio picks on mousedown, which bubbles up from the li).
+            // Enter counts even with the list closed: after Escape both
+            // Gradio versions still pick the highlighted option on Enter.
             let optionPicked = false;
             dropdown.addEventListener("mousedown", (e) => {
                 const target = e && e.target;
@@ -414,7 +416,7 @@
                 if (li && list && list.contains(li)) optionPicked = true;
             });
             input.addEventListener("keydown", (e) => {
-                if (e && e.key === "Enter" && findOpenList(dropdown)) optionPicked = true;
+                if (e && e.key === "Enter") optionPicked = true;
             });
 
             // Forge's quicksettings change-handlers save the new
@@ -493,6 +495,10 @@
                     const name = nameForRawCode(v);
                     if (name && input.title !== name) input.title = name;
                 }
+                // A pick of the language already shown changes nothing: once
+                // the list is closed and the input has lost the focus, forget
+                // it, so a later host update is not taken for that pick.
+                if (optionPicked && v === committed && !hasFocus() && !findOpenList(dropdown)) optionPicked = false;
                 if (v === committed || isTransient(v) || hasFocus()) return;
                 const pickedFromEmpty = optionPicked && !(committed && committed.trim());
                 // A change with no option picked is the host's own update:
