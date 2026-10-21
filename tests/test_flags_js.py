@@ -83,6 +83,14 @@ class PickerNamesTests(unittest.TestCase):
         self.assertTrue(used)
         self.assertEqual(used - svgs, set())
 
+    def test_korean_flag_is_not_a_plain_circle(self):
+        # Without its four trigrams the Korean flag reads as Japan's at icon
+        # size; the taegeuk is red above and blue below.
+        block = _js_block("FLAG_SVG")
+        kr = block[block.index("kr:"):block.index("pl:")]
+        self.assertEqual(kr.count('<g transform="translate('), 4)
+        self.assertIn("a4,4 0 0 0 8,0", kr)
+
     def test_every_locale_english_word_has_the_uk_flag(self):
         # Forge Neo shows "English" through the UI translation: the English
         # entry keeps its flag only if that word is in LABEL_TO_CODE.
