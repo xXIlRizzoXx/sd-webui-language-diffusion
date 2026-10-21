@@ -183,8 +183,17 @@
             encodeURIComponent(
                 '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 20">' +
                     '<rect width="30" height="20" fill="#fff"/>' +
+                    // Taegeuk: red above, blue below.
                     '<circle cx="15" cy="10" r="4" fill="#cd2e3a"/>' +
-                    '<path d="M11,10 a4,4 0 0 1 8,0 a2,2 0 0 1 -4,0 a2,2 0 0 0 -4,0 z" fill="#0047a0"/>' +
+                    '<path d="M11,10 a4,4 0 0 0 8,0 a2,2 0 0 0 -4,0 a2,2 0 0 1 -4,0 z" fill="#0047a0"/>' +
+                    // The four trigrams on the diagonals (geon, gam, gon, ri);
+                    // without them the flag reads as Japan's at icon size.
+                    '<g fill="#000">' +
+                    '<g transform="translate(7.1 4.7) rotate(123.7)"><rect x="-2" y="-1.3" width="4" height="0.6"/><rect x="-2" y="-0.3" width="4" height="0.6"/><rect x="-2" y="0.7" width="4" height="0.6"/></g>' +
+                    '<g transform="translate(22.9 4.7) rotate(56.3)"><rect x="-2" y="-1.3" width="1.8" height="0.6"/><rect x="0.2" y="-1.3" width="1.8" height="0.6"/><rect x="-2" y="-0.3" width="4" height="0.6"/><rect x="-2" y="0.7" width="1.8" height="0.6"/><rect x="0.2" y="0.7" width="1.8" height="0.6"/></g>' +
+                    '<g transform="translate(22.9 15.3) rotate(123.7)"><rect x="-2" y="-1.3" width="1.8" height="0.6"/><rect x="0.2" y="-1.3" width="1.8" height="0.6"/><rect x="-2" y="-0.3" width="1.8" height="0.6"/><rect x="0.2" y="-0.3" width="1.8" height="0.6"/><rect x="-2" y="0.7" width="1.8" height="0.6"/><rect x="0.2" y="0.7" width="1.8" height="0.6"/></g>' +
+                    '<g transform="translate(7.1 15.3) rotate(56.3)"><rect x="-2" y="-1.3" width="4" height="0.6"/><rect x="-2" y="-0.3" width="1.8" height="0.6"/><rect x="0.2" y="-0.3" width="1.8" height="0.6"/><rect x="-2" y="0.7" width="4" height="0.6"/></g>' +
+                    "</g>" +
                     "</svg>",
             ),
         pl:
