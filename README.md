@@ -1063,6 +1063,7 @@ Published releases, newest first. Full notes are on the
 
 | Version | Date | Type | Contents |
 |---|---|---|---|
+| v2.0.0 | 2026-10-21 | stable | AUTOMATIC1111 1.10 support; complete Forge Neo and AUTOMATIC1111 core UI; ADetailer Ultimate aligned to v26.2.0+plus.8; nested tooltips translated |
 | v1.1.2 | 2026-07-13 | stable | ADetailer Ultimate aligned to v26.3.0+plus.6 (detection-preview split, run-on-image tool, preview help paragraphs) |
 | v1.1.2-beta.2 | 2026-07-10 | beta | ADetailer Ultimate preview help paragraphs |
 | v1.1.2-beta.1 | 2026-07-09 | beta | ADetailer Ultimate detection-preview split and run-on-image tool |
