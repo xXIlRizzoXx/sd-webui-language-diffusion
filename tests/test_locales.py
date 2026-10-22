@@ -336,6 +336,55 @@ class LocaleFileTests(unittest.TestCase):
                 self.assertEqual(data["📤 Export"], data["📤 Esport"])
                 self.assertNotEqual(data["📤 Export"], "📤 Export")
 
+    def test_paste_swap_status_names_each_tab(self):
+        # ADetailer plus.9 reports a Paste swap as "🔁 Swapped with the Nth tab."
+        # for every tab up to its "Max tabs" maximum (15).
+        def ordinal(n):
+            suffix = "th" if 11 <= n % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+            return f"{n}{suffix}"
+
+        for code, (_, data) in self.locales.items():
+            for n in range(1, 16):
+                key = f"🔁 Swapped with the {ordinal(n)} tab."
+                with self.subTest(locale=code, key=key):
+                    self.assertIn(key, data)
+                    self.assertIn(str(n), data[key])
+                    self.assertTrue(data[key].startswith("🔁 "))
+                    self.assertNotEqual(data[key], key)
+        # Russian: "with the Nth tab" takes the instrumental case.
+        for n in range(1, 16):
+            key = f"🔁 Swapped with the {ordinal(n)} tab."
+            self.assertEqual(self.locales["ru_RU"][1][key], f"🔁 Поменяно местами с {n}-й вкладкой.")
+
+    def test_preset_export_failure_status_is_translated(self):
+        # ADetailer plus.9 shows this in the preset status on Gradio 3 when the
+        # browser cannot save the exported file.
+        key = "⚠️ Export could not save the file in this browser. Back up user_presets.json from the extension folder instead."
+        for code, (_, data) in self.locales.items():
+            with self.subTest(locale=code):
+                self.assertIn(key, data)
+                self.assertTrue(data[key].startswith("⚠️ "))
+                self.assertIn("user_presets.json", data[key])
+                self.assertNotEqual(data[key], key)
+
+    def test_plus9_settings_info_lines_keep_their_parentheses(self):
+        # Settings info lines are matched with the parentheses the WebUI adds.
+        labels = (
+            "Match the colors of each inpainted region to the picture",
+            "Detailed region opacity",
+            "Drop overlapping detections (max overlap, 0 = off)",
+            "Upscaler for ADetailer's inpaint area",
+            "Enable ADetailer at startup",
+        )
+        for code, (_, data) in self.locales.items():
+            for label in labels:
+                with self.subTest(locale=code, key=label):
+                    self.assertIn(label, data)
+                    self.assertNotEqual(data[label], label)
+            infos = [k for k in data if k.startswith("(Starts the ADetailer panel already switched on")]
+            self.assertEqual(len(infos), 1, code)
+            self.assertTrue(data[infos[0]].startswith(("(", "（")), code)
+
 
 if __name__ == "__main__":
     unittest.main()
