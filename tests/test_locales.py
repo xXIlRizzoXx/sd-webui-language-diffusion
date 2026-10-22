@@ -327,6 +327,15 @@ class LocaleFileTests(unittest.TestCase):
                         self.assertIn(str(n), data[key])
                         self.assertNotEqual(data[key], key)
 
+    def test_preset_export_button_is_translated_under_both_labels(self):
+        # ADetailer plus.8 labels the button "📤 Esport" (a typo); plus.9
+        # fixed it to "📤 Export". Both must translate, to the same text.
+        for code, (_, data) in self.locales.items():
+            with self.subTest(locale=code):
+                self.assertIn("📤 Export", data)
+                self.assertEqual(data["📤 Export"], data["📤 Esport"])
+                self.assertNotEqual(data["📤 Export"], "📤 Export")
+
 
 if __name__ == "__main__":
     unittest.main()

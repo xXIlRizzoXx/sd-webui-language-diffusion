@@ -106,10 +106,10 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
 
 - **Ten complete locale dictionaries** (Italian, Spanish, French, German,
   Simplified Chinese, Japanese, Brazilian Portuguese, Russian, Korean,
-  Polish), each translating 2652 UI strings end to end — labels,
+  Polish), each translating 2653 UI strings end to end — labels,
   dropdown choices, settings descriptions, tooltips, error messages,
   sub-tab names, modal text, for both the Forge Neo and the
-  AUTOMATIC1111 1.10 core UI. Includes 372 keys covering the panel and
+  AUTOMATIC1111 1.10 core UI. Includes 373 keys covering the panel and
   settings of the [ADetailer Ultimate](https://github.com/xXIlRizzoXx/adetailer-ultimate)
   extension (when installed) so the ADetailer panel translates in place
   with the rest of the UI (a few parts stay English by that extension's
@@ -160,7 +160,7 @@ entry in the Quicksettings list — see [Uninstall](#uninstall).
 Each non-English JSON is approximately 222–316 KB and contains every
 English UI string that Forge's localization system can match against,
 mapped to its translation in that locale — the Forge Neo and
-AUTOMATIC1111 core UI (2130 keys), ADetailer Ultimate (372 keys) and
+AUTOMATIC1111 core UI (2130 keys), ADetailer Ultimate (373 keys) and
 Metadata Removal + Image Browser (150 keys); extension keys are used only
 if that extension is installed and are harmless otherwise. The core UI
 keys cover both hosts end to end, Gradio's own texts and the built-in
@@ -406,7 +406,7 @@ extension stays English if Language Diffusion isn't installed.
 | Extension | Strings | Languages | Status |
 |-----------|:-------:|:---------:|--------|
 | 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 2130 | 10 | base coverage |
-| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.9.beta.1 | 372 | **10 / 10** | ✅ verified |
+| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.9.beta.1 | 373 | **10 / 10** | ✅ verified |
 | ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) v1.0.0 | 39 | **10 / 10** | ✅ verified |
 | 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 115 | **10 / 10** | ✅ verified |
 
