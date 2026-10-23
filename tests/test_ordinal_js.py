@@ -66,7 +66,7 @@ class AdetailerOrdinalScriptTests(unittest.TestCase):
         self.assertEqual(before["loaded"], 1)
         # Tab 1 (no ordinal) is the WebUI's job; unknown bases, malformed
         # ordinals, script text and anything outside the ADetailer panel stay.
-        for name in ("tab1", "unknownBase", "wrongOrdinal", "noSpace", "script", "outside", "outsidePrompt"):
+        for name in ("tab1", "unknownBase", "wrongOrdinal", "noSpace", "script", "outside", "outsidePrompt", "settingText"):
             with self.subTest(text=name):
                 self.assertEqual(done[name], before[name])
 
@@ -132,12 +132,19 @@ class AdetailerOrdinalScriptTests(unittest.TestCase):
                 self.assertEqual(done["gradio4"], "(none)")
                 self.assertEqual(done["textbox"], "None")
                 self.assertEqual(done["outside"], "None")
+                # Settings > ADetailer dropdowns too (plus.9 "Upscaler for
+                # ADetailer's inpaint area"), but no other setting's.
+                self.assertEqual(done["setting"], loc["Use the WebUI's img2img upscaler"])
+                self.assertEqual(done["otherSetting"], "None")
                 # After a pick: only "change"/"blur" queue one pass, a frame later.
                 self.assertEqual(steps["valuesSelect"]["frames"], 0)
                 self.assertEqual(steps["valuesSelect"]["preset"], "(none)")
                 self.assertEqual(steps["valuesQueued"]["frames"], 1)
                 self.assertEqual(steps["valuesChanged"]["preset"], loc["(none)"])
                 self.assertEqual(steps["valuesChanged"]["checkpoint"], loc["Use same checkpoint"])
+                self.assertEqual(steps["valuesSelect"]["setting"], "Use the WebUI's img2img upscaler")
+                self.assertEqual(steps["valuesChanged"]["setting"], loc["Use the WebUI's img2img upscaler"])
+                self.assertEqual(steps["valuesLateSetting"]["lateSetting"], loc["None"])
                 self.assertEqual(steps["valuesBlurred"]["focused"], loc["Use same VAE"])
                 again = steps["valuesAgain"]
                 self.assertEqual(again["late"], loc["None"])

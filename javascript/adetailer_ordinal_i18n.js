@@ -23,7 +23,7 @@
  * ("(none)", "None", "Use same checkpoint", ...) is the input's value,
  * which neither the WebUI nor ADetailer translates there (ADetailer
  * re-translates only Gradio 4 inputs, role="listbox"). Inside the ADetailer
- * panels, an unfocused Gradio 3 dropdown input whose value is exactly a key
+ * panels and the Settings > ADetailer blocks (values only), an unfocused Gradio 3 dropdown input whose value is exactly a key
  * shows the translation: at load, when a panel mounts, and one frame after
  * Gradio's "change" or "blur" DOM event, since Gradio writes the English
  * value back after a pick. Gradio 3 reads the input back only on "input"
@@ -38,7 +38,10 @@
 
     var re_ordinal = /^(?:([\s\S]*?) )?(\d+)(st|nd|rd|th)(\n[\s\S]*)?$/;
     var re_panel = /adetailer_ad_main_accordion/;
-    var PANEL = '[id*="adetailer_ad_main_accordion"]';
+    var re_setting = /^setting_ad_/;
+    // The ADetailer panels, and the Settings > ADetailer blocks, whose
+    // dropdown values (only those) are translated too.
+    var PANEL = '[id*="adetailer_ad_main_accordion"], [id^="setting_ad_"]';
     var has = Object.prototype.hasOwnProperty;
 
     // window.localization, or null when no language is selected. Called for
@@ -105,6 +108,13 @@
         return false;
     }
 
+    function inSetting(el) {
+        for (; el; el = el.parentElement) {
+            if (el.id && re_setting.test(el.id)) return true;
+        }
+        return false;
+    }
+
     function visit(node, panel) {
         if (node.nodeType === 3) {
             var parent = node.parentElement;
@@ -126,12 +136,13 @@
         for (var i = 0; i < children.length; i++) visit(children[i], panel);
     }
 
-    // The ADetailer panels inside node (node itself when it is in one). Only
-    // they are walked: the hosts report every node of the UI as it mounts,
-    // and walking each whole subtree froze the page for a minute.
+    // The ADetailer panels and settings blocks inside node (node itself when
+    // it is in one). Only they are walked: the hosts report every node of the
+    // UI as it mounts, and walking each whole subtree froze the page for a
+    // minute.
     function panels(node) {
         var start = node.nodeType === 3 ? node.parentElement : node;
-        if (inPanel(start)) return [node];
+        if (inPanel(start) || inSetting(start)) return [node];
         if (node.nodeType !== 1 && node.nodeType !== 9 && node.nodeType !== 11) return [];
         if (typeof node.querySelectorAll !== "function") return [];
         return Array.prototype.slice.call(node.querySelectorAll(PANEL));
@@ -140,7 +151,8 @@
     function process(node) {
         if (!dict() || !node) return;
         panels(node).forEach(function (p) {
-            visit(p, true);
+            var start = p.nodeType === 3 ? p.parentElement : p;
+            if (inPanel(start)) visit(p, true);
             translateValues(p);
         });
     }
@@ -158,7 +170,7 @@
         inputs.forEach(function (inp) {
             var value = inp.value;
             if (!value || !has.call(loc, value)) return;
-            if (inp === document.activeElement || !inPanel(inp)) return;
+            if (inp === document.activeElement || !(inPanel(inp) || inSetting(inp))) return;
             var tl = loc[value];
             // A translation that is itself a key would change again next pass.
             if (typeof tl !== "string" || !tl || tl === value || has.call(loc, tl)) return;

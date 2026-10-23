@@ -57,12 +57,12 @@ El.prototype.hasAttribute = function (name) {
 // Only the selectors the script uses: Gradio 3 dropdown inputs and the
 // ADetailer panels.
 const G3_INPUT = "input.border-none:not([role]):not([type])";
-const PANEL_SEL = '[id*="adetailer_ad_main_accordion"]';
+const PANEL_SEL = '[id*="adetailer_ad_main_accordion"], [id^="setting_ad_"]';
 const isG3Input = (el) =>
     el.nodeName === "INPUT" && el.attrs.class === "border-none" && !el.hasAttribute("role") && !el.hasAttribute("type");
 const matcher = (sel) => {
     if (sel === G3_INPUT) return isG3Input;
-    if (sel === PANEL_SEL) return (el) => el.id.includes("adetailer_ad_main_accordion");
+    if (sel === PANEL_SEL) return (el) => el.id.includes("adetailer_ad_main_accordion") || el.id.startsWith("setting_ad_");
     throw new Error("unsupported selector " + sel);
 };
 // The engine's own walk, which the script's DOM walk is counted apart from.
@@ -98,6 +98,8 @@ const t = {
     negative: new El("TEXTAREA", "", [], "ADetailer negative prompt 2nd\nIf blank, the main negative prompt is used."),
     outside: span("ADetailer detector 2nd"),
     outsidePrompt: new El("TEXTAREA", "", [], "ADetailer prompt 3rd\nIf blank, the main prompt is used."),
+    // Text inside a Settings > ADetailer block: only values are translated there.
+    settingText: span("ADetailer detector 2nd"),
 };
 
 // Values shown in closed dropdowns (input.value), checked apart from t.
@@ -111,6 +113,9 @@ const v = {
     gradio4: input("(none)", { role: "listbox" }),
     textbox: input("None", { type: "text" }),
     outside: input("None"),
+    // Settings > ADetailer dropdown, outside the panels; another setting's.
+    setting: input("Use the WebUI's img2img upscaler"),
+    otherSetting: input("None"),
 };
 
 const panel = new El("DIV", "script_txt2img_adetailer_ad_main_accordion", [
@@ -119,7 +124,11 @@ const panel = new El("DIV", "script_txt2img_adetailer_ad_main_accordion", [
     new El("DIV", "", [v.preset, v.detector, v.checkpoint, v.sampler, v.notKey, v.focused, v.gradio4, v.textbox]),
 ]);
 const other = new El("DIV", "txt2img_settings", [t.outside, t.outsidePrompt, v.outside]);
-const root = new El("DIV", "root", [panel, other]);
+const settings = new El("DIV", "settings", [
+    new El("DIV", "setting_ad_crop_upscaler", [new El("LABEL", "", [t.settingText, v.setting])]),
+    new El("DIV", "setting_sd_vae", [v.otherSetting]),
+]);
+const root = new El("DIV", "root", [panel, other, settings]);
 
 const updateCallbacks = [];
 const loadedCallbacks = [];
@@ -212,6 +221,7 @@ const gradioEvent = (event) =>
     docListeners.filter((l) => l.type === "gradio").forEach((l) => l.cb({ detail: { event } }));
 v.checkpoint.value = "Use same checkpoint";
 v.preset.value = "(none)";
+v.setting.value = "Use the WebUI's img2img upscaler";
 gradioEvent("select");
 values("valuesSelect", { frames: frames.length });
 gradioEvent("change");
@@ -235,6 +245,12 @@ loadedCallbacks.forEach((cb) => cb());
 gradioEvent("change");
 frames.splice(0).forEach((cb) => cb());
 values("valuesAgain", { late: late.childNodes[0].value });
+
+// A Settings > ADetailer block mounted later.
+const lateSetting = new El("DIV", "setting_ad_later", [input("None")]);
+settings.append(lateSetting);
+updateCallbacks.forEach((cb) => cb([{ type: "childList", addedNodes: [lateSetting] }]));
+values("valuesLateSetting", { lateSetting: lateSetting.childNodes[0].value });
 
 // The hosts report every node of the UI as it mounts. Outside the ADetailer
 // panels the script must not walk those subtrees itself: count how often it

@@ -802,8 +802,8 @@ It also translates placeholders that ADetailer sets later with
 a DOM `MutationObserver` on the `placeholder` attribute, inside the
 ADetailer panels, writes the translation when the new text is a key.
 On AUTOMATIC1111 (Gradio 3) it also translates the value shown in a
-closed ADetailer dropdown (`(none)`, `None`, `Use same checkpoint`, ...)
-when it is exactly a key and the box is not being typed into: at load,
+closed ADetailer dropdown (`(none)`, `None`, `Use same checkpoint`, ...),
+in the panels and in Settings > ADetailer, when it is exactly a key and the box is not being typed into: at load,
 when a panel mounts, and one frame after Gradio's `change` or `blur` DOM
 event. On Forge Neo ADetailer does this itself.
 It uses the WebUI's `onUiUpdate`/`onUiLoaded` hooks and DOM listeners,
