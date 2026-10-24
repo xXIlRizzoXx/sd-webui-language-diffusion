@@ -385,6 +385,39 @@ class LocaleFileTests(unittest.TestCase):
             self.assertEqual(len(infos), 1, code)
             self.assertTrue(data[infos[0]].startswith(("(", "（")), code)
 
+    def test_plus9_beta2_texts_are_translated(self):
+        # ADetailer Ultimate plus.9.beta.2: four settings (label and info line
+        # in parentheses), the four "More sort orders" choices and the
+        # "Show labels" switch of the detection preview with its tooltip.
+        labels = (
+            "Show detection previews in the results gallery",
+            "Hide detection boxes from the live preview",
+            "More sort orders (overrides Sort bounding boxes by)",
+            "Max inpaint size, pixels per side (0 = no limit)",
+            "Position (right to left)", "Position (top to bottom)",
+            "Area (small to large)", "Confidence (high to low)",
+            "Show labels",
+            "Untick to see only the boxes, without names, scores and numbers.",
+        )
+        infos = (
+            "(Adds the picture with the detection boxes of every ADetailer pass after the generated images, with the parameters of its image, up to 32 per generation. They are not saved to disk and API responses do not include them. They are not shown while a script of the Script menu is selected)",
+            "(While ADetailer works, the live preview no longer shows the picture with the boxes it detected; it keeps its last picture until the inpainting steps replace it. The Detection preview button and 'Save mask previews' are not affected)",
+            "(Any choice other than Off is used instead of 'Sort bounding boxes by', for example to give the first part of a [SEP] prompt to the face on the right. Off keeps 'Sort bounding boxes by')",
+            "(With 'Inpaint only masked' and without 'Use separate width/height', a region whose inpaint size would have a side longer than this is inpainted smaller, with the same shape, so 'Scale inpaint to bbox' on a large detection does not run out of video memory. 0 = no limit)",
+        )
+        for code, (_, data) in self.locales.items():
+            for key in labels:
+                with self.subTest(locale=code, key=key):
+                    self.assertIn(key, data)
+                    self.assertNotEqual(data[key], key)
+            for key in infos:
+                with self.subTest(locale=code, info=key[:40]):
+                    self.assertIn(key, data)
+                    self.assertTrue(data[key].startswith(("(", "（")))
+                    self.assertTrue(data[key].endswith((")", "）")))
+            with self.subTest(locale=code, key="sort order spelled like the plus.8 choices"):
+                self.assertIn(re.split(r"[ (（]", data["Position (left to right)"])[0], data["Position (right to left)"])
+
 
 if __name__ == "__main__":
     unittest.main()

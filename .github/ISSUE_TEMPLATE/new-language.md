@@ -26,7 +26,7 @@ A few words on why this locale matters — for example:
 
 ### Are you offering to translate?
 
-- [ ] Yes, I can seed the full ~2742-key translation myself.
+- [ ] Yes, I can seed the full ~2756-key translation myself.
 - [ ] Yes, partially — I can translate the most important keys.
 - [ ] No, but I'd be happy to review someone else's translation.
 - [ ] Just suggesting; can't translate.
