@@ -138,6 +138,7 @@ FORGE_SINCE_MAY = [
     "[Qwen 2.1] Enable Reference",
     "[Anima] Enable Reference",
     "[Krea2] Enable Reference",
+    "[Moss-Image] Reference Method",
     "Batch Cond/Uncond",
     "Delay before a prompt edit is sent to Gradio",
     "Show filenames without folder in the VAE / Text Encoder dropdown",
@@ -261,7 +262,9 @@ UNTRANSLATED_CHOICES_SAME = {("fr_FR", "extensions")}
 # Forge's torch.compile presets), so a choice group may leave them without a
 # key.
 CHOICES_KEPT_ENGLISH = {"B", "C", "CLIP", "DeepBooru", "Automatic", "guard_filter_fn", "dynamic",
-                        "max-autotune", "max-autotune-no-cudagraphs", "reduce-overhead", "Zero Terminal SNR", "Tab"}
+                        "max-autotune", "max-autotune-no-cudagraphs", "reduce-overhead", "Zero Terminal SNR", "Tab",
+                        # [Moss-Image] Reference Method (Forge Neo, 27/10/2026): method names.
+                        "ai-toolkit", "Moss-Image-Edit"}
 
 # Texts of the html/ templates (footer, Extra Networks pane) and of the
 # Quicksettings "[info]" link, shown by both hosts. "Sort:" is the trimmed
