@@ -724,6 +724,23 @@ class HostStringKeyTests(unittest.TestCase):
         self.assertEqual(literal - set(ADETAILER_XYZ_AXIS_LABELS), {"[ADetailer] Enable"})
         self.assertLessEqual(set(ADETAILER_XYZ_AXIS_LABELS), literal)
 
+    @unittest.skipUnless("plus.9" in _adetailer_version(ADETAILER_DIR),
+                         "no ADetailer Ultimate plus.9 checkout in the host: its tooltips not checked")
+    def test_installed_adetailer_tooltips_are_keys(self):
+        # button-tooltips.js and option-tooltips.js set each text as a title:
+        # every value of their TOOLTIPS map must be a key (plus.9.beta.3 added
+        # the one of the detector menu's refresh button).
+        tooltips = []
+        for name in ("button-tooltips.js", "option-tooltips.js"):
+            source = _read(os.path.join(ADETAILER_DIR, "javascript", name))
+            block = source[source.index("const TOOLTIPS = {"):]
+            block = block[:block.index("\n    };")]
+            for literal in re.findall(r':\s*"((?:[^"\\]|\\.)*)"\s*,', block):
+                tooltips.append(json.loads('"%s"' % literal.replace("\\'", "'")))
+        # 12 button tooltips and 58 option tooltips in plus.9.beta.3.
+        self.assertGreaterEqual(len(tooltips), 70)
+        self.assertTranslated(sorted(set(tooltips)))
+
     def test_forge_resize_mode_strings_are_keys(self):
         self.assertTranslated(FORGE_RESIZE_MODE)
 

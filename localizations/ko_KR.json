@@ -2605,6 +2605,7 @@
     "Confidence (high to low)": "신뢰도 (높은 것에서 낮은 것)",
     "Show labels": "레이블 표시",
     "Untick to see only the boxes, without names, scores and numbers.": "체크를 해제하면 이름, 점수, 번호 없이 상자만 표시합니다.",
+    "Read the detector folders again, so a model added or removed while the WebUI runs shows up in the detector menu of every tab on this side (txt2img or img2img); the other side's menus follow after a page reload or with their own refresh button.": "디텍터 폴더를 다시 읽어, WebUI 실행 중에 추가하거나 제거한 모델이 이쪽 (txt2img 또는 img2img) 모든 탭의 디텍터 메뉴에 나타나게 합니다. 반대쪽 메뉴는 페이지를 새로 고치거나 그쪽의 새로 고침 버튼을 누르면 반영됩니다.",
     "Metadata Removal": "메타데이터 제거",
     "Strip metadata from saved images": "저장된 이미지에서 메타데이터 제거",
     "Image": "이미지",

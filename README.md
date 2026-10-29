@@ -106,10 +106,10 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
 
 - **Ten complete locale dictionaries** (Italian, Spanish, French, German,
   Simplified Chinese, Japanese, Brazilian Portuguese, Russian, Korean,
-  Polish), each translating 2756 UI strings end to end — labels,
+  Polish), each translating 2757 UI strings end to end — labels,
   dropdown choices, settings descriptions, tooltips, error messages,
   sub-tab names, modal text, for both the Forge Neo and the
-  AUTOMATIC1111 1.10 core UI. Includes 476 keys covering the panel and
+  AUTOMATIC1111 1.10 core UI. Includes 477 keys covering the panel and
   settings of the [ADetailer Ultimate](https://github.com/xXIlRizzoXx/adetailer-ultimate)
   extension (when installed) so the ADetailer panel translates in place
   with the rest of the UI (a few parts stay English by that extension's
@@ -157,10 +157,10 @@ entry in the Quicksettings list — see [Uninstall](#uninstall).
 | 한국어 | `localizations/ko_KR.json` | 🇰🇷 | full seed translation |
 | Polski | `localizations/pl_PL.json` | 🇵🇱 | full seed translation |
 
-Each non-English JSON is approximately 242–345 KB and contains every
+Each non-English JSON is approximately 242–346 KB and contains every
 English UI string that Forge's localization system can match against,
 mapped to its translation in that locale — the Forge Neo and
-AUTOMATIC1111 core UI (2130 keys), ADetailer Ultimate (476 keys) and
+AUTOMATIC1111 core UI (2130 keys), ADetailer Ultimate (477 keys) and
 Metadata Removal + Image Browser (150 keys); extension keys are used only
 if that extension is installed and are harmless otherwise. The core UI
 keys cover both hosts end to end, Gradio's own texts and the built-in
@@ -406,7 +406,7 @@ extension stays English if Language Diffusion isn't installed.
 | Extension | Strings | Languages | Status |
 |-----------|:-------:|:---------:|--------|
 | 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 2130 | 10 | base coverage |
-| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.9.beta.2 | 476 | **10 / 10** | ✅ verified |
+| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.9.beta.3 | 477 | **10 / 10** | ✅ verified |
 | ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) v1.0.0 | 39 | **10 / 10** | ✅ verified |
 | 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 115 | **10 / 10** | ✅ verified |
 
@@ -437,16 +437,17 @@ extension stays English if Language Diffusion isn't installed.
   Prompt, Negative ...): ADetailer builds it as Markdown, with bold
   labels mixed with the preset's own values, so it is left in English
   rather than translated piece by piece (fragment keys).
-- ADetailer Ultimate beta: this branch covers the v26.2.0+plus.9.beta.2
-  beta (the *Save inpaint masks*, *Show detection previews in the results
-  gallery*, *Hide detection boxes from the live preview*, *More sort orders*
-  and *Max inpaint size* settings, the option tooltips, the Paste swap and
+- ADetailer Ultimate beta: this branch covers the v26.2.0+plus.9.beta.3
+  beta (the hover text of the 🔄 button next to the detector menu, the
+  *Save inpaint masks*, *Show detection previews in the results gallery*,
+  *Hide detection boxes from the live preview*, *More sort orders* and
+  *Max inpaint size* settings, the option tooltips, the Paste swap and
   paste-into-every-tab controls, the *Show labels* switch of the detection
-  preview, the *[ADetailer] Enable* X/Y/Z axis and the per-tab X/Y/Z axes up
-  to the 15th tab), on top of every
-  v26.2.0+plus.8 string. The detection preview status line with its count
-  (`✅ 3 detection(s). Click the boxes ...`) stays in English, like the
-  other count-interpolated status messages.
+  preview, the *[ADetailer] Enable* X/Y/Z axis and the per-tab X/Y/Z axes
+  up to the 15th tab), on top of every v26.2.0+plus.8 string. The
+  detection preview status line with its count (`✅ 3 detection(s). Click
+  the boxes ...`) stays in English, like the other count-interpolated
+  status messages.
 
 ### Not translated (kept in English on purpose)
 
@@ -627,16 +628,16 @@ sd-webui-language-diffusion/
 │   ├── forge_language_flags.js            ← flag decorator for the dropdown
 │   └── hints_i18n_patch.js                ← tooltip alias bridge, nested tooltips
 └── localizations/
-    ├── it_IT.json    ← Italiano                  ~267 KB
+    ├── it_IT.json    ← Italiano                  ~268 KB
     ├── es_ES.json    ← Español                   ~271 KB
-    ├── fr_FR.json    ← Français                  ~275 KB
+    ├── fr_FR.json    ← Français                  ~276 KB
     ├── de_DE.json    ← Deutsch                   ~267 KB
     ├── zh_CN.json    ← Simplified Chinese        ~242 KB
-    ├── ja_JP.json    ← 日本語                     ~282 KB
-    ├── pt_BR.json    ← Português (Brasil)        ~266 KB
-    ├── ru_RU.json    ← Русский                   ~345 KB
-    ├── ko_KR.json    ← 한국어                     ~267 KB
-    └── pl_PL.json    ← Polski                    ~261 KB
+    ├── ja_JP.json    ← 日本語                     ~283 KB
+    ├── pt_BR.json    ← Português (Brasil)        ~267 KB
+    ├── ru_RU.json    ← Русский                   ~346 KB
+    ├── ko_KR.json    ← 한국어                     ~268 KB
+    └── pl_PL.json    ← Polski                    ~262 KB
 ```
 
 ### `install.py`

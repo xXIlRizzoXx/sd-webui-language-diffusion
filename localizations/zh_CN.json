@@ -2605,6 +2605,7 @@
     "Confidence (high to low)": "置信度(从高到低)",
     "Show labels": "显示标签",
     "Untick to see only the boxes, without names, scores and numbers.": "取消勾选则只显示框,不显示名称、分数和编号。",
+    "Read the detector folders again, so a model added or removed while the WebUI runs shows up in the detector menu of every tab on this side (txt2img or img2img); the other side's menus follow after a page reload or with their own refresh button.": "重新读取检测器文件夹,让 WebUI 运行期间添加或删除的模型出现在这一侧 (txt2img 或 img2img) 每个标签页的检测器菜单中;另一侧的菜单在重新加载页面后,或点击那一侧自己的刷新按钮后更新。",
     "Metadata Removal": "元数据移除",
     "Strip metadata from saved images": "从保存的图像中移除元数据",
     "Image": "图像",

@@ -2605,6 +2605,7 @@
     "Confidence (high to low)": "Confiança (da maior para a menor)",
     "Show labels": "Mostrar rótulos",
     "Untick to see only the boxes, without names, scores and numbers.": "Desmarque para ver só as caixas, sem nomes, pontuações e números.",
+    "Read the detector folders again, so a model added or removed while the WebUI runs shows up in the detector menu of every tab on this side (txt2img or img2img); the other side's menus follow after a page reload or with their own refresh button.": "Lê de novo as pastas dos detectores, para que um modelo adicionado ou removido com a WebUI em execução apareça no menu do detector de todas as abas deste lado (txt2img ou img2img); os menus do outro lado acompanham depois de recarregar a página ou com o próprio botão de atualizar.",
     "Metadata Removal": "Remoção de metadados",
     "Strip metadata from saved images": "Remover metadados das imagens salvas",
     "Image": "Imagem",

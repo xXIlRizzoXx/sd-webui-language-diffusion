@@ -2605,6 +2605,7 @@
     "Confidence (high to low)": "信頼度 (高から低へ)",
     "Show labels": "ラベルを表示",
     "Untick to see only the boxes, without names, scores and numbers.": "チェックを外すと、名前・スコア・番号なしで枠だけを表示します。",
+    "Read the detector folders again, so a model added or removed while the WebUI runs shows up in the detector menu of every tab on this side (txt2img or img2img); the other side's menus follow after a page reload or with their own refresh button.": "検出器のフォルダーを読み込み直し、WebUI の実行中に追加・削除したモデルをこちら側 (txt2img または img2img) のすべてのタブの検出器メニューに表示します。反対側のメニューは、ページを再読み込みするか、そちら側の更新ボタンで反映されます。",
     "Metadata Removal": "メタデータの削除",
     "Strip metadata from saved images": "保存する画像からメタデータを削除する",
     "Image": "画像",

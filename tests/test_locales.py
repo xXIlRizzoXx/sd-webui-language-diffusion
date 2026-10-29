@@ -418,6 +418,22 @@ class LocaleFileTests(unittest.TestCase):
             with self.subTest(locale=code, key="sort order spelled like the plus.8 choices"):
                 self.assertIn(re.split(r"[ (（]", data["Position (left to right)"])[0], data["Position (right to left)"])
 
+    def test_plus9_beta3_refresh_tooltip_is_translated(self):
+        # ADetailer Ultimate plus.9.beta.3: the hover text of the 🔄 button
+        # next to the detector menu (button-tooltips.js). It names the
+        # detector menu, so it uses each locale's word for the detector.
+        key = ("Read the detector folders again, so a model added or removed while the WebUI runs shows up in "
+               "the detector menu of every tab on this side (txt2img or img2img); the other side's menus follow "
+               "after a page reload or with their own refresh button.")
+        for code, (_, data) in self.locales.items():
+            with self.subTest(locale=code):
+                self.assertIn(key, data)
+                self.assertNotEqual(data[key], key)
+                self.assertIn("txt2img", data[key])
+                self.assertIn("img2img", data[key])
+                detector = data["ADetailer detector"].replace("ADetailer", "").strip().lower()
+                self.assertIn(detector, data[key].lower())
+
 
 if __name__ == "__main__":
     unittest.main()
