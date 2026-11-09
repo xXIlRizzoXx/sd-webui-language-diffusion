@@ -27,6 +27,10 @@
 
 <img src="docs/img/04-adetailer.jpg" alt="Extensions: ADetailer Ultimate, Metadata Removal and Image Browser translated, every ADetailer tab included" width="100%" />
 
+<img src="docs/img/08-plus9-panel.jpg" alt="ADetailer Ultimate plus.9: Copy, Paste, Swap with the copied tab and Paste into every tab, and the hover text of every option, translated" width="100%" />
+
+<img src="docs/img/09-plus9-settings.jpg" alt="Settings &gt; ADetailer: the plus.9 settings and their help lines translated" width="100%" />
+
 <img src="docs/img/05-languages.jpg" alt="Ten languages: the same screen in German, Japanese, Russian and Simplified Chinese" width="100%" />
 
 <img src="docs/img/06-inpaint.jpg" alt="img2img and inpaint: modes, canvas, ControlNet units and Extra networks translated" width="100%" />
@@ -437,17 +441,18 @@ extension stays English if Language Diffusion isn't installed.
   Prompt, Negative ...): ADetailer builds it as Markdown, with bold
   labels mixed with the preset's own values, so it is left in English
   rather than translated piece by piece (fragment keys).
-- ADetailer Ultimate beta: this branch covers the v26.2.0+plus.9.beta.3
-  beta (the hover text of the 🔄 button next to the detector menu, the
-  *Save inpaint masks*, *Show detection previews in the results gallery*,
-  *Hide detection boxes from the live preview*, *More sort orders* and
-  *Max inpaint size* settings, the option tooltips, the Paste swap and
-  paste-into-every-tab controls, the *Show labels* switch of the detection
-  preview, the *[ADetailer] Enable* X/Y/Z axis and the per-tab X/Y/Z axes
-  up to the 15th tab), on top of every v26.2.0+plus.8 string. The
-  detection preview status line with its count (`✅ 3 detection(s). Click
-  the boxes ...`) stays in English, like the other count-interpolated
-  status messages.
+- ADetailer Ultimate v26.2.0+plus.9: the hover text of every option and
+  button (the 🔄 refresh button next to the detector menu included), the
+  Paste swap and paste-into-every-tab controls and their statuses, the
+  plus.9 settings (*Save inpaint masks*, *Show detection previews in the
+  results gallery*, *Hide detection boxes from the live preview*, *More
+  sort orders*, *Max inpaint size*, the upscaler of the inpaint area …),
+  the *Show labels* switch of the detection preview, the *[ADetailer]
+  Enable* X/Y/Z axis and the per-tab X/Y/Z axes up to the 15th tab are
+  translated. The detection preview status line with its count (`✅ 3
+  detection(s). Click the boxes ...`) and the warnings that name a pasted
+  detector that is not installed stay in English, like the other
+  interpolated status messages.
 
 ### Not translated (kept in English on purpose)
 
@@ -1074,6 +1079,8 @@ Published releases, newest first. Full notes are on the
 
 | Version | Date | Type | Contents |
 |---|---|---|---|
+| v2.1.0 | 2026-11-09 | stable | ADetailer Ultimate aligned to v26.2.0+plus.9 (option and button tooltips, tab swap and paste-into-every-tab, new settings, X/Y/Z axes up to the 15th tab); Forge Neo core UI updated to 2026-11-06 |
+| v2.1.0-beta.1 | 2026-10-24 | beta | ADetailer Ultimate v26.2.0+plus.9.beta.2 |
 | v2.0.0 | 2026-10-21 | stable | AUTOMATIC1111 1.10 support; complete Forge Neo and AUTOMATIC1111 core UI; ADetailer Ultimate aligned to v26.2.0+plus.8; nested tooltips translated |
 | v1.1.2 | 2026-07-13 | stable | ADetailer Ultimate aligned to v26.3.0+plus.6 (detection-preview split, run-on-image tool, preview help paragraphs) |
 | v1.1.2-beta.2 | 2026-07-10 | beta | ADetailer Ultimate preview help paragraphs |
