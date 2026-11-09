@@ -447,5 +447,20 @@ class LocaleFileTests(unittest.TestCase):
                 self.assertTrue(data[key].startswith("⚠️ "))
                 self.assertIn("--hide-ui-dir-config", data[key])
 
+    def test_forge_preferred_vae_text_encoder_matches_preferred_vae(self):
+        # Forge Neo 2026-11-06: the checkpoint metadata editor's singular
+        # "Preferred VAE / Text Encoder" (formerly "Text encoder(s)") and its
+        # refresh button. They take the same adjective as "Preferred VAE",
+        # agreeing with the singular VAE, and the refresh tooltip is the label
+        # with the same ": refresh" ending as "Preferred VAE: refresh".
+        for code, (_, data) in self.locales.items():
+            with self.subTest(locale=code):
+                label = data["Preferred VAE / Text Encoder"]
+                for word in data["Preferred VAE"].split():
+                    if word != "VAE":
+                        self.assertIn(word, label)
+                ending = data["Preferred VAE: refresh"][len(data["Preferred VAE"]):]
+                self.assertEqual(data["Preferred VAE / Text Encoder: refresh"], label + ending)
+
 if __name__ == "__main__":
     unittest.main()

@@ -219,7 +219,7 @@ BOTH_HOSTS_CORE = ["Generate forever", "Cancel generate forever", "Model hash", 
                    # siblings are translated.
                    "Ignore", "Apply if any", "Discard", "Path", "Date Created", "Date Modified", "Alias from file",
                    "Disable", "Local", "Remote",
-                   # Model metadata editors: the Forge "Base model" radio and
+                   # Model metadata editors: the Forge "Base model" / "Model Arch" radio and
                    # LoRA "Preset" dropdown, the A1111 Lora "Stable Diffusion
                    # version" dropdown.
                    "Unknown",
