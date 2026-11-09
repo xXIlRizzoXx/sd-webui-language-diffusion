@@ -435,5 +435,17 @@ class LocaleFileTests(unittest.TestCase):
                 self.assertIn(detector, data[key].lower())
 
 
+    def test_plus9_folder_batch_disabled_status_is_translated(self):
+        # ADetailer Ultimate v26.2.0+plus.9 (stable): the status of "Run
+        # ADetailer on an image" when a folder batch is asked for on a WebUI
+        # started with --hide-ui-dir-config. The option name stays as typed.
+        key = "⚠️ Folder batch is disabled: the WebUI was started with --hide-ui-dir-config."
+        for code, (_, data) in self.locales.items():
+            with self.subTest(locale=code):
+                self.assertIn(key, data)
+                self.assertNotEqual(data[key], key)
+                self.assertTrue(data[key].startswith("⚠️ "))
+                self.assertIn("--hide-ui-dir-config", data[key])
+
 if __name__ == "__main__":
     unittest.main()

@@ -2607,6 +2607,7 @@
     "Show labels": "Показывать подписи",
     "Untick to see only the boxes, without names, scores and numbers.": "Снимите отметку, чтобы видеть только рамки, без названий, оценок и номеров.",
     "Read the detector folders again, so a model added or removed while the WebUI runs shows up in the detector menu of every tab on this side (txt2img or img2img); the other side's menus follow after a page reload or with their own refresh button.": "Заново читает папки детекторов, чтобы модель, добавленная или удалённая во время работы WebUI, появилась в меню детектора каждой вкладки на этой стороне (txt2img или img2img); меню другой стороны обновятся после перезагрузки страницы или своей кнопкой обновления.",
+    "⚠️ Folder batch is disabled: the WebUI was started with --hide-ui-dir-config.": "⚠️ Пакетная обработка папки отключена: WebUI запущен с --hide-ui-dir-config.",
     "Metadata Removal": "Удаление метаданных",
     "Strip metadata from saved images": "Удалять метаданные из сохраняемых изображений",
     "Image": "Изображение",

@@ -2607,6 +2607,7 @@
     "Show labels": "Pokaż etykiety",
     "Untick to see only the boxes, without names, scores and numbers.": "Odznacz, aby widzieć tylko ramki, bez nazw, wyników i numerów.",
     "Read the detector folders again, so a model added or removed while the WebUI runs shows up in the detector menu of every tab on this side (txt2img or img2img); the other side's menus follow after a page reload or with their own refresh button.": "Ponownie odczytuje foldery detektorów, aby model dodany lub usunięty podczas działania WebUI pojawił się w menu detektora każdej karty po tej stronie (txt2img lub img2img); menu po drugiej stronie zaktualizują się po przeładowaniu strony lub po użyciu ich własnego przycisku odświeżania.",
+    "⚠️ Folder batch is disabled: the WebUI was started with --hide-ui-dir-config.": "⚠️ Przetwarzanie wsadowe folderu jest wyłączone: WebUI uruchomiono z --hide-ui-dir-config.",
     "Metadata Removal": "Usuwanie metadanych",
     "Strip metadata from saved images": "Usuwaj metadane z zapisywanych obrazów",
     "Image": "Obraz",
