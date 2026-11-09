@@ -139,6 +139,10 @@ FORGE_SINCE_MAY = [
     "[Anima] Enable Reference",
     "[Krea2] Enable Reference",
     "[Moss-Image] Reference Method",
+    # Checkpoint metadata editor (Forge Neo, 06/11/2026), which replaced
+    # "Base model" and "Preferred VAE / Text encoder(s)".
+    "Model Arch",
+    "Preferred VAE / Text Encoder",
     "Batch Cond/Uncond",
     "Delay before a prompt edit is sent to Gradio",
     "Show filenames without folder in the VAE / Text Encoder dropdown",
@@ -277,8 +281,9 @@ A1111_HTML = ["Startup profile"]
 # link title.
 FORGE_TITLES = ["Where to get the modules?", "Close Preview"]
 
-# Forge Neo only: the first choice of the checkpoint metadata editor's
-# "Preferred VAE / Text encoder(s)" dropdown.
+# Forge Neo before 06/11/2026 only: the first choice of the checkpoint
+# metadata editor's "Preferred VAE / Text encoder(s)" dropdown. Newer
+# Forge Neo no longer shows it, so it is not looked for in the sources.
 FORGE_CHOICES = ["Built in"]
 
 # Forge Neo only: the Refiner "Switch at" slider info (one or the other,
@@ -311,7 +316,9 @@ SAVE_TOOLTIPS = [t.format(d) for t in SAVE_TOOLTIP_TEMPLATES for dirs in SAVE_DI
 
 # X/Y/Z plot axis types (scripts/xyz_grid.py AxisOption labels) that are
 # technical names and stay English in every locale, so they have no key.
-XYZ_AXIS_KEPT_ENGLISH = {"Prompt S/R", "Shift", "Sigma Churn"}
+XYZ_AXIS_KEPT_ENGLISH = {"Prompt S/R", "Shift", "Sigma Churn",
+                         # Forge Neo axes added on 04-05/11/2026.
+                         "Prompt S/R (LoRA)", "Text Encoder"}
 
 # X/Y/Z plot axis types added as keys (both hosts; "Initial noise
 # multiplier" and "Cond. Image Mask Weight" are img2img-only axes).
@@ -984,7 +991,7 @@ class HostStringKeyTests(unittest.TestCase):
         # appear verbatim (a hint without its parentheses) in its sources.
         if _is_forge(HOST_ROOT):
             expected = (FORGE_RESIZE_MODE + FORGE_MERGER + FORGE_SINCE_MAY + FORGE_REFINER_INFO + BOTH_HOSTS_CORE
-                        + BOTH_HOSTS_HTML + FORGE_HTML + FORGE_TITLES + FORGE_CHOICES)
+                        + BOTH_HOSTS_HTML + FORGE_HTML + FORGE_TITLES)
         else:
             expected = A1111_STRINGS + BOTH_HOSTS_CORE + A1111_CHOICES + HYPERTILE_XYZ_AXIS_LABELS + BOTH_HOSTS_HTML + A1111_HTML
         blob = "\n".join(_read(p) for p in _host_sources(HOST_ROOT, ("modules", "scripts", "extensions-builtin", "javascript")))
