@@ -15,6 +15,31 @@
 
 ---
 
+## 📊 Translation coverage
+
+Measured on the source code of each version: the share of the interface texts
+the WebUI's localization can translate that Language Diffusion translates, in
+all 10 languages. Texts no dictionary can reach (inline markup, text built on
+the spot, the browser's own dialogs) are not counted. The few left in English
+are kept on purpose: Stable Diffusion terms and short labels such as
+Hires. fix, Prompt S/R, Full, Tab or Automatic (see
+[Not translated](#not-translated-kept-in-english-on-purpose)).
+
+| WebUI | Version checked | Translated |
+|---|---|:---:|
+| 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) | 2026-11-22 (6d5aa3bc) | **98.8 %** |
+| 🌐 [AUTOMATIC1111](https://github.com/AUTOMATIC1111/stable-diffusion-webui) | 1.10.1 | **99.1 %** |
+
+**Translated extensions**, by author:
+
+| Author | Extension | Version checked | Translated |
+|---|---|---|:---:|
+| [xXIlRizzoXx](https://github.com/xXIlRizzoXx) | ⭐ [ADetailer Ultimate](https://github.com/xXIlRizzoXx/adetailer-ultimate) | v26.2.0+plus.9 | **100 %** |
+| [xXIlRizzoXx](https://github.com/xXIlRizzoXx) | ⭐ [Metadata Removal](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) | v1.0.0 | **100 %** |
+| [AlUlkesh](https://github.com/AlUlkesh) | 📁 [Image Browser](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) | commit 4aff849 | **100 %** |
+
+---
+
 ## ✨ What it does
 
 <img src="docs/img/01-picker.jpg" alt="The language picker: in the top bar, with native names and flags; pick a language and the page reloads in it" width="100%" />
@@ -30,6 +55,12 @@
 <img src="docs/img/08-plus9-panel.jpg" alt="ADetailer Ultimate plus.9: Copy, Paste, Swap with the copied tab and Paste into every tab, and the hover text of every option, translated" width="100%" />
 
 <img src="docs/img/09-plus9-settings.jpg" alt="Settings &gt; ADetailer: the plus.9 settings and their help lines translated" width="100%" />
+
+<img src="docs/img/12-forge-json-builder.jpg" alt="Forge Neo JSON Builder page of Extra Networks: sections, buttons, hover tips and placeholders translated" width="100%" />
+
+<img src="docs/img/13-forge-extensions.jpg" alt="The rewritten Forge Neo Extensions tab translated: Installed, Available, Install from URL" width="100%" />
+
+<img src="docs/img/14-forge-settings.jpg" alt="New Forge Neo settings translated: Moss-Image Skip Layer Guidance, reference image size, Alpha Threshold" width="100%" />
 
 <img src="docs/img/05-languages.jpg" alt="Ten languages: the same screen in German, Japanese, Russian and Simplified Chinese" width="100%" />
 
