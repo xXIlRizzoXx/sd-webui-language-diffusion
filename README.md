@@ -34,7 +34,7 @@ Hires. fix, Prompt S/R, Full, Tab or Automatic (see
 
 | Author | Extension | Version checked | Translated |
 |---|---|---|:---:|
-| [xXIlRizzoXx](https://github.com/xXIlRizzoXx) | ⭐ [ADetailer Ultimate](https://github.com/xXIlRizzoXx/adetailer-ultimate) | v26.2.0+plus.9 | **100 %** |
+| [xXIlRizzoXx](https://github.com/xXIlRizzoXx) | ⭐ [ADetailer Ultimate](https://github.com/xXIlRizzoXx/adetailer-ultimate) | v26.2.0+plus.10.beta.3 | **99.6 %** |
 | [xXIlRizzoXx](https://github.com/xXIlRizzoXx) | ⭐ [Metadata Removal](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) | v1.0.0 | **100 %** |
 | [AlUlkesh](https://github.com/AlUlkesh) | 📁 [Image Browser](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) | commit 4aff849 | **100 %** |
 
