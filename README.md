@@ -1080,6 +1080,7 @@ Published releases, newest first. Full notes are on the
 
 | Version | Date | Type | Contents |
 |---|---|---|---|
+| v2.1.1 | 2026-11-25 | stable | Forge Neo core UI updated to 2026-11-22 (rewritten Extensions tab, JSON Builder page of Extra Networks, Moss-Image Skip Layer Guidance and other new settings); nested placeholders translated |
 | v2.1.0 | 2026-11-09 | stable | ADetailer Ultimate aligned to v26.2.0+plus.9 (option and button tooltips, tab swap and paste-into-every-tab, new settings, X/Y/Z axes up to the 15th tab); Forge Neo core UI updated to 2026-11-06 |
 | v2.1.0-beta.1 | 2026-10-24 | beta | ADetailer Ultimate v26.2.0+plus.9.beta.2 |
 | v2.0.0 | 2026-10-21 | stable | AUTOMATIC1111 1.10 support; complete Forge Neo and AUTOMATIC1111 core UI; ADetailer Ultimate aligned to v26.2.0+plus.8; nested tooltips translated |
