@@ -439,6 +439,64 @@ ADETAILER_PLUS9_BETA_XYZ_AXIS_LABELS = ["[ADetailer] Enable"] + [
     if tab > 1 or name in ADETAILER_PLUS9_FIRST_TAB_AXES
 ]
 
+# ADetailer Ultimate v26.2.0+plus.10.beta.2 (beta only, this branch ships as a
+# -beta pre-release): the subject guide, the classes box for YOLOE, the
+# "Masked content" option of each tab with its axis, "1 megapixel" and three
+# settings with their hints as drawn "(hint)". Texts read only from the tag.
+ADETAILER_PLUS10_BETA = [
+    "Guide: several subjects, one LoRA each",
+    "Pick a LoRA and a few words for each subject, then press the button. The guide fills the 1st tab (and the 2nd with the last choice of What to redraw): detector, one prompt part per subject, and the settings that keep the parts in order. The prompt those tabs had is replaced, and their Inpaint denoising strength is set to 0.6. The subjects are the biggest people in the picture, as many as People in the picture below says, counted from left to right: Subject 1 is the leftmost of them. This needs Settings → ADetailer → Sort bounding boxes by set to Position (left to right): the status under the button says when it is not. Leave a row empty to leave that subject as it is. The subjects are easier to recognise when the main prompt already describes them: colours, clothes, who is on the left and who on the right. Keep these LoRAs out of the main prompt. Everything can be edited afterwards.",
+    "What to redraw",
+    "Whole person redraws each person inside their outline, so body and clothes follow the LoRA too. Face only redraws the faces. The last choice redraws each person on the 1st tab and then their face on the 2nd.",
+    "Whole person (outline)",
+    "Face only",
+    "Whole person, then face (2 tabs)",
+    "People in the picture",
+    "How many people the guide counts: the biggest ones, from left to right. Auto counts up to the last row filled. Set it when the picture has more people than rows filled: the rows then go to the leftmost of the people counted, not to the biggest ones.",
+    "Subject 1 LoRA",
+    "Subject 1 weight",
+    "Subject 1 words",
+    "Subject 2 LoRA",
+    "Subject 2 weight",
+    "Subject 2 words",
+    "Subject 3 LoRA",
+    "Subject 3 weight",
+    "Subject 3 words",
+    "Subject 4 LoRA",
+    "Subject 4 weight",
+    "Subject 4 words",
+    "✨ Fill the tabs",
+    "⚠️ Pick what to redraw first.",
+    "⚠️ Pick a LoRA or type some words for at least one subject.",
+    "⚠️ This choice needs 2 tabs and the panel has 1: raise Settings, ADetailer, Max tabs to 2 or more and reload the UI, or pick another choice. Nothing was changed.",
+    "Detector",
+    "ADetailer detector CLASSES (YOLO-World / YOLOE)",
+    "Comma separated class names to detect, ex: 'person,cat'. Empty: YOLO-World looks for its 80 COCO classes, YOLOE for the classes saved in the model.",
+    "YOLO-World and YOLOE only: the names to look for, separated by commas, for example person, hand. Left empty, YOLO-World looks for its 80 default classes and YOLOE for the classes saved in the model.",
+    "What fills the region before it is redrawn. Original keeps it as it is (the usual choice). Latent noise and latent nothing redraw it from scratch and need a denoising strength of about 0.8 or more.",
+    "[ADetailer] Masked content 1st",
+    "Run ADetailer on an image uses the prompt saved in the image",
+    "(For every picture of 'Run ADetailer on an image', also in a folder batch, the main prompt and negative prompt become the ones the WebUI saved in that picture, so an empty tab prompt or [PROMPT] reuses them as in a normal generation. Only the two prompts are taken, not the seed, sampler or size. A picture without saved parameters, or pasted from the clipboard, keeps an empty main prompt. Off = the main prompt is always empty)",
+    "Run ADetailer on an image and Skip img2img keep the transparency of the picture",
+    "(For a picture with transparent parts, such as a character on an empty background, also in a folder batch, the result gets the picture's transparency back. The same in the img2img tab with ADetailer's Skip img2img ticked, also in its Batch tab; on Forge Neo, a Batch tab file whose sides are not multiples of the WebUI's Resolution Step setting (64 by default) is resized by the WebUI first and comes out without its transparency. ADetailer still works on the picture with its transparent parts filled with the img2img background color. The saved file keeps the transparency only in a file format that has it, such as PNG: a JPEG has none, and AUTOMATIC1111 also saves WebP without it. Off = the transparent parts stay filled)",
+    "With hires fix, detail with the hires checkpoint",
+    "(When txt2img uses hires fix with a 'Hires checkpoint' other than 'Use same checkpoint', the tabs without their own checkpoint detail the upscaled picture with that hires checkpoint instead of the main one. On Forge and Forge Neo its hires VAE / text encoder choices come with it, and a tab's own VAE or text encoder still replaces them. Tabs with their own checkpoint keep it. No effect without hires fix, in img2img and in 'Run ADetailer on an image'. Off = the main checkpoint, as before)",
+    "(Strict is for SDXL only, and matches exactly to trained SDXL resolutions. Free works with any model, but will use potentially unsupported dimensions. 1 megapixel works with any model: about 1024x1024 pixels with the shape of the box (from 1:4 to 4:1), sides in multiples of 64, made for SDXL, Flux and newer models; with SD1.5 models it takes about four times the time and video memory.)",
+    "1 megapixel (SDXL, Flux and newer)",
+]
+# plus.9 spellings of the texts plus.10 rewrote: kept for the stable plus.9.
+ADETAILER_PLUS9_REWORDED_IN_PLUS10 = [
+    "ADetailer detector CLASSES (YOLO-World)",
+    "Comma separated class names to detect, ex: 'person,cat'. default: COCO 80 classes",
+    "YOLO-World only: the names to look for, separated by commas, for example person, hand. Left empty, it looks for its 80 default classes.",
+    "(Strict is for SDXL only, and matches exactly to trained SDXL resolutions. Free works with any model, but will use potentially unsupported dimensions.)",
+]
+# Left out on purpose: "Auto" is a word of the whole page (see the PR #1 test of
+# generic words), the placeholder is prompt words typed in English, and the
+# "ℹ️ The 2nd tab counts on its own" notes come out joined to lines made on the
+# spot, so a key would leave a status half translated.
+ADETAILER_PLUS10_NOT_KEYS = ["Auto", "woman, red hair, green dress"]
+
 # The installed ADetailer of the host, checked when it is a plus.9 checkout.
 ADETAILER_DIR = os.path.join(HOST_ROOT, "extensions", "adetailer") if HOST_ROOT else ""
 
@@ -451,9 +509,15 @@ def _adetailer_version(root):
         found = re.search(r"__version__\s*=\s*[\"']([^\"']+)", f.read())
     return found.group(1) if found else ""
 
+
+def _adetailer_plus(root):
+    # The NN of "+plus.NN" in the installed ADetailer Ultimate version, 0 if none.
+    found = re.search(r"\+plus\.(\d+)", _adetailer_version(root))
+    return int(found.group(1)) if found else 0
+
 # Keys whose translation may equal the English text: technical vocabulary,
 # or words spelled the same in some languages.
-SAME_AS_ENGLISH = {"Latent Upscale", "Meta", "📖 Guide", "Horizontal", "Vertical", "Linear", "Modules", "Name", "Notes", "Training",
+SAME_AS_ENGLISH = {"Latent Upscale", "Meta", "Detector", "📖 Guide", "Horizontal", "Vertical", "Linear", "Modules", "Name", "Notes", "Training",
                    "(in MB)", "(in ms)", "(EXPERIMENTAL)", "Rectangle", "Oval", "Styles", "Steps",
                    "Version", "Date", "Action", "Branch", "Commit", "Local", "Remote", "Zoom", "Original",
                    "wiki", "Compact", "Preprocessor", "Variation", "Region", "[Region]", "Error", "Frames", "Upscale", "Model:",
@@ -767,7 +831,52 @@ class HostStringKeyTests(unittest.TestCase):
                     # ADetailer tells its axes apart by this prefix.
                     self.assertTrue(data[label].startswith("[ADetailer] "), data[label])
 
-    @unittest.skipUnless("plus.9" in _adetailer_version(ADETAILER_DIR),
+    def test_adetailer_plus10_beta_strings_are_keys(self):
+        self.assertEqual(len(ADETAILER_PLUS10_BETA), 39)
+        self.assertEqual(len(ADETAILER_PLUS10_BETA), len(set(ADETAILER_PLUS10_BETA)))
+        self.assertTranslated(ADETAILER_PLUS10_BETA + ADETAILER_PLUS9_REWORDED_IN_PLUS10)
+        for code, data in sorted(self.locales.items()):
+            with self.subTest(locale=code):
+                self.assertTrue(data["[ADetailer] Masked content 1st"].startswith("[ADetailer] "))
+                # Emoji texts are matched by ADetailer's localize_emoji_buttons.js,
+                # which keeps the emoji of the key in front of the translation.
+                for key in ADETAILER_PLUS10_BETA:
+                    if key[0] in "✨⚠":
+                        self.assertEqual(data[key][:2], key[:2], key)
+                # The guide's rows say the same thing four times.
+                for field in ("LoRA", "weight", "words"):
+                    first = data["Subject 1 %s" % field]
+                    self.assertIn("1", first)
+                    for n in (2, 3, 4):
+                        self.assertEqual(data["Subject %d %s" % (n, field)], first.replace("1", str(n)))
+                for key in ADETAILER_PLUS10_NOT_KEYS:
+                    self.assertNotIn(key, data)
+                self.assertFalse([k for k in data if k.startswith("ℹ️ The 2nd tab counts on its own")])
+
+    @unittest.skipUnless(_adetailer_plus(ADETAILER_DIR) >= 10,
+                         "no ADetailer Ultimate plus.10 checkout in the host: plus.10 strings not checked against it")
+    def test_installed_adetailer_plus10_beta_strings_are_listed(self):
+        constants, sources = set(), ""
+        for rel in ("aaaaaa/ui.py", "adetailer/subject_guide.py", "adetailer/args.py", "scripts/!adetailer.py"):
+            source = _read(os.path.join(ADETAILER_DIR, *rel.split("/")))
+            sources += source
+            for n in ast.walk(ast.parse(source)):
+                if isinstance(n, ast.Constant) and isinstance(n.value, str):
+                    constants.add(n.value)
+        tooltips = _read(os.path.join(ADETAILER_DIR, "javascript", "option-tooltips.js"))
+        self.assertIn('_WARN = chr(0x26A0) + chr(0xFE0F) + " "', sources)  # "⚠️ "
+        self.assertIn("GUIDE_SUBJECTS = 4", sources)
+        for key in ADETAILER_PLUS10_BETA:
+            with self.subTest(key=key):
+                subject = re.match(r"Subject \d (\w+)$", key)
+                if subject:
+                    self.assertIn('label=f"Subject {i} %s"' % subject.group(1), sources)
+                    continue
+                shown = {key, key[1:-1] if key.startswith("(") else key,
+                         key[len("⚠️ "):] if key.startswith("⚠️ ") else key}
+                self.assertTrue(shown & constants or json.dumps(key, ensure_ascii=False) in tooltips, key)
+
+    @unittest.skipUnless(_adetailer_plus(ADETAILER_DIR) >= 9,
                          "no ADetailer Ultimate plus.9 checkout in the host: beta strings not checked against it")
     def test_installed_adetailer_plus9_beta_strings_are_listed(self):
         source = _read(os.path.join(ADETAILER_DIR, "scripts", "!adetailer.py"))
@@ -791,10 +900,12 @@ class HostStringKeyTests(unittest.TestCase):
         self.assertEqual(sorted(name for name, field in per_tab if field in first_tab),
                          sorted(ADETAILER_PLUS9_FIRST_TAB_AXES))
         self.assertIn('min(max(int(opts.data.get("ad_max_models", 4)), 1), %d)' % ADETAILER_MAX_TABS, source)
-        self.assertEqual(literal - set(ADETAILER_XYZ_AXIS_LABELS), {"[ADetailer] Enable"})
+        # plus.10 adds the "Masked content" axis of the 1st tab.
+        extra = {"[ADetailer] Masked content 1st"} if _adetailer_plus(ADETAILER_DIR) >= 10 else set()
+        self.assertEqual(literal - set(ADETAILER_XYZ_AXIS_LABELS), {"[ADetailer] Enable"} | extra)
         self.assertLessEqual(set(ADETAILER_XYZ_AXIS_LABELS), literal)
 
-    @unittest.skipUnless("plus.9" in _adetailer_version(ADETAILER_DIR),
+    @unittest.skipUnless(_adetailer_plus(ADETAILER_DIR) >= 9,
                          "no ADetailer Ultimate plus.9 checkout in the host: its tooltips not checked")
     def test_installed_adetailer_tooltips_are_keys(self):
         # button-tooltips.js and option-tooltips.js set each text as a title:

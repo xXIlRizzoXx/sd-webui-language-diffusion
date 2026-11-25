@@ -141,10 +141,10 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
 
 - **Ten complete locale dictionaries** (Italian, Spanish, French, German,
   Simplified Chinese, Japanese, Brazilian Portuguese, Russian, Korean,
-  Polish), each translating 2811 UI strings end to end — labels,
+  Polish), each translating 2850 UI strings end to end — labels,
   dropdown choices, settings descriptions, tooltips, error messages,
   sub-tab names, modal text, for both the Forge Neo and the
-  AUTOMATIC1111 1.10 core UI. Includes 478 keys covering the panel and
+  AUTOMATIC1111 1.10 core UI. Includes 517 keys covering the panel and
   settings of the [ADetailer Ultimate](https://github.com/xXIlRizzoXx/adetailer-ultimate)
   extension (when installed) so the ADetailer panel translates in place
   with the rest of the UI (a few parts stay English by that extension's
@@ -192,10 +192,10 @@ entry in the Quicksettings list — see [Uninstall](#uninstall).
 | 한국어 | `localizations/ko_KR.json` | 🇰🇷 | full seed translation |
 | Polski | `localizations/pl_PL.json` | 🇵🇱 | full seed translation |
 
-Each non-English JSON is approximately 245–350 KB and contains every
+Each non-English JSON is approximately 255–364 KB and contains every
 English UI string that Forge's localization system can match against,
 mapped to its translation in that locale — the Forge Neo and
-AUTOMATIC1111 core UI (2183 keys), ADetailer Ultimate (478 keys) and
+AUTOMATIC1111 core UI (2183 keys), ADetailer Ultimate (517 keys) and
 Metadata Removal + Image Browser (150 keys); extension keys are used only
 if that extension is installed and are harmless otherwise. The core UI
 keys cover both hosts end to end, Gradio's own texts and the built-in
@@ -442,7 +442,7 @@ extension stays English if Language Diffusion isn't installed.
 | Extension | Strings | Languages | Status |
 |-----------|:-------:|:---------:|--------|
 | 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 2183 | 10 | base coverage |
-| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.9 | 478 | **10 / 10** | ✅ verified |
+| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.10.beta.2 | 517 | **10 / 10** | ✅ verified |
 | ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) v1.0.0 | 39 | **10 / 10** | ✅ verified |
 | 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 115 | **10 / 10** | ✅ verified |
 
@@ -485,6 +485,18 @@ extension stays English if Language Diffusion isn't installed.
   detection(s). Click the boxes ...`) and the warnings that name a pasted
   detector that is not installed stay in English, like the other
   interpolated status messages.
+- ADetailer Ultimate beta: this branch covers the v26.2.0+plus.10.beta.2
+  beta (the *Guide: several subjects, one LoRA each* panel with its subject
+  rows, choices, hints and fixed warnings, the *Masked content* option of
+  each tab with its hint and *[ADetailer] Masked content 1st* X/Y/Z axis,
+  the classes box for YOLO-World and YOLOE, the *1 megapixel* inpaint size
+  and the three new settings about the prompt saved in the image, the
+  transparency of the picture and the hires checkpoint), on top of every
+  v26.2.0+plus.9 string, whose plus.9 spellings stay for the stable
+  release. The guide's *Auto* choice, the example words of its subject
+  rows (typed into the prompt), the *None* shown in its LoRA menus (a
+  translated value could end up as a LoRA name) and the guide status lines
+  built on the spot stay in English.
 
 ### Not translated (kept in English on purpose)
 
@@ -665,16 +677,16 @@ sd-webui-language-diffusion/
 │   ├── forge_language_flags.js            ← flag decorator for the dropdown
 │   └── hints_i18n_patch.js                ← tooltip alias bridge, nested tooltips
 └── localizations/
-    ├── it_IT.json    ← Italiano                  ~271 KB
-    ├── es_ES.json    ← Español                   ~275 KB
-    ├── fr_FR.json    ← Français                  ~279 KB
-    ├── de_DE.json    ← Deutsch                   ~271 KB
-    ├── zh_CN.json    ← Simplified Chinese        ~245 KB
-    ├── ja_JP.json    ← 日本語                     ~286 KB
-    ├── pt_BR.json    ← Português (Brasil)        ~270 KB
-    ├── ru_RU.json    ← Русский                   ~350 KB
-    ├── ko_KR.json    ← 한국어                     ~271 KB
-    └── pl_PL.json    ← Polski                    ~265 KB
+    ├── it_IT.json    ← Italiano                  ~281 KB
+    ├── es_ES.json    ← Español                   ~285 KB
+    ├── fr_FR.json    ← Français                  ~290 KB
+    ├── de_DE.json    ← Deutsch                   ~281 KB
+    ├── zh_CN.json    ← Simplified Chinese        ~255 KB
+    ├── ja_JP.json    ← 日本語                     ~298 KB
+    ├── pt_BR.json    ← Português (Brasil)        ~280 KB
+    ├── ru_RU.json    ← Русский                   ~364 KB
+    ├── ko_KR.json    ← 한국어                     ~282 KB
+    └── pl_PL.json    ← Polski                    ~275 KB
 ```
 
 ### `install.py`
