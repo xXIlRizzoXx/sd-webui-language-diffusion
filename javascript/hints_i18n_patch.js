@@ -38,6 +38,8 @@
 // This part adds an onUiUpdate callback (the WebUI's own childList hook)
 // that translates the title of every element BELOW each added node, when
 // the title is exactly a key, using the WebUI's own window.localization.
+// The placeholders of those elements too, for the same reason: Forge's JSON
+// Builder page (Extra Networks) is inserted as one block of inputs.
 // The added node itself stays localization.js's job. A pass over the
 // document at DOMContentLoaded also covers the image viewer, which lives
 // outside gradioApp(). The Extra Networks sort button changes its title
@@ -45,10 +47,12 @@
 // childList hook never sees: a MutationObserver on the title attribute
 // only, under gradioApp(), translates such changes the same way.
 //
-// Never loops and never translates twice: a title is written only when the
-// current value is a key, its translation differs and is not itself another
-// key, and the value is not the one this script last wrote on that node,
-// so the attribute change caused by the write is ignored. aria-label is
+// Never loops and never translates twice: a title or placeholder is written
+// only when the current value is a key, its translation differs and is not
+// itself another key, and the value is not the one this script last wrote
+// on that node (el._ldTitle / el._ldPlaceholder), so the attribute change
+// caused by the write is ignored. _ldPlaceholder is also the mark that
+// adetailer_ordinal_i18n.js writes: keep the two names in step. aria-label is
 // left alone, as localization.js does. No Gradio event listener; nothing
 // happens when no language is selected (empty dictionary).
 
@@ -116,10 +120,16 @@
         return null;
     }
 
-    function translateTitle(el, loc) {
+    // The last value this script wrote on a node, per attribute.
+    var MARKS = { title: "_ldTitle", placeholder: "_ldPlaceholder" };
+
+    // The title or placeholder attribute of el, when its text is a key.
+    function translateAttr(el, loc, attr) {
         if (!el || el.nodeType !== 1 || typeof el.getAttribute !== "function") return;
-        var value = el.getAttribute("title");
-        if (!value || value === el._ldTitle) return;
+        var value = el.getAttribute(attr);
+        var mark = MARKS[attr];
+        if (!mark) return;
+        if (!value || value === el[mark]) return;
         // Keys never have outer whitespace; some host titles do.
         var key = value.trim();
         if (!key || !has.call(loc, key)) return;
@@ -127,15 +137,22 @@
         if (typeof tl !== "string" || !tl || tl === key) return;
         // A translation that is itself another key would change again.
         if (has.call(loc, tl) && loc[tl] !== tl) return;
-        el._ldTitle = tl;
-        el.setAttribute("title", tl);
+        el[mark] = tl;
+        el.setAttribute(attr, tl);
     }
 
-    // Titles of the elements below root (root itself excluded).
+    function translateTitle(el, loc) {
+        translateAttr(el, loc, "title");
+    }
+
+    // Titles and placeholders of the elements below root (root itself
+    // excluded): the hosts translate only those of the node they add.
     function translateBelow(root, loc) {
         if (!root || typeof root.querySelectorAll !== "function") return;
         var els = root.querySelectorAll("[title]");
         for (var i = 0; i < els.length; i++) translateTitle(els[i], loc);
+        var holders = root.querySelectorAll("[placeholder]");
+        for (var j = 0; j < holders.length; j++) translateAttr(holders[j], loc, "placeholder");
     }
 
     if (typeof onUiUpdate === "function") {

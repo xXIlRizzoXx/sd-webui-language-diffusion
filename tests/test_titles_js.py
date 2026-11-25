@@ -100,6 +100,24 @@ class NestedTitleScriptTests(unittest.TestCase):
                     self.assertTrue(all(n <= 1 for n in done["writes"].values()), done["writes"])
                     self.assertLessEqual(done["rounds"], 3)
 
+    def test_nested_placeholders_are_translated_in_every_locale(self):
+        # Forge's JSON Builder page is inserted as one block: localization.js
+        # translates only the placeholder of the added node itself.
+        for flavour in FLAVOURS:
+            for code in locale_codes():
+                with self.subTest(flavour=flavour, locale=code):
+                    loc = load_locale(code)
+                    steps = self.simulate(code, flavour)
+                    done = steps["loaded"]["placeholders"]
+                    self.assertEqual(done["builderTop"], loc["e.g. LoRA"])
+                    self.assertEqual(done["caption"], loc["global caption"])
+                    self.assertEqual(done["meta"], loc["meta tags (comma separated)"])
+                    self.assertEqual(done["extra"], loc["e.g. LoRA"])
+                    self.assertEqual(done["coord"], "x1")
+                    self.assertEqual(steps["again"]["placeholders"], done)
+        steps = self.simulate(None, "forge")
+        self.assertEqual(steps["loaded"]["placeholders"], steps["before"]["placeholders"])
+
     def test_sort_direction_toggle_is_translated(self):
         for flavour in FLAVOURS:
             for code in ("it_IT", "zh_CN", "ru_RU"):

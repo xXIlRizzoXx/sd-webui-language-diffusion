@@ -23,6 +23,7 @@ function processNode(node) {
         return;
     }
     if (node.title && localization[node.title] !== undefined) node.title = localization[node.title];
+    if (node.placeholder && localization[node.placeholder] !== undefined) node.placeholder = localization[node.placeholder];
     const walk = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null, false);
     let n;
     while ((n = walk.nextNode())) {
@@ -71,6 +72,12 @@ class El {
     set title(v) {
         this.setAttribute("title", v);
     }
+    get placeholder() {
+        return this.attrs.placeholder || "";
+    }
+    set placeholder(v) {
+        this.setAttribute("placeholder", v);
+    }
     getAttribute(name) {
         return name in this.attrs ? this.attrs[name] : null;
     }
@@ -90,12 +97,13 @@ class El {
         return child;
     }
     querySelectorAll(sel) {
-        if (sel !== "[title]") throw new Error("unsupported selector " + sel);
+        const attr = { "[title]": "title", "[placeholder]": "placeholder" }[sel];
+        if (!attr) throw new Error("unsupported selector " + sel);
         const out = [];
         const walk = (e) =>
             e.childNodes.forEach((c) => {
                 if (c.nodeType === 1) {
-                    if ("title" in c.attrs) out.push(c);
+                    if (attr in c.attrs) out.push(c);
                     walk(c);
                 }
             });
@@ -275,8 +283,27 @@ if (flavour === "forge") {
 }
 Object.assign(t, viewer);
 
+// Placeholders of elements nested in a block inserted at once (Forge's JSON
+// Builder page): localization.js translates only the added node's own.
+const p = {};
+const holder = (name, placeholder, tag) => {
+    const el = new El(tag || "INPUT");
+    el.attrs.placeholder = placeholder;
+    return (p[name] = el);
+};
+const builderTop = holder("builderTop", "e.g. LoRA", "DIV");
+builderTop.childNodes.push(new El("DIV", undefined, [
+    holder("caption", "global caption", "TEXTAREA"),
+    holder("meta", "meta tags (comma separated)"),
+    holder("extra", "e.g. LoRA"),
+    holder("coord", "x1"),
+]));
+builderTop.childNodes[0].parentElement = builderTop;
+blocks.push(builderTop);
+const placeholders = () => Object.fromEntries(Object.entries(p).map(([k, n]) => [k, n.getAttribute("placeholder")]));
+
 function snapshot(step, extra) {
-    const out = { step };
+    const out = { step, placeholders: placeholders() };
     for (const [name, node] of Object.entries(t)) out[name] = node.nodeType === 3 ? node.textContent : node.getAttribute("title");
     console.log(JSON.stringify(Object.assign(out, extra || {})));
 }
