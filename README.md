@@ -56,6 +56,10 @@ Hires. fix, Prompt S/R, Full, Tab or Automatic (see
 
 <img src="docs/img/09-plus9-settings.jpg" alt="Settings &gt; ADetailer: the plus.9 settings and their help lines translated" width="100%" />
 
+<img src="docs/img/10-plus10-guide.jpg" alt="ADetailer Ultimate plus.10: the Guide: several subjects, one LoRA each, translated with its choices, subject rows and warnings" width="100%" />
+
+<img src="docs/img/11-plus10-settings.jpg" alt="ADetailer Ultimate plus.10: Masked content and the new settings with their help lines translated" width="100%" />
+
 <img src="docs/img/12-forge-json-builder.jpg" alt="Forge Neo JSON Builder page of Extra Networks: sections, buttons, hover tips and placeholders translated" width="100%" />
 
 <img src="docs/img/13-forge-extensions.jpg" alt="The rewritten Forge Neo Extensions tab translated: Installed, Available, Install from URL" width="100%" />
@@ -442,7 +446,7 @@ extension stays English if Language Diffusion isn't installed.
 | Extension | Strings | Languages | Status |
 |-----------|:-------:|:---------:|--------|
 | 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 2183 | 10 | base coverage |
-| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.10.beta.2 | 517 | **10 / 10** | ✅ verified |
+| ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.10.beta.3 | 517 | **10 / 10** | ✅ verified |
 | ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) v1.0.0 | 39 | **10 / 10** | ✅ verified |
 | 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 115 | **10 / 10** | ✅ verified |
 
@@ -485,8 +489,8 @@ extension stays English if Language Diffusion isn't installed.
   detection(s). Click the boxes ...`) and the warnings that name a pasted
   detector that is not installed stay in English, like the other
   interpolated status messages.
-- ADetailer Ultimate beta: this branch covers the v26.2.0+plus.10.beta.2
-  beta (the *Guide: several subjects, one LoRA each* panel with its subject
+- ADetailer Ultimate beta: this branch covers the v26.2.0+plus.10.beta.3
+  beta, the same texts as beta.2 (the *Guide: several subjects, one LoRA each* panel with its subject
   rows, choices, hints and fixed warnings, the *Masked content* option of
   each tab with its hint and *[ADetailer] Masked content 1st* X/Y/Z axis,
   the classes box for YOLO-World and YOLOE, the *1 megapixel* inpaint size
@@ -1125,6 +1129,7 @@ Published releases, newest first. Full notes are on the
 |---|---|---|---|
 | v2.1.1 | 2026-11-25 | stable | Forge Neo core UI updated to 2026-11-22 (rewritten Extensions tab, JSON Builder page of Extra Networks, Moss-Image Skip Layer Guidance and other new settings); nested placeholders translated |
 | v2.1.0 | 2026-11-09 | stable | ADetailer Ultimate aligned to v26.2.0+plus.9 (option and button tooltips, tab swap and paste-into-every-tab, new settings, X/Y/Z axes up to the 15th tab); Forge Neo core UI updated to 2026-11-06 |
+| v2.2.0-beta.1 | 2026-11-25 | beta | ADetailer Ultimate v26.2.0+plus.10.beta.3 (subject guide, Masked content, YOLOE classes, 1 megapixel, three new settings); the guide's LoRA menus keep None on AUTOMATIC1111 |
 | v2.1.0-beta.1 | 2026-10-24 | beta | ADetailer Ultimate v26.2.0+plus.9.beta.2 |
 | v2.0.0 | 2026-10-21 | stable | AUTOMATIC1111 1.10 support; complete Forge Neo and AUTOMATIC1111 core UI; ADetailer Ultimate aligned to v26.2.0+plus.8; nested tooltips translated |
 | v1.1.2 | 2026-07-13 | stable | ADetailer Ultimate aligned to v26.3.0+plus.6 (detection-preview split, run-on-image tool, preview help paragraphs) |

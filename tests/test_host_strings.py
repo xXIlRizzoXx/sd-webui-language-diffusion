@@ -439,10 +439,10 @@ ADETAILER_PLUS9_BETA_XYZ_AXIS_LABELS = ["[ADetailer] Enable"] + [
     if tab > 1 or name in ADETAILER_PLUS9_FIRST_TAB_AXES
 ]
 
-# ADetailer Ultimate v26.2.0+plus.10.beta.2 (beta only, this branch ships as a
+# ADetailer Ultimate v26.2.0+plus.10.beta.2 and beta.3, the same texts (beta only, this branch ships as a
 # -beta pre-release): the subject guide, the classes box for YOLOE, the
 # "Masked content" option of each tab with its axis, "1 megapixel" and three
-# settings with their hints as drawn "(hint)". Texts read only from the tag.
+# settings with their hints as drawn "(hint)". Texts read only from the tags.
 ADETAILER_PLUS10_BETA = [
     "Guide: several subjects, one LoRA each",
     "Pick a LoRA and a few words for each subject, then press the button. The guide fills the 1st tab (and the 2nd with the last choice of What to redraw): detector, one prompt part per subject, and the settings that keep the parts in order. The prompt those tabs had is replaced, and their Inpaint denoising strength is set to 0.6. The subjects are the biggest people in the picture, as many as People in the picture below says, counted from left to right: Subject 1 is the leftmost of them. This needs Settings → ADetailer → Sort bounding boxes by set to Position (left to right): the status under the button says when it is not. Leave a row empty to leave that subject as it is. The subjects are easier to recognise when the main prompt already describes them: colours, clothes, who is on the left and who on the right. Keep these LoRAs out of the main prompt. Everything can be edited afterwards.",
