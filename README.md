@@ -110,7 +110,7 @@ to **Stable Diffusion WebUI Forge — Neo**. It ships:
 
 - **Ten complete locale dictionaries** (Italian, Spanish, French, German,
   Simplified Chinese, Japanese, Brazilian Portuguese, Russian, Korean,
-  Polish), each translating 2762 UI strings end to end — labels,
+  Polish), each translating 2811 UI strings end to end — labels,
   dropdown choices, settings descriptions, tooltips, error messages,
   sub-tab names, modal text, for both the Forge Neo and the
   AUTOMATIC1111 1.10 core UI. Includes 478 keys covering the panel and
@@ -161,10 +161,10 @@ entry in the Quicksettings list — see [Uninstall](#uninstall).
 | 한국어 | `localizations/ko_KR.json` | 🇰🇷 | full seed translation |
 | Polski | `localizations/pl_PL.json` | 🇵🇱 | full seed translation |
 
-Each non-English JSON is approximately 242–346 KB and contains every
+Each non-English JSON is approximately 245–350 KB and contains every
 English UI string that Forge's localization system can match against,
 mapped to its translation in that locale — the Forge Neo and
-AUTOMATIC1111 core UI (2134 keys), ADetailer Ultimate (478 keys) and
+AUTOMATIC1111 core UI (2183 keys), ADetailer Ultimate (478 keys) and
 Metadata Removal + Image Browser (150 keys); extension keys are used only
 if that extension is installed and are harmless otherwise. The core UI
 keys cover both hosts end to end, Gradio's own texts and the built-in
@@ -182,14 +182,15 @@ table checkboxes), which the extension's own script translates.
 1. Launch Forge Neo normally.
 2. In the top tab bar, click **Extensions**.
 3. Open the **Install from URL** sub-tab.
-4. In the **URL for extension's git repository** field, paste:
+4. In the **GitHub Repository URL** field (on AUTOMATIC1111: **URL for
+   extension's git repository**), paste:
    ```
    https://github.com/xXIlRizzoXx/sd-webui-language-diffusion
    ```
 5. Leave the other two fields empty.
 6. Click **Install**.
 7. Switch to the **Installed** sub-tab.
-8. Click **Apply and restart UI**.
+8. Click **Apply and Restart UI** (on AUTOMATIC1111: **Apply and restart UI**).
 
 When the WebUI comes back, the extension is loaded. Continue with
 [First-time setup](#first-time-setup).
@@ -409,7 +410,7 @@ extension stays English if Language Diffusion isn't installed.
 
 | Extension | Strings | Languages | Status |
 |-----------|:-------:|:---------:|--------|
-| 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 2134 | 10 | base coverage |
+| 🌐 [Forge — Neo](https://github.com/Haoming02/sd-webui-forge-classic) + AUTOMATIC1111 1.10 **(core UI)** | 2183 | 10 | base coverage |
 | ⭐ [**ADetailer Ultimate**](https://github.com/xXIlRizzoXx/adetailer-ultimate) v26.2.0+plus.9 | 478 | **10 / 10** | ✅ verified |
 | ⭐ [**Metadata Removal**](https://github.com/xXIlRizzoXx/sd-forge-metadata-removal) v1.0.0 | 39 | **10 / 10** | ✅ verified |
 | 📁 [**Image Browser**](https://github.com/AlUlkesh/stable-diffusion-webui-images-browser) commit 4aff849 (no tagged releases) | 115 | **10 / 10** | ✅ verified |
@@ -633,16 +634,16 @@ sd-webui-language-diffusion/
 │   ├── forge_language_flags.js            ← flag decorator for the dropdown
 │   └── hints_i18n_patch.js                ← tooltip alias bridge, nested tooltips
 └── localizations/
-    ├── it_IT.json    ← Italiano                  ~268 KB
-    ├── es_ES.json    ← Español                   ~271 KB
-    ├── fr_FR.json    ← Français                  ~276 KB
-    ├── de_DE.json    ← Deutsch                   ~267 KB
-    ├── zh_CN.json    ← Simplified Chinese        ~242 KB
-    ├── ja_JP.json    ← 日本語                     ~283 KB
-    ├── pt_BR.json    ← Português (Brasil)        ~267 KB
-    ├── ru_RU.json    ← Русский                   ~346 KB
-    ├── ko_KR.json    ← 한국어                     ~268 KB
-    └── pl_PL.json    ← Polski                    ~262 KB
+    ├── it_IT.json    ← Italiano                  ~271 KB
+    ├── es_ES.json    ← Español                   ~275 KB
+    ├── fr_FR.json    ← Français                  ~279 KB
+    ├── de_DE.json    ← Deutsch                   ~271 KB
+    ├── zh_CN.json    ← Simplified Chinese        ~245 KB
+    ├── ja_JP.json    ← 日本語                     ~286 KB
+    ├── pt_BR.json    ← Português (Brasil)        ~270 KB
+    ├── ru_RU.json    ← Русский                   ~350 KB
+    ├── ko_KR.json    ← 한국어                     ~271 KB
+    └── pl_PL.json    ← Polski                    ~265 KB
 ```
 
 ### `install.py`
@@ -1135,7 +1136,7 @@ with the WebUI fork name and version.
   the extension did not load; if it is there, it also shows the active
   language and how many locales the WebUI can see.
 - Confirm you restarted the UI after installation: **Reload UI** or
-  **Apply and restart UI** is enough to pick up the JSONs. If the
+  **Apply and Restart UI** is enough to pick up the JSONs. If the
   languages still do not appear, do a full restart of the WebUI.
 
 ### I picked a language, but the UI did not change
@@ -1204,7 +1205,7 @@ To remove the extension:
 1. Either delete the `extensions/sd-webui-language-diffusion/` folder
    from your Forge installation,
 2. **Or** disable it in Forge's **Extensions → Installed** tab
-   (untick the checkbox, then Apply and restart UI).
+   (untick the checkbox, then Apply and Restart UI).
 
 The UI text falls back to English the next time the UI is loaded if
 no other localization extension is installed. Your models,

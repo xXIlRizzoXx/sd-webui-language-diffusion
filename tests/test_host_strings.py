@@ -207,6 +207,66 @@ FORGE_SINCE_MAY = [
     " specified in the UI)",
 ]
 
+# Forge Neo strings added or renamed from 21/10 to 22/11/2026 (6d5aa3bc): the
+# rewritten Extensions tab (A1111 1.10 keeps the old spellings, which stay
+# keys), Alpha Threshold, Moss-Image Skip Layer Guidance, the reference image
+# size setting and the JSON Builder page of Extra Networks. Settings hints
+# are listed as drawn: "(hint)". Left English: MP / AR, the 2025+ checkbox,
+# the tutorial title (multi-line), the JSON field names (object, character,
+# text, caption), browser dialogs and messages built on the spot.
+FORGE_SINCE_OCTOBER = [
+    "Apply and Restart UI",
+    "Apply and Quit",
+    "Check for Updates",
+    "Disable Extensions",
+    "Load from Index",
+    "Note: This index is maintained by third parties ; Please verify the Extension before installing",
+    "Filter Type",
+    "Tags Logic",
+    "any",
+    "Hidden Tags",
+    "GitHub Repository URL",
+    "Branch Name",
+    "leave empty for default",
+    "Local Folder Name",
+    "leave empty for auto",
+    "State to Restore",
+    "Cancelled",
+    "Select a Config to Restore from",
+    "Alpha Threshold",
+    "(alpha below this value is considered fully transparent)",
+    "[Moss-Image] Enable Skip Layer Guidance",
+    "(the official document recommends skipping uncond for layer 22, optionally 24 and 26)",
+    "Layers to Skip",
+    "(comma-separated block indices)",
+    "Start Percent",
+    "End Percent",
+    "Maximum Side Length for Reference Images",
+    "(applies to reference images from img2img and ImageStitch)",
+    "(set to 0 for no limit)",
+    "Set Resolution",
+    "Summary",
+    "Meta",
+    "Add Item",
+    "Clear All",
+    "Send to Prompt",
+    "Load from Prompt",
+    "Save JSON",
+    "Load JSON",
+    "Save/Load",
+    "Fit to View",
+    "Use Selected Gallery Image",
+    "Load Background From File",
+    "Reset Background",
+    "Expand items",
+    # Set later by JS on the same button: LD's title observer translates them.
+    "Collapse Items",
+    "Expand Items",
+    "global caption",
+    "meta tags (comma separated)",
+    "e.g. LoRA",
+]
+
 # Core strings shown by both hosts: the Generate / Interrupt right-click menu
 # (contextMenus.js) and the img2img Batch "Parameters to take from png info"
 # checkboxes.
@@ -393,7 +453,7 @@ def _adetailer_version(root):
 
 # Keys whose translation may equal the English text: technical vocabulary,
 # or words spelled the same in some languages.
-SAME_AS_ENGLISH = {"Latent Upscale", "📖 Guide", "Horizontal", "Vertical", "Linear", "Modules", "Name", "Notes", "Training",
+SAME_AS_ENGLISH = {"Latent Upscale", "Meta", "📖 Guide", "Horizontal", "Vertical", "Linear", "Modules", "Name", "Notes", "Training",
                    "(in MB)", "(in ms)", "(EXPERIMENTAL)", "Rectangle", "Oval", "Styles", "Steps",
                    "Version", "Date", "Action", "Branch", "Commit", "Local", "Remote", "Zoom", "Original",
                    "wiki", "Compact", "Preprocessor", "Variation", "Region", "[Region]", "Error", "Frames", "Upscale", "Model:",
@@ -761,6 +821,19 @@ class HostStringKeyTests(unittest.TestCase):
         self.assertEqual(len(FORGE_SINCE_MAY), len(set(FORGE_SINCE_MAY)))
         self.assertTranslated(FORGE_SINCE_MAY)
 
+    def test_forge_strings_added_since_october_are_keys(self):
+        self.assertEqual(len(FORGE_SINCE_OCTOBER), 49)
+        self.assertEqual(len(FORGE_SINCE_OCTOBER), len(set(FORGE_SINCE_OCTOBER)))
+        self.assertTranslated(FORGE_SINCE_OCTOBER)
+        for code, data in sorted(self.locales.items()):
+            with self.subTest(locale=code):
+                # The prefix is kept, as in "[Moss-Image] Reference Method".
+                self.assertTrue(data.get("[Moss-Image] Enable Skip Layer Guidance", "").startswith("[Moss-Image] "))
+                # JSON field names stay English: the item rows show them as
+                # radio labels and placeholders next to each other.
+                for word in ("object", "character", "text", "caption", "MP", "AR"):
+                    self.assertNotIn(word, data)
+
     def test_older_spellings_used_by_a1111_are_kept(self):
         self.assertTranslated(A1111_STILL_USED)
 
@@ -990,7 +1063,7 @@ class HostStringKeyTests(unittest.TestCase):
         # Guards the lists above against typos: each string of this host must
         # appear verbatim (a hint without its parentheses) in its sources.
         if _is_forge(HOST_ROOT):
-            expected = (FORGE_RESIZE_MODE + FORGE_MERGER + FORGE_SINCE_MAY + FORGE_REFINER_INFO + BOTH_HOSTS_CORE
+            expected = (FORGE_RESIZE_MODE + FORGE_MERGER + FORGE_SINCE_MAY + FORGE_SINCE_OCTOBER + FORGE_REFINER_INFO + BOTH_HOSTS_CORE
                         + BOTH_HOSTS_HTML + FORGE_HTML + FORGE_TITLES)
         else:
             expected = A1111_STRINGS + BOTH_HOSTS_CORE + A1111_CHOICES + HYPERTILE_XYZ_AXIS_LABELS + BOTH_HOSTS_HTML + A1111_HTML
