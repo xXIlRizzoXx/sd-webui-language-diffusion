@@ -136,6 +136,12 @@ class AdetailerOrdinalScriptTests(unittest.TestCase):
                 # ADetailer's inpaint area"), but no other setting's.
                 self.assertEqual(done["setting"], loc["Use the WebUI's img2img upscaler"])
                 self.assertEqual(done["otherSetting"], "None")
+                # The plus.10 subject guide's LoRA menus take typed text:
+                # Gradio sends the input's text once the user edits it, so a
+                # translated "None" could become a LoRA name in a <lora:...> tag.
+                for step in ("valuesLoaded", "valuesChanged", "valuesBlurred", "valuesAgain"):
+                    self.assertEqual(steps[step]["guideLora"], "None", step)
+                self.assertEqual(steps["valuesAgain"]["lateGuide"], "None")
                 # After a pick: only "change"/"blur" queue one pass, a frame later.
                 self.assertEqual(steps["valuesSelect"]["frames"], 0)
                 self.assertEqual(steps["valuesSelect"]["preset"], "(none)")
@@ -149,8 +155,8 @@ class AdetailerOrdinalScriptTests(unittest.TestCase):
                 again = steps["valuesAgain"]
                 self.assertEqual(again["late"], loc["None"])
                 # A second pass changes nothing.
-                self.assertEqual(dict(again, step="valuesBlurred", late=None),
-                                 dict(steps["valuesBlurred"], late=None))
+                self.assertEqual(dict(again, step="valuesBlurred", late=None, lateGuide=None),
+                                 dict(steps["valuesBlurred"], late=None, lateGuide=None))
 
 
 if __name__ == "__main__":

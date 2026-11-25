@@ -116,12 +116,16 @@ const v = {
     // Settings > ADetailer dropdown, outside the panels; another setting's.
     setting: input("Use the WebUI's img2img upscaler"),
     otherSetting: input("None"),
+    // plus.10 subject guide: a LoRA menu that takes typed text, inside the
+    // panel. Gradio sends the input's text once it is edited: "None" stays English.
+    guideLora: input("None"),
 };
 
 const panel = new El("DIV", "script_txt2img_adetailer_ad_main_accordion", [
     new El("DIV", "", [t.tab1, t.tab2, t.padded, t.seventh, t.eleventh, t.tabName2, t.tabName5]),
     new El("DIV", "", [t.unknownBase, t.wrongOrdinal, t.noSpace, t.script, t.prompt, t.negative]),
     new El("DIV", "", [v.preset, v.detector, v.checkpoint, v.sampler, v.notKey, v.focused, v.gradio4, v.textbox]),
+    new El("DIV", "script_txt2img_adetailer_ad_subject_guide_lora_1", [new El("LABEL", "", [v.guideLora])]),
 ]);
 const other = new El("DIV", "txt2img_settings", [t.outside, t.outsidePrompt, v.outside]);
 const settings = new El("DIV", "settings", [
@@ -240,11 +244,15 @@ values("valuesBlurred");
 // A dropdown mounted later in the panel, and a second full pass.
 const late = new El("DIV", "", [input("None")]);
 panel.append(late);
+// A subject guide LoRA menu mounted later, reported by itself.
+const lateGuide = new El("DIV", "script_img2img_adetailer_ad_subject_guide_lora_4", [input("None")]);
+panel.append(lateGuide);
 updateCallbacks.forEach((cb) => cb([{ type: "childList", addedNodes: [late] }]));
+updateCallbacks.forEach((cb) => cb([{ type: "childList", addedNodes: [lateGuide.childNodes[0]] }]));
 loadedCallbacks.forEach((cb) => cb());
 gradioEvent("change");
 frames.splice(0).forEach((cb) => cb());
-values("valuesAgain", { late: late.childNodes[0].value });
+values("valuesAgain", { late: late.childNodes[0].value, lateGuide: lateGuide.childNodes[0].value });
 
 // A Settings > ADetailer block mounted later.
 const lateSetting = new El("DIV", "setting_ad_later", [input("None")]);

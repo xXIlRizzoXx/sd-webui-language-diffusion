@@ -27,7 +27,10 @@
  * shows the translation: at load, when a panel mounts, and one frame after
  * Gradio's "change" or "blur" DOM event, since Gradio writes the English
  * value back after a pick. Gradio 3 reads the input back only on "input"
- * events, so its own value is unchanged.
+ * events, so its own value is unchanged. The LoRA menus of the plus.10
+ * subject guide are left alone: they take typed text, and Gradio sends the
+ * input's text as soon as the user edits it, so a translated "None" could
+ * become a LoRA name.
  *
  * DOM only: it uses the WebUI's onUiUpdate/onUiLoaded hooks, a DOM
  * MutationObserver and a DOM event listener, and adds no Gradio event
@@ -108,6 +111,15 @@
         return false;
     }
 
+    // A dropdown that takes typed text: ADetailer's subject guide LoRA menus.
+    var re_free_text = /ad_subject_guide_lora/;
+    function takesTypedText(el) {
+        for (; el; el = el.parentElement) {
+            if (el.id && re_free_text.test(el.id)) return true;
+        }
+        return false;
+    }
+
     function inSetting(el) {
         for (; el; el = el.parentElement) {
             if (el.id && re_setting.test(el.id)) return true;
@@ -171,6 +183,7 @@
             var value = inp.value;
             if (!value || !has.call(loc, value)) return;
             if (inp === document.activeElement || !(inPanel(inp) || inSetting(inp))) return;
+            if (takesTypedText(inp)) return;
             var tl = loc[value];
             // A translation that is itself a key would change again next pass.
             if (typeof tl !== "string" || !tl || tl === value || has.call(loc, tl)) return;
